@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Horario Escolar</title>
     <style>
-        /* Version: 6 */
-        /* Changes: Backend removed. Admin panel with PIN added. */
+        /* Version: 7 */
+        /* Changes: Use of a time API for accurate time. Admin panel removed. */
         
         body {
             font-family: Arial, sans-serif;
@@ -32,7 +32,6 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             position: relative;
             max-width: 90%;
-            margin-bottom: 2em;
         }
         #current-class-display {
             font-size: 2.5em;
@@ -56,44 +55,17 @@
             border-radius: 10px;
             white-space: nowrap;
         }
-        .admin-panel, .pin-form {
-            background-color: #e9e9e9;
-            padding: 1.5em;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            max-width: 90%;
-            display: none; /* Oculto por defecto */
-        }
-        .pin-form {
-            display: block; /* Visible al inicio */
-        }
-        .admin-panel label, .admin-panel input, .admin-panel button {
-            display: block;
-            width: 100%;
-            margin-bottom: 10px;
-            box-sizing: border-box;
-        }
-        input[type="number"], input[type="text"] {
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        #pin-error {
-            color: red;
-            font-size: 0.8em;
-            margin-top: -10px;
-            margin-bottom: 10px;
+        @media (max-width: 600px) {
+            .container {
+                width: 90%;
+                padding: 1.5em 1em;
+            }
+            #current-class-display {
+                font-size: 1.8em;
+            }
+            #teacher-display {
+                font-size: 1em;
+            }
         }
     </style>
 </head>
@@ -104,32 +76,9 @@
         <div id="teacher-display"></div>
     </div>
 
-    <div class="pin-form" id="pin-form">
-        <h2>Panel de administración</h2>
-        <p>Ingresa el PIN para continuar.</p>
-        <input type="password" id="pin-input" placeholder="Introduce el PIN">
-        <button onclick="checkPin()">Acceder</button>
-        <p id="pin-error"></p>
-    </div>
-
-    <div class="admin-panel" id="admin-panel">
-        <h2>Panel de administración</h2>
-        <p>Aquí puedes ajustar la hora del horario.</p>
-        <label for="hour-offset">Ajustar hora (ej. -1 o +1):</label>
-        <input type="number" id="hour-offset" value="0">
-        <label for="minute-offset">Ajustar minutos (ej. -10 o +10):</label>
-        <input type="number" id="minute-offset" value="0">
-        <button onclick="saveOffset()">Guardar Ajuste</button>
-        <p id="admin-message"></p>
-    </div>
-
     <script>
-        // Version: 6
-        // Changes: Code rewritten to be standalone (no backend). PIN-based admin panel.
-
-        const adminPin = "26435";
-        let offsetHours = 0;
-        let offsetMinutes = 0;
+        // Version: 7
+        // Changes: Use of a time API for accurate time.
 
         const schedule = [
             // Lunes (0)
@@ -175,99 +124,72 @@
             ],
         ];
 
-        function checkPin() {
-            const pinInput = document.getElementById('pin-input').value;
-            const pinForm = document.getElementById('pin-form');
-            const adminPanel = document.getElementById('admin-panel');
-            const pinError = document.getElementById('pin-error');
-            
-            if (pinInput === adminPin) {
-                pinForm.style.display = 'none';
-                adminPanel.style.display = 'block';
-                pinError.textContent = '';
-                // Recuperar el ajuste guardado si existe
-                offsetHours = parseInt(localStorage.getItem('hourOffset')) || 0;
-                offsetMinutes = parseInt(localStorage.getItem('minuteOffset')) || 0;
-                document.getElementById('hour-offset').value = offsetHours;
-                document.getElementById('minute-offset').value = offsetMinutes;
-            } else {
-                pinError.textContent = 'PIN incorrecto. Intenta de nuevo.';
-            }
-        }
+        async function updateSchedule() {
+            try {
+                const response = await fetch('http://worldtimeapi.org/api/timezone/America/Tijuana');
+                const data = await response.json();
+                const now = new Date(data.datetime);
 
-        function saveOffset() {
-            offsetHours = parseInt(document.getElementById('hour-offset').value) || 0;
-            offsetMinutes = parseInt(document.getElementById('minute-offset').value) || 0;
-            localStorage.setItem('hourOffset', offsetHours);
-            localStorage.setItem('minuteOffset', offsetMinutes);
-            document.getElementById('admin-message').textContent = `Ajuste guardado: ${offsetHours}h y ${offsetMinutes}m.`;
-            updateSchedule(); // Actualiza el horario inmediatamente
-        }
+                const dayOfWeek = now.getDay();
+                const currentHour = now.getHours();
+                const currentMinute = now.getMinutes();
 
-        function updateSchedule() {
-            const now = new Date();
-            // Aplicar el offset de la administración
-            now.setHours(now.getHours() + offsetHours);
-            now.setMinutes(now.getMinutes() + offsetMinutes);
+                const currentTimeInMinutes = currentHour * 60 + currentMinute;
+                
+                const currentClassDisplay = document.getElementById('current-class-display');
+                const teacherDisplay = document.getElementById('teacher-display');
+                const nextClassDisplay = document.getElementById('next-class-display');
 
-            const dayOfWeek = now.getDay();
-            const currentHour = now.getHours();
-            const currentMinute = now.getMinutes();
-
-            const currentTimeInMinutes = currentHour * 60 + currentMinute;
-            
-            const currentClassDisplay = document.getElementById('current-class-display');
-            const teacherDisplay = document.getElementById('teacher-display');
-            const nextClassDisplay = document.getElementById('next-class-display');
-
-            if (dayOfWeek === 0 || dayOfWeek === 6) { // Domingo o Sábado
-                currentClassDisplay.textContent = "¡Sin Clases!";
-                teacherDisplay.textContent = "Disfruta el fin de semana";
-                nextClassDisplay.textContent = "";
-                return;
-            }
-
-            const todaySchedule = schedule[dayOfWeek - 1]; // Lunes es 0 en el array
-            let currentClass = "¡Sin Clases!";
-            let currentTeacher = "Aún no empiezan o ya terminaron";
-            let nextClass = "No hay más clases hoy";
-
-            for (let i = 0; i < todaySchedule.length; i++) {
-                const classStartMinutes = todaySchedule[i].time[0] * 60 + todaySchedule[i].time[1];
-                const classDuration = todaySchedule[i].name.includes("Receso") ? 20 : 75;
-                const classEndMinutes = classStartMinutes + classDuration;
-
-                if (currentTimeInMinutes >= classStartMinutes && currentTimeInMinutes < classEndMinutes) {
-                    currentClass = todaySchedule[i].name;
-                    currentTeacher = todaySchedule[i].teacher;
-                    if (i + 1 < todaySchedule.length) {
-                        nextClass = todaySchedule[i + 1].name;
-                    }
-                    break;
+                if (dayOfWeek === 0 || dayOfWeek === 6) { // Domingo o Sábado
+                    currentClassDisplay.textContent = "¡Sin Clases!";
+                    teacherDisplay.textContent = "Disfruta el fin de semana";
+                    nextClassDisplay.textContent = "";
+                    return;
                 }
-            }
 
-            if (currentClass === "¡Sin Clases!") {
+                const todaySchedule = schedule[dayOfWeek - 1]; // Lunes es 0 en el array
+                let currentClass = "¡Sin Clases!";
+                let currentTeacher = "Aún no empiezan o ya terminaron";
+                let nextClass = "No hay más clases hoy";
+
                 for (let i = 0; i < todaySchedule.length; i++) {
                     const classStartMinutes = todaySchedule[i].time[0] * 60 + todaySchedule[i].time[1];
-                    if (currentTimeInMinutes < classStartMinutes) {
-                        nextClass = todaySchedule[i].name;
+                    const classDuration = todaySchedule[i].name.includes("Receso") ? 20 : 75;
+                    const classEndMinutes = classStartMinutes + classDuration;
+
+                    if (currentTimeInMinutes >= classStartMinutes && currentTimeInMinutes < classEndMinutes) {
+                        currentClass = todaySchedule[i].name;
+                        currentTeacher = todaySchedule[i].teacher;
+                        if (i + 1 < todaySchedule.length) {
+                            nextClass = todaySchedule[i + 1].name;
+                        }
                         break;
                     }
                 }
-            }
 
-            currentClassDisplay.textContent = currentClass;
-            teacherDisplay.textContent = currentTeacher;
-            nextClassDisplay.textContent = `Siguiente clase: ${nextClass}`;
+                if (currentClass === "¡Sin Clases!") {
+                    for (let i = 0; i < todaySchedule.length; i++) {
+                        const classStartMinutes = todaySchedule[i].time[0] * 60 + todaySchedule[i].time[1];
+                        if (currentTimeInMinutes < classStartMinutes) {
+                            nextClass = todaySchedule[i].name;
+                            break;
+                        }
+                    }
+                }
+
+                currentClassDisplay.textContent = currentClass;
+                teacherDisplay.textContent = currentTeacher;
+                nextClassDisplay.textContent = `Siguiente clase: ${nextClass}`;
+            } catch (error) {
+                console.error('Error al obtener la hora de la API:', error);
+                document.getElementById('current-class-display').textContent = "Error de conexión";
+                document.getElementById('teacher-display').textContent = "No se pudo obtener la hora. Intenta recargar.";
+                document.getElementById('next-class-display').textContent = "";
+            }
         }
 
-        // Cargar el ajuste guardado al inicio
-        offsetHours = parseInt(localStorage.getItem('hourOffset')) || 0;
-        offsetMinutes = parseInt(localStorage.getItem('minuteOffset')) || 0;
-
-        updateSchedule(); // Inicia la actualización
-        setInterval(updateSchedule, 60000); // Actualiza cada minuto
+        updateSchedule(); // Actualiza al cargar la página
+        setInterval(updateSchedule, 60000); // Actualiza cada minuto para mayor precisión
     </script>
 </body>
 </html>
