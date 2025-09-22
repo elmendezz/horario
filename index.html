@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Horario Escolar</title>
     <style>
-        /* Version: 5 */
-        /* Changes: CSS fine-tuning to make the container and text smaller and prevent overflow. */
-
+        /* Version: 6 */
+        /* Changes: Backend removed. Admin panel with PIN added. */
+        
         body {
             font-family: Arial, sans-serif;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
@@ -18,28 +19,30 @@
             background-color: #f0f0f0;
             color: #333;
             text-align: center;
+            padding: 1em;
         }
         .container {
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 2em 1.5em; /* Reducido el padding para un recuadro más chico */
+            padding: 2em 1.5em;
             background-color: #fff;
             border-radius: 15px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             position: relative;
-            max-width: 90%; /* Asegura que no sea demasiado grande en pantallas amplias */
+            max-width: 90%;
+            margin-bottom: 2em;
         }
         #current-class-display {
-            font-size: 2.5em; /* Tamaño de fuente más chico */
+            font-size: 2.5em;
             font-weight: bold;
             margin-bottom: 0.1em;
             line-height: 1.2;
             word-wrap: break-word;
         }
         #teacher-display {
-            font-size: 1.3em; /* Tamaño de fuente más chico */
+            font-size: 1.3em;
             color: #666;
             margin-bottom: 0.8em;
         }
@@ -53,17 +56,44 @@
             border-radius: 10px;
             white-space: nowrap;
         }
-        @media (max-width: 600px) {
-            .container {
-                width: 90%;
-                padding: 1.5em 1em; /* Padding más chico para móviles */
-            }
-            #current-class-display {
-                font-size: 1.8em;
-            }
-            #teacher-display {
-                font-size: 1em;
-            }
+        .admin-panel, .pin-form {
+            background-color: #e9e9e9;
+            padding: 1.5em;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            max-width: 90%;
+            display: none; /* Oculto por defecto */
+        }
+        .pin-form {
+            display: block; /* Visible al inicio */
+        }
+        .admin-panel label, .admin-panel input, .admin-panel button {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        input[type="number"], input[type="text"] {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #pin-error {
+            color: red;
+            font-size: 0.8em;
+            margin-top: -10px;
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -74,28 +104,170 @@
         <div id="teacher-display"></div>
     </div>
 
+    <div class="pin-form" id="pin-form">
+        <h2>Panel de administración</h2>
+        <p>Ingresa el PIN para continuar.</p>
+        <input type="password" id="pin-input" placeholder="Introduce el PIN">
+        <button onclick="checkPin()">Acceder</button>
+        <p id="pin-error"></p>
+    </div>
+
+    <div class="admin-panel" id="admin-panel">
+        <h2>Panel de administración</h2>
+        <p>Aquí puedes ajustar la hora del horario.</p>
+        <label for="hour-offset">Ajustar hora (ej. -1 o +1):</label>
+        <input type="number" id="hour-offset" value="0">
+        <label for="minute-offset">Ajustar minutos (ej. -10 o +10):</label>
+        <input type="number" id="minute-offset" value="0">
+        <button onclick="saveOffset()">Guardar Ajuste</button>
+        <p id="admin-message"></p>
+    </div>
+
     <script>
-        // Version: 5
-        // Changes: Fetch schedule data from Vercel Serverless API.
+        // Version: 6
+        // Changes: Code rewritten to be standalone (no backend). PIN-based admin panel.
 
-        const updateSchedule = () => {
-            fetch('/api/schedule')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('current-class-display').textContent = data.current.name;
-                    document.getElementById('teacher-display').textContent = data.current.teacher || "";
-                    document.getElementById('next-class-display').textContent = `Siguiente clase: ${data.next.name}`;
-                })
-                .catch(error => {
-                    console.error('Error al obtener el horario:', error);
-                    document.getElementById('current-class-display').textContent = "Error al cargar el horario";
-                    document.getElementById('teacher-display').textContent = "Intenta recargar la página.";
-                    document.getElementById('next-class-display').textContent = "";
-                });
-        };
+        const adminPin = "26435";
+        let offsetHours = 0;
+        let offsetMinutes = 0;
 
-        updateSchedule();
-        setInterval(updateSchedule, 60000);
+        const schedule = [
+            // Lunes (0)
+            [
+                { time: [7, 0], name: "Cultura Digital I", teacher: "ARMENTA FELIX ANA CRISTINA" },
+                { time: [8, 20], name: "Ingles I", teacher: "FALCON OLIVOANI ANDREA MAREL" },
+                { time: [9, 45], name: "Receso de 20 min.", teacher: "¡A descansar!" },
+                { time: [10, 5], name: "Ingles I", teacher: "FALCON OLIVOANI ANDREA MAREL" },
+                { time: [11, 30], name: "Humanidades I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
+                { time: [12, 55], name: "Lengua y Comunicación I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
+                { time: [14, 20], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO" },
+            ],
+            // Martes (1)
+            [
+                { time: [8, 20], name: "Cultura Digital I", teacher: "ARMENTA FELIX ANA CRISTINA" },
+                { time: [9, 45], name: "Receso de 20 min.", teacher: "¡A descansar!" },
+                { time: [10, 5], name: "Lengua y Comunicación I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
+                { time: [11, 30], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO" },
+                { time: [12, 55], name: "Ingles I", teacher: "FALCON OLIVOANI ANDREA MAREL" },
+            ],
+            // Miércoles (2)
+            [
+                { time: [9, 45], name: "Humanidades I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
+                { time: [11, 10], name: "Humanidades I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
+                { time: [12, 35], name: "Pensamiento matematico I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA" },
+                { time: [14, 0], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO" },
+            ],
+            // Jueves (3)
+            [
+                { time: [9, 45], name: "Humanidades I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
+                { time: [11, 10], name: "Pensamiento matematico I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA" },
+                { time: [12, 35], name: "Pensamiento matematico I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA" },
+                { time: [14, 0], name: "Ciencias Sociales I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
+            ],
+            // Viernes (4)
+            [
+                { time: [8, 20], name: "Formación socioemocional I", teacher: "CHAVEZ ARRIOLA LUIS MARIO" },
+                { time: [9, 45], name: "Receso de 20 min.", teacher: "¡A descansar!" },
+                { time: [10, 5], name: "Ciencias Sociales I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
+                { time: [11, 30], name: "Lengua y Comunicación I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
+                { time: [12, 55], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO" },
+                { time: [14, 20], name: "Pensamiento matematico I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA" },
+            ],
+        ];
+
+        function checkPin() {
+            const pinInput = document.getElementById('pin-input').value;
+            const pinForm = document.getElementById('pin-form');
+            const adminPanel = document.getElementById('admin-panel');
+            const pinError = document.getElementById('pin-error');
+            
+            if (pinInput === adminPin) {
+                pinForm.style.display = 'none';
+                adminPanel.style.display = 'block';
+                pinError.textContent = '';
+                // Recuperar el ajuste guardado si existe
+                offsetHours = parseInt(localStorage.getItem('hourOffset')) || 0;
+                offsetMinutes = parseInt(localStorage.getItem('minuteOffset')) || 0;
+                document.getElementById('hour-offset').value = offsetHours;
+                document.getElementById('minute-offset').value = offsetMinutes;
+            } else {
+                pinError.textContent = 'PIN incorrecto. Intenta de nuevo.';
+            }
+        }
+
+        function saveOffset() {
+            offsetHours = parseInt(document.getElementById('hour-offset').value) || 0;
+            offsetMinutes = parseInt(document.getElementById('minute-offset').value) || 0;
+            localStorage.setItem('hourOffset', offsetHours);
+            localStorage.setItem('minuteOffset', offsetMinutes);
+            document.getElementById('admin-message').textContent = `Ajuste guardado: ${offsetHours}h y ${offsetMinutes}m.`;
+            updateSchedule(); // Actualiza el horario inmediatamente
+        }
+
+        function updateSchedule() {
+            const now = new Date();
+            // Aplicar el offset de la administración
+            now.setHours(now.getHours() + offsetHours);
+            now.setMinutes(now.getMinutes() + offsetMinutes);
+
+            const dayOfWeek = now.getDay();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+
+            const currentTimeInMinutes = currentHour * 60 + currentMinute;
+            
+            const currentClassDisplay = document.getElementById('current-class-display');
+            const teacherDisplay = document.getElementById('teacher-display');
+            const nextClassDisplay = document.getElementById('next-class-display');
+
+            if (dayOfWeek === 0 || dayOfWeek === 6) { // Domingo o Sábado
+                currentClassDisplay.textContent = "¡Sin Clases!";
+                teacherDisplay.textContent = "Disfruta el fin de semana";
+                nextClassDisplay.textContent = "";
+                return;
+            }
+
+            const todaySchedule = schedule[dayOfWeek - 1]; // Lunes es 0 en el array
+            let currentClass = "¡Sin Clases!";
+            let currentTeacher = "Aún no empiezan o ya terminaron";
+            let nextClass = "No hay más clases hoy";
+
+            for (let i = 0; i < todaySchedule.length; i++) {
+                const classStartMinutes = todaySchedule[i].time[0] * 60 + todaySchedule[i].time[1];
+                const classDuration = todaySchedule[i].name.includes("Receso") ? 20 : 75;
+                const classEndMinutes = classStartMinutes + classDuration;
+
+                if (currentTimeInMinutes >= classStartMinutes && currentTimeInMinutes < classEndMinutes) {
+                    currentClass = todaySchedule[i].name;
+                    currentTeacher = todaySchedule[i].teacher;
+                    if (i + 1 < todaySchedule.length) {
+                        nextClass = todaySchedule[i + 1].name;
+                    }
+                    break;
+                }
+            }
+
+            if (currentClass === "¡Sin Clases!") {
+                for (let i = 0; i < todaySchedule.length; i++) {
+                    const classStartMinutes = todaySchedule[i].time[0] * 60 + todaySchedule[i].time[1];
+                    if (currentTimeInMinutes < classStartMinutes) {
+                        nextClass = todaySchedule[i].name;
+                        break;
+                    }
+                }
+            }
+
+            currentClassDisplay.textContent = currentClass;
+            teacherDisplay.textContent = currentTeacher;
+            nextClassDisplay.textContent = `Siguiente clase: ${nextClass}`;
+        }
+
+        // Cargar el ajuste guardado al inicio
+        offsetHours = parseInt(localStorage.getItem('hourOffset')) || 0;
+        offsetMinutes = parseInt(localStorage.getItem('minuteOffset')) || 0;
+
+        updateSchedule(); // Inicia la actualización
+        setInterval(updateSchedule, 60000); // Actualiza cada minuto
     </script>
 </body>
 </html>
