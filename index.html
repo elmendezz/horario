@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Horario Escolar</title>
     <style>
-        /* Version: 7 */
-        /* Changes: Use of a time API for accurate time. Admin panel removed. */
+        /* Version: 9 */
+        /* Changes: Final fixes to schedule logic. Refined layout. */
         
         body {
             font-family: Arial, sans-serif;
@@ -32,6 +32,7 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             position: relative;
             max-width: 90%;
+            margin-bottom: 1em;
         }
         #current-class-display {
             font-size: 2.5em;
@@ -55,6 +56,12 @@
             border-radius: 10px;
             white-space: nowrap;
         }
+        #clock {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #555;
+            margin-top: 1em;
+        }
         @media (max-width: 600px) {
             .container {
                 width: 90%;
@@ -75,121 +82,152 @@
         <div id="current-class-display">Cargando horario...</div>
         <div id="teacher-display"></div>
     </div>
+    <div id="clock"></div>
 
     <script>
-        // Version: 7
-        // Changes: Use of a time API for accurate time.
+        // Version: 9
+        // Changes: Final bug fixes for schedule logic. Clock synchronization.
 
         const schedule = [
-            // Lunes (0)
+            // Lunes (1)
             [
-                { time: [7, 0], name: "Cultura Digital I", teacher: "ARMENTA FELIX ANA CRISTINA" },
-                { time: [8, 20], name: "Ingles I", teacher: "FALCON OLIVOANI ANDREA MAREL" },
-                { time: [9, 45], name: "Receso de 20 min.", teacher: "¡A descansar!" },
-                { time: [10, 5], name: "Ingles I", teacher: "FALCON OLIVOANI ANDREA MAREL" },
-                { time: [11, 30], name: "Humanidades I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
-                { time: [12, 55], name: "Lengua y Comunicación I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
-                { time: [14, 20], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO" },
+                { time: [7, 0], name: "Cultura Digital I", teacher: "ARMENTA FELIX ANA CRISTINA", duration: 75 },
+                { time: [8, 20], name: "Ingles I", teacher: "FALCON OLIVOANI ANDREA MAREL", duration: 75 },
+                { time: [9, 45], name: "Receso de 20 min.", teacher: "¡A descansar!", duration: 20 },
+                { time: [10, 5], name: "Ingles I", teacher: "FALCON OLIVOANI ANDREA MAREL", duration: 75 },
+                { time: [11, 30], name: "Humanidades I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 75 },
+                { time: [12, 55], name: "Lengua y Comunicación I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 75 },
+                { time: [14, 20], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO", duration: 75 },
             ],
-            // Martes (1)
+            // Martes (2)
             [
-                { time: [8, 20], name: "Cultura Digital I", teacher: "ARMENTA FELIX ANA CRISTINA" },
-                { time: [9, 45], name: "Receso de 20 min.", teacher: "¡A descansar!" },
-                { time: [10, 5], name: "Lengua y Comunicación I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
-                { time: [11, 30], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO" },
-                { time: [12, 55], name: "Ingles I", teacher: "FALCON OLIVOANI ANDREA MAREL" },
+                { time: [8, 20], name: "Cultura Digital I", teacher: "ARMENTA FELIX ANA CRISTINA", duration: 75 },
+                { time: [9, 45], name: "Receso de 20 min.", teacher: "¡A descansar!", duration: 20 },
+                { time: [10, 5], name: "Lengua y Comunicación I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 75 },
+                { time: [11, 30], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO", duration: 75 },
+                { time: [12, 55], name: "Ingles I", teacher: "FALCON OLIVOANI ANDREA MAREL", duration: 75 },
             ],
-            // Miércoles (2)
+            // Miércoles (3)
             [
-                { time: [9, 45], name: "Humanidades I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
-                { time: [11, 10], name: "Humanidades I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
-                { time: [12, 35], name: "Pensamiento matematico I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA" },
-                { time: [14, 0], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO" },
+                { time: [9, 45], name: "Humanidades I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 75 },
+                { time: [11, 10], name: "Humanidades I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 75 },
+                { time: [12, 35], name: "Pensamiento matematico I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA", duration: 75 },
+                { time: [14, 0], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO", duration: 75 },
             ],
-            // Jueves (3)
+            // Jueves (4)
             [
-                { time: [9, 45], name: "Humanidades I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
-                { time: [11, 10], name: "Pensamiento matematico I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA" },
-                { time: [12, 35], name: "Pensamiento matematico I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA" },
-                { time: [14, 0], name: "Ciencias Sociales I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
+                { time: [9, 45], name: "Humanidades I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 75 },
+                { time: [11, 10], name: "Pensamiento matematico I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA", duration: 75 },
+                { time: [12, 35], name: "Pensamiento matematico I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA", duration: 75 },
+                { time: [14, 0], name: "Ciencias Sociales I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 75 },
             ],
-            // Viernes (4)
+            // Viernes (5)
             [
-                { time: [8, 20], name: "Formación socioemocional I", teacher: "CHAVEZ ARRIOLA LUIS MARIO" },
-                { time: [9, 45], name: "Receso de 20 min.", teacher: "¡A descansar!" },
-                { time: [10, 5], name: "Ciencias Sociales I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
-                { time: [11, 30], name: "Lengua y Comunicación I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
-                { time: [12, 55], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO" },
-                { time: [14, 20], name: "Pensamiento matematico I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA" },
+                { time: [8, 20], name: "Formación socioemocional I", teacher: "CHAVEZ ARRIOLA LUIS MARIO", duration: 75 },
+                { time: [9, 45], name: "Receso de 20 min.", teacher: "¡A descansar!", duration: 20 },
+                { time: [10, 5], name: "Ciencias Sociales I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 75 },
+                { time: [11, 30], name: "Lengua y Comunicación I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 75 },
+                { time: [12, 55], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO", duration: 75 },
+                { time: [14, 20], name: "Pensamiento matematico I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA", duration: 75 },
             ],
         ];
 
-        async function updateSchedule() {
+        let serverTime = null;
+
+        async function fetchTime() {
             try {
                 const response = await fetch('http://worldtimeapi.org/api/timezone/America/Tijuana');
+                if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.json();
-                const now = new Date(data.datetime);
+                serverTime = new Date(data.datetime);
+                console.log("Hora de la API obtenida:", serverTime);
+            } catch (error) {
+                console.error('Error fetching time from API:', error);
+                serverTime = new Date(); // Fallback to local time
+                console.log("Usando hora local como respaldo:", serverTime);
+            }
+        }
+        
+        function updateClock() {
+            if (!serverTime) {
+                document.getElementById('clock').textContent = 'Sincronizando reloj...';
+                return;
+            }
+            const now = new Date(serverTime.getTime() + (Date.now() - startTime));
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock').textContent = `Hora: ${hours}:${minutes}:${seconds}`;
+        }
+        
+        function updateSchedule() {
+            if (!serverTime) return;
 
-                const dayOfWeek = now.getDay();
-                const currentHour = now.getHours();
-                const currentMinute = now.getMinutes();
+            const now = new Date(serverTime.getTime() + (Date.now() - startTime));
+            const dayOfWeek = now.getDay();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
 
-                const currentTimeInMinutes = currentHour * 60 + currentMinute;
-                
-                const currentClassDisplay = document.getElementById('current-class-display');
-                const teacherDisplay = document.getElementById('teacher-display');
-                const nextClassDisplay = document.getElementById('next-class-display');
+            const currentTimeInMinutes = currentHour * 60 + currentMinute;
+            
+            const currentClassDisplay = document.getElementById('current-class-display');
+            const teacherDisplay = document.getElementById('teacher-display');
+            const nextClassDisplay = document.getElementById('next-class-display');
 
-                if (dayOfWeek === 0 || dayOfWeek === 6) { // Domingo o Sábado
-                    currentClassDisplay.textContent = "¡Sin Clases!";
-                    teacherDisplay.textContent = "Disfruta el fin de semana";
-                    nextClassDisplay.textContent = "";
-                    return;
+            if (dayOfWeek === 0 || dayOfWeek === 6) {
+                currentClassDisplay.textContent = "¡Sin Clases!";
+                teacherDisplay.textContent = "Disfruta el fin de semana";
+                nextClassDisplay.textContent = "";
+                return;
+            }
+
+            const todaySchedule = schedule[dayOfWeek - 1];
+            let currentClass = "¡Sin Clases!";
+            let currentTeacher = "Aún no empiezan o ya terminaron";
+            let nextClass = "No hay más clases hoy";
+
+            for (let i = 0; i < todaySchedule.length; i++) {
+                const classStartMinutes = todaySchedule[i].time[0] * 60 + todaySchedule[i].time[1];
+                const classDuration = todaySchedule[i].duration;
+                const classEndMinutes = classStartMinutes + classDuration;
+
+                if (currentTimeInMinutes >= classStartMinutes && currentTimeInMinutes < classEndMinutes) {
+                    currentClass = todaySchedule[i].name;
+                    currentTeacher = todaySchedule[i].teacher;
+                    if (i + 1 < todaySchedule.length) {
+                        nextClass = todaySchedule[i + 1].name;
+                    }
+                    break;
                 }
+            }
 
-                const todaySchedule = schedule[dayOfWeek - 1]; // Lunes es 0 en el array
-                let currentClass = "¡Sin Clases!";
-                let currentTeacher = "Aún no empiezan o ya terminaron";
-                let nextClass = "No hay más clases hoy";
-
+            if (currentClass === "¡Sin Clases!") {
                 for (let i = 0; i < todaySchedule.length; i++) {
                     const classStartMinutes = todaySchedule[i].time[0] * 60 + todaySchedule[i].time[1];
-                    const classDuration = todaySchedule[i].name.includes("Receso") ? 20 : 75;
-                    const classEndMinutes = classStartMinutes + classDuration;
-
-                    if (currentTimeInMinutes >= classStartMinutes && currentTimeInMinutes < classEndMinutes) {
-                        currentClass = todaySchedule[i].name;
-                        currentTeacher = todaySchedule[i].teacher;
-                        if (i + 1 < todaySchedule.length) {
-                            nextClass = todaySchedule[i + 1].name;
-                        }
+                    if (currentTimeInMinutes < classStartMinutes) {
+                        nextClass = todaySchedule[i].name;
                         break;
                     }
                 }
-
-                if (currentClass === "¡Sin Clases!") {
-                    for (let i = 0; i < todaySchedule.length; i++) {
-                        const classStartMinutes = todaySchedule[i].time[0] * 60 + todaySchedule[i].time[1];
-                        if (currentTimeInMinutes < classStartMinutes) {
-                            nextClass = todaySchedule[i].name;
-                            break;
-                        }
-                    }
-                }
-
+            }
+            if (currentClass === "¡Sin Clases!" && nextClass === "No hay más clases hoy") {
+                currentClassDisplay.textContent = "¡Clases terminadas por hoy!";
+                teacherDisplay.textContent = "";
+            } else {
                 currentClassDisplay.textContent = currentClass;
                 teacherDisplay.textContent = currentTeacher;
-                nextClassDisplay.textContent = `Siguiente clase: ${nextClass}`;
-            } catch (error) {
-                console.error('Error al obtener la hora de la API:', error);
-                document.getElementById('current-class-display').textContent = "Error de conexión";
-                document.getElementById('teacher-display').textContent = "No se pudo obtener la hora. Intenta recargar.";
-                document.getElementById('next-class-display').textContent = "";
             }
+            
+            nextClassDisplay.textContent = `Siguiente clase: ${nextClass}`;
         }
 
-        updateSchedule(); // Actualiza al cargar la página
-        setInterval(updateSchedule, 60000); // Actualiza cada minuto para mayor precisión
+        let startTime = Date.now();
+        fetchTime().then(() => {
+            updateSchedule();
+            setInterval(updateSchedule, 10000); // Actualiza cada 10 segundos
+            setInterval(updateClock, 1000); // Actualiza el reloj cada segundo
+        });
+        
     </script>
 </body>
 </html>
