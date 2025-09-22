@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Horario Escolar</title>
     <style>
+        /* Version: 5 */
+        /* Changes: CSS fine-tuning to make the container and text smaller and prevent overflow. */
+
         body {
             font-family: Arial, sans-serif;
             display: flex;
@@ -21,42 +24,45 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 3em 2em; /* Se aumentó el padding para más espacio */
+            padding: 2em 1.5em; /* Reducido el padding para un recuadro más chico */
             background-color: #fff;
             border-radius: 15px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             position: relative;
+            max-width: 90%; /* Asegura que no sea demasiado grande en pantallas amplias */
         }
         #current-class-display {
-            font-size: 3em;
+            font-size: 2.5em; /* Tamaño de fuente más chico */
             font-weight: bold;
-            margin-bottom: 0.2em; /* Se redujo el margen */
+            margin-bottom: 0.1em;
             line-height: 1.2;
+            word-wrap: break-word;
         }
         #teacher-display {
-            font-size: 1.5em;
+            font-size: 1.3em; /* Tamaño de fuente más chico */
             color: #666;
-            margin-bottom: 1em;
+            margin-bottom: 0.8em;
         }
         #next-class-display {
             position: absolute;
             top: 10px;
             right: 10px;
-            font-size: 1em;
+            font-size: 0.9em;
             background-color: #e9e9e9;
             padding: 5px 10px;
             border-radius: 10px;
-            white-space: nowrap; /* Evita que el texto se parta en varias líneas */
+            white-space: nowrap;
         }
         @media (max-width: 600px) {
             .container {
                 width: 90%;
+                padding: 1.5em 1em; /* Padding más chico para móviles */
             }
             #current-class-display {
-                font-size: 2em;
+                font-size: 1.8em;
             }
             #teacher-display {
-                font-size: 1.2em;
+                font-size: 1em;
             }
         }
     </style>
@@ -69,107 +75,27 @@
     </div>
 
     <script>
-        // Version: 2
-        // Cambios: Se ajusta el CSS para evitar el amontonamiento y se corrige la lógica del horario.
-
-        const schedule = [
-            // Lunes
-            [
-                { time: [7, 0], name: "Cultura Digital I", teacher: "ARMENTA FELIX ANA CRISTINA" },
-                { time: [8, 20], name: "Ingles I", teacher: "FALCON OLIVOANI ANDREA MAREL" },
-                { time: [9, 45], name: "Receso de 20 min.", teacher: "¡A descansar!" }, // Añadido el receso
-                { time: [10, 5], name: "Ingles I", teacher: "FALCON OLIVOANI ANDREA MAREL" }, // Corregido tiempo
-                { time: [11, 30], name: "Humanidades I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
-                { time: [12, 55], name: "Lengua y Comunicación I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
-                { time: [14, 20], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO" },
-            ],
-            // Martes
-            [
-                { time: [8, 20], name: "Cultura Digital I", teacher: "ARMENTA FELIX ANA CRISTINA" },
-                { time: [9, 45], name: "Receso de 20 min.", teacher: "¡A descansar!" },
-                { time: [10, 5], name: "Lengua y Comunicación I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
-                { time: [11, 30], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO" },
-                { time: [12, 55], name: "Ingles I", teacher: "FALCON OLIVOANI ANDREA MAREL" },
-            ],
-            // Miércoles
-            [
-                { time: [9, 45], name: "Humanidades I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
-                { time: [10, 50], name: "Receso de 20 min.", teacher: "¡A descansar!" },
-                { time: [11, 10], name: "Humanidades I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
-                { time: [12, 35], name: "Pensamiento matematico I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA" },
-                { time: [14, 0], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO" },
-            ],
-            // Jueves
-            [
-                { time: [9, 45], name: "Humanidades I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
-                { time: [10, 50], name: "Receso de 20 min.", teacher: "¡A descansar!" },
-                { time: [11, 10], name: "Pensamiento matematico I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA" },
-                { time: [12, 35], name: "Pensamiento matematico I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA" },
-                { time: [14, 0], name: "Ciencias Sociales I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
-            ],
-            // Viernes
-            [
-                { time: [8, 20], name: "Formación socioemocional I", teacher: "CHAVEZ ARRIOLA LUIS MARIO" },
-                { time: [9, 45], name: "Receso de 20 min.", teacher: "¡A descansar!" },
-                { time: [10, 5], name: "Ciencias Sociales I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
-                { time: [11, 30], name: "Lengua y Comunicación I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
-                { time: [12, 55], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO" },
-                { time: [14, 20], name: "Pensamiento matematico I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA" },
-            ],
-        ];
-
-        const getScheduleData = () => {
-            const now = new Date();
-            const dayOfWeek = now.getDay();
-            const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
-
-            // Sábado o Domingo
-            if (dayOfWeek === 0 || dayOfWeek === 6) {
-                return { current: "¡Sin Clases!", next: "" };
-            }
-
-            const todaySchedule = schedule[dayOfWeek - 1]; // Ajusta el índice para que Lunes sea 0
-            let currentClass = "¡Sin Clases!";
-            let currentTeacher = "Aún no empiezan o ya terminaron";
-            let nextClass = "No hay más clases hoy";
-
-            for (let i = 0; i < todaySchedule.length; i++) {
-                const classStartMinutes = todaySchedule[i].time[0] * 60 + todaySchedule[i].time[1];
-                const classEndMinutes = classStartMinutes + (todaySchedule[i].name.includes("Receso") ? 20 : 75); // Receso de 20, clase de 75
-
-                if (currentTimeInMinutes >= classStartMinutes && currentTimeInMinutes < classEndMinutes) {
-                    currentClass = todaySchedule[i].name;
-                    currentTeacher = todaySchedule[i].teacher;
-                    if (i + 1 < todaySchedule.length) {
-                        nextClass = todaySchedule[i + 1].name;
-                    }
-                    break;
-                }
-            }
-            
-            // Si no se encontró una clase actual, busca la siguiente
-            if (currentClass === "¡Sin Clases!") {
-                for (let i = 0; i < todaySchedule.length; i++) {
-                    const classStartMinutes = todaySchedule[i].time[0] * 60 + todaySchedule[i].time[1];
-                    if (currentTimeInMinutes < classStartMinutes) {
-                        nextClass = todaySchedule[i].name;
-                        break;
-                    }
-                }
-            }
-
-            return { current: currentClass, teacher: currentTeacher, next: nextClass };
-        };
+        // Version: 5
+        // Changes: Fetch schedule data from Vercel Serverless API.
 
         const updateSchedule = () => {
-            const data = getScheduleData();
-            document.getElementById('current-class-display').textContent = data.current;
-            document.getElementById('teacher-display').textContent = data.teacher || "";
-            document.getElementById('next-class-display').textContent = `Siguiente clase: ${data.next}`;
+            fetch('/api/schedule')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('current-class-display').textContent = data.current.name;
+                    document.getElementById('teacher-display').textContent = data.current.teacher || "";
+                    document.getElementById('next-class-display').textContent = `Siguiente clase: ${data.next.name}`;
+                })
+                .catch(error => {
+                    console.error('Error al obtener el horario:', error);
+                    document.getElementById('current-class-display').textContent = "Error al cargar el horario";
+                    document.getElementById('teacher-display').textContent = "Intenta recargar la página.";
+                    document.getElementById('next-class-display').textContent = "";
+                });
         };
 
         updateSchedule();
-        setInterval(updateSchedule, 60000); // Actualiza cada minuto
+        setInterval(updateSchedule, 60000);
     </script>
 </body>
 </html>
