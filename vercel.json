@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/schedule.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/schedule",
+      "dest": "api/schedule.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "index.html"
+    }
+  ]
+}
