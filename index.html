@@ -249,7 +249,7 @@
 
             if (currentClass === "¡Sin Clases!") {
                 for (let i = 0; i < todaySchedule.length; i++) {
-                    const classStartMinutes = todaySchedule[i].time[0] * 00 + todaySchedule[i].time[1];
+                    const classStartMinutes = todaySchedule[i].time[0] * 60 + todaySchedule[i].time[1];
                     if (currentTimeInMinutes < classStartMinutes) {
                         nextClass = todaySchedule[i].name;
                         break;
