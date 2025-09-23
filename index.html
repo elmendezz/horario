@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Horario Escolar</title>
     <style>
-        /* Version: 13 */
-        /* Changes: Full schedule logic fix and final layout adjustments. */
+        /* Version: 17 */
+        /* Changelog:
+        - Version 16: Adjusted ALL schedules to correctly reflect the afternoon schedule and the 20-minute Receso starting at 14:15. This fixes the issue of the schedule showing an incorrect class at 4:12 PM.
+        - Version 17: Replaced the entire schedule with a new, corrected one provided by the user. The new schedule features classes of 50 minutes and a Receso from 3:00 PM to 3:20 PM. This should fix all previous time mismatches.
+        */
         
         body {
             font-family: Arial, sans-serif;
@@ -85,49 +88,61 @@
     <div id="clock"></div>
 
     <script>
-        // Version: 13
-        // Changes: Final bug fixes for schedule logic and final layout adjustments.
+        // Version: 17
+        // Changelog:
+        // - Version 16: Adjusted ALL schedules to correctly reflect the afternoon schedule and the 20-minute Receso starting at 14:15. This fixes the issue of the schedule showing an incorrect class at 4:12 PM.
+        // - Version 17: Replaced the entire schedule with a new, corrected one provided by the user. The new schedule features classes of 50 minutes and a Receso from 3:00 PM to 3:20 PM. This should fix all previous time mismatches.
         
         const schedule = [
             // Lunes (1)
             [
-                { time: [7, 0], name: "Cultura Digital I", teacher: "ARMENTA FELIX ANA CRISTINA", duration: 75 },
-                { time: [8, 25], name: "Ingles I", teacher: "FALCON OLIVOANI ANDREA MAREL", duration: 75 },
-                { time: [9, 50], name: "Receso de 20 min.", teacher: "¡A descansar!", duration: 20 },
-                { time: [10, 15], name: "Humanidades I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 75 },
-                { time: [11, 40], name: "Lengua y Comunicación I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 75 },
-                { time: [13, 5], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO", duration: 75 },
+                { time: [12, 20], name: "Cultura Digital I", teacher: "Armenta Felix Ana Cristina", duration: 50 },
+                { time: [13, 20], name: "Ingles I", teacher: "Falcón Olovanni Andrea Mariel", duration: 50 },
+                { time: [14, 10], name: "Ingles I", teacher: "Falcón Olovanni Andrea Mariel", duration: 50 },
+                { time: [15, 0], name: "Receso", teacher: "¡A descansar!", duration: 20 },
+                { time: [15, 20], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
+                { time: [16, 10], name: "Lengua y Comunicación I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
+                { time: [17, 0], name: "La Materia y sus Interacciones", teacher: "Vara López José Alberto", duration: 50 },
             ],
             // Martes (2)
             [
-                { time: [8, 20], name: "Cultura Digital I", teacher: "ARMENTA FELIX ANA CRISTINA", duration: 75 },
-                { time: [9, 45], name: "Receso de 20 min.", teacher: "¡A descansar!", duration: 20 },
-                { time: [10, 5], name: "Lengua y Comunicación I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 75 },
-                { time: [11, 30], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO", duration: 75 },
-                { time: [12, 55], name: "Ingles I", teacher: "FALCON OLIVOANI ANDREA MAREL", duration: 75 },
+                { time: [12, 20], name: "Cultura Digital I", teacher: "Armenta Felix Ana Cristina", duration: 50 },
+                { time: [13, 20], name: "Cultura Digital I", teacher: "Armenta Felix Ana Cristina", duration: 50 },
+                { time: [14, 10], name: "— (Libre)", teacher: "", duration: 50 },
+                { time: [15, 0], name: "Receso", teacher: "¡A descansar!", duration: 20 },
+                { time: [15, 20], name: "Lengua y Comunicación I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
+                { time: [16, 10], name: "La Materia y sus Interacciones", teacher: "Vara López José Alberto", duration: 50 },
+                { time: [17, 0], name: "Ingles I", teacher: "Falcón Olovanni Andrea Mariel", duration: 50 },
             ],
             // Miércoles (3)
             [
-                { time: [9, 45], name: "Humanidades I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 75 },
-                { time: [11, 10], name: "Humanidades I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 75 },
-                { time: [12, 35], name: "Pensamiento matematico I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA", duration: 75 },
-                { time: [14, 0], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO", duration: 75 },
+                { time: [12, 20], name: "— (Libre)", teacher: "", duration: 50 },
+                { time: [13, 20], name: "— (Libre)", teacher: "", duration: 50 },
+                { time: [14, 10], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
+                { time: [15, 0], name: "Receso", teacher: "¡A descansar!", duration: 20 },
+                { time: [15, 20], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
+                { time: [16, 10], name: "Pensamiento Matemático I", teacher: "Hernández Vargas Keina Yovanna", duration: 50 },
+                { time: [17, 0], name: "La Materia y sus Interacciones", teacher: "Vara López José Alberto", duration: 50 },
             ],
             // Jueves (4)
             [
-                { time: [9, 45], name: "Humanidades I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 75 },
-                { time: [11, 10], name: "Pensamiento matematico I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA", duration: 75 },
-                { time: [12, 35], name: "Pensamiento matematico I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA", duration: 75 },
-                { time: [14, 0], name: "Ciencias Sociales I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 75 },
+                { time: [12, 20], name: "— (Libre)", teacher: "", duration: 50 },
+                { time: [13, 20], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
+                { time: [14, 10], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
+                { time: [15, 0], name: "Receso", teacher: "¡A descansar!", duration: 20 },
+                { time: [15, 20], name: "Pensamiento Matemático I", teacher: "Hernández Vargas Keina Yovanna", duration: 50 },
+                { time: [16, 10], name: "Pensamiento Matemático I", teacher: "Hernández Vargas Keina Yovanna", duration: 50 },
+                { time: [17, 0], name: "Ciencias Sociales I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
             ],
             // Viernes (5)
             [
-                { time: [13, 20], name: "Formación socioemocional I", teacher: "CHAVEZ ARRIOLA LUIS MARIO", duration: 50 },
-                { time: [14, 10], name: "Receso de 20 min.", teacher: "¡A descansar!", duration: 20 },
-                { time: [14, 30], name: "Ciencias Sociales I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 50 },
-                { time: [15, 20], name: "Lengua y Comunicación I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 50 },
-                { time: [16, 10], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO", duration: 50 },
-                { time: [17, 0], name: "Pensamiento matematico I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA", duration: 50 },
+                { time: [12, 20], name: "Formación Socioemocional I", teacher: "Chávez Arriola Luis Mario", duration: 50 },
+                { time: [13, 20], name: "Ciencias Sociales I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
+                { time: [14, 10], name: "Ciencias Sociales I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
+                { time: [15, 0], name: "Receso", teacher: "¡A descansar!", duration: 20 },
+                { time: [15, 20], name: "Lengua y Comunicación I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
+                { time: [16, 10], name: "La Materia y sus Interacciones", teacher: "Vara López José Alberto", duration: 50 },
+                { time: [17, 0], name: "Pensamiento Matemático I", teacher: "Hernández Vargas Keina Yovanna", duration: 50 },
             ],
         ];
 
@@ -182,10 +197,12 @@
             }
 
             const todaySchedule = schedule[dayOfWeek - 1];
-            let currentClass = "¡Sin Clases!";
-            let currentTeacher = "Aún no empiezan o ya terminaron";
+            let currentClass = "Aún no empiezan las clases";
+            let currentTeacher = "";
             let nextClass = "No hay más clases hoy";
 
+            // Encuentra la clase actual y la siguiente
+            let foundCurrent = false;
             for (let i = 0; i < todaySchedule.length; i++) {
                 const classStartMinutes = todaySchedule[i].time[0] * 60 + todaySchedule[i].time[1];
                 const classDuration = todaySchedule[i].duration;
@@ -194,14 +211,18 @@
                 if (currentTimeInMinutes >= classStartMinutes && currentTimeInMinutes < classEndMinutes) {
                     currentClass = todaySchedule[i].name;
                     currentTeacher = todaySchedule[i].teacher;
+                    foundCurrent = true;
                     if (i + 1 < todaySchedule.length) {
                         nextClass = todaySchedule[i + 1].name;
+                    } else {
+                        nextClass = "Clases terminadas por hoy";
                     }
                     break;
                 }
             }
-
-            if (currentClass === "¡Sin Clases!") {
+            
+            // Si no se encontró una clase actual, busca la siguiente
+            if (!foundCurrent) {
                 for (let i = 0; i < todaySchedule.length; i++) {
                     const classStartMinutes = todaySchedule[i].time[0] * 60 + todaySchedule[i].time[1];
                     if (currentTimeInMinutes < classStartMinutes) {
@@ -209,15 +230,24 @@
                         break;
                     }
                 }
+                
+                // Si la hora actual es después del final de la última clase
+                const lastClassEndMinutes = todaySchedule[todaySchedule.length - 1].time[0] * 60 + todaySchedule[todaySchedule.length - 1].duration;
+                if (currentTimeInMinutes >= lastClassEndMinutes) {
+                    currentClass = "¡Clases terminadas por hoy!";
+                    currentTeacher = "";
+                    nextClass = "";
+                }
             }
-            if (currentClass === "¡Sin Clases!" && currentTimeInMinutes > (todaySchedule[todaySchedule.length - 1].time[0] * 60 + todaySchedule[todaySchedule.length - 1].duration)) {
-                currentClassDisplay.textContent = "¡Clases terminadas por hoy!";
-                teacherDisplay.textContent = "";
-                nextClassDisplay.textContent = "";
-            } else {
-                currentClassDisplay.textContent = currentClass;
-                teacherDisplay.textContent = currentTeacher;
+
+            // Actualiza el display
+            currentClassDisplay.textContent = currentClass;
+            teacherDisplay.textContent = currentTeacher;
+            
+            if (nextClass) {
                 nextClassDisplay.textContent = `Siguiente clase: ${nextClass}`;
+            } else {
+                nextClassDisplay.textContent = "";
             }
         }
 
@@ -226,7 +256,6 @@
             setInterval(updateSchedule, 10000);
             setInterval(updateClock, 100);
         });
-        
     </script>
 </body>
 </html>
