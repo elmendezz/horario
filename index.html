@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Horario Escolar</title>
     <style>
-        /* Version: 22 */
+        /* Versión: 23 */
         /* Changelog:
         - Version 17: Nuevo horario corregido.
         - Version 18: "Siguiente clase" movido fuera del contenedor.
@@ -13,7 +13,26 @@
         - Version 20: "Siguiente clase" ahora es un botón que redirige a horario.jpg.
         - Version 21: Se agregó un contador para la próxima clase del siguiente día hábil.
         - Version 22: Se corrigió un error que causaba que el contador no apareciera al final del día. Ahora calcula correctamente la próxima clase del siguiente día hábil.
+        - Version 23: Se añadió un botón para alternar entre el tema claro y oscuro, con persistencia a través del almacenamiento local.
         */
+        
+        :root {
+            --bg-color: #f0f0f0;
+            --text-color: #333;
+            --container-bg: #fff;
+            --container-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            --next-class-bg: #4CAF50;
+            --next-class-hover-bg: #45a049;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --container-bg: #1e1e1e;
+            --container-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            --next-class-bg: #6200ea;
+            --next-class-hover-bg: #3700b3;
+        }
         
         body {
             font-family: Arial, sans-serif;
@@ -23,10 +42,11 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #f0f0f0;
-            color: #333;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             text-align: center;
             padding: 1em;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         .container {
             display: flex;
@@ -34,12 +54,13 @@
             justify-content: center;
             align-items: center;
             padding: 2em 1.5em;
-            background-color: #fff;
+            background-color: var(--container-bg);
             border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--container-shadow);
             position: relative;
             max-width: 90%;
             margin-bottom: 1em;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
         }
         #current-class-display {
             font-size: 2.5em;
@@ -50,14 +71,14 @@
         }
         #teacher-display {
             font-size: 1.3em;
-            color: #666;
+            color: var(--text-color);
             margin-bottom: 0.8em;
         }
         #next-class-display {
             font-size: 0.9em;
             padding: 8px 14px;
             border-radius: 12px;
-            background-color: #4CAF50;
+            background-color: var(--next-class-bg);
             color: white;
             cursor: pointer;
             border: none;
@@ -68,18 +89,29 @@
             transition: background-color 0.2s ease;
         }
         #next-class-display:hover {
-            background-color: #45a049;
+            background-color: var(--next-class-hover-bg);
         }
         #clock {
             font-size: 1.5em;
             font-weight: bold;
-            color: #555;
+            color: var(--text-color);
             margin-top: 1em;
         }
         #countdown {
             font-size: 1.2em;
-            color: #444;
+            color: var(--text-color);
             margin-top: 0.5em;
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 1em;
+            right: 1em;
+            font-size: 1.5em;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: var(--text-color);
+            transition: color 0.3s ease;
         }
         @media (max-width: 600px) {
             .container {
@@ -96,6 +128,7 @@
     </style>
 </head>
 <body>
+    <button id="theme-toggle" aria-label="Cambiar tema">🌑</button>
     <button id="next-class-display">Siguiente clase: Cargando...</button>
     <div class="container">
         <div id="current-class-display">Cargando horario...</div>
@@ -105,9 +138,8 @@
     <div id="countdown"></div>
 
     <script>
-        // Version: 22
-        // "Siguiente clase" es botón que redirige a horario.jpg.
-        // Se corrigió la lógica del contador para la próxima clase del siguiente día hábil.
+        // Versión: 23
+        // Se agregó la funcionalidad para cambiar entre tema claro y oscuro, con persistencia.
 
         const schedule = [
             // Lunes (1)
@@ -145,7 +177,7 @@
                 { time: [12, 20], name: "— (Libre)", teacher: "", duration: 50 },
                 { time: [13, 20], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
                 { time: [14, 10], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
-                { time: [15, 0], name: "Receso", teacher: "¡A descansar!", duration: 20 },
+                { time: [15, 0], name: "Receso", teacher: "¡A descansar!", duration: 2.0 },
                 { time: [15, 20], name: "Pensamiento Matemático I", teacher: "Hernández Vargas Keina Yovanna", duration: 50 },
                 { time: [16, 10], name: "Pensamiento Matemático I", teacher: "Hernández Vargas Keina Yovanna", duration: 50 },
                 { time: [17, 0], name: "Ciencias Sociales I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
@@ -248,7 +280,21 @@
             if (dayOfWeek === 0 || dayOfWeek === 6) {
                 currentClassDisplay.textContent = "¡Sin Clases!";
                 teacherDisplay.textContent = "Disfruta el fin de semana";
-                nextClassDisplay.textContent = "Siguiente clase: Ninguna";
+                
+                // Lógica para el contador de la próxima clase del lunes
+                const nextDayIndex = 1; // Lunes
+                const nextDaySchedule = schedule[nextDayIndex - 1];
+                const nextClassTime = nextDaySchedule[0].time;
+                nextClass = nextDaySchedule[0].name;
+
+                const nextClassStart = new Date(now);
+                nextClassStart.setDate(nextClassStart.getDate() + (nextDayIndex - dayOfWeek + 7) % 7);
+                nextClassStart.setHours(nextClassTime[0], nextClassTime[1], 0, 0);
+                
+                countdownEl.dataset.nextClassStart = nextClassStart.toISOString();
+
+                nextClassDisplay.textContent = `Siguiente clase: ${nextClass}`;
+
                 return;
             }
 
@@ -297,17 +343,15 @@
                     let nextDayIndex = 0;
                     let foundNextDay = false;
                     
-                    // Buscar el siguiente día hábil (de lunes a viernes)
                     for (let i = 1; i < 8; i++) {
                         nextDayIndex = (dayOfWeek + i) % 7;
-                        if (nextDayIndex >= 1 && nextDayIndex <= 5) { // Lunes (1) a Viernes (5)
+                        if (nextDayIndex >= 1 && nextDayIndex <= 5) {
                             if (schedule[nextDayIndex - 1] && schedule[nextDayIndex - 1].length > 0) {
                                 foundNextDay = true;
                                 const nextDaySchedule = schedule[nextDayIndex - 1];
                                 const nextClassTime = nextDaySchedule[0].time;
                                 nextClass = nextDaySchedule[0].name;
 
-                                // Calcular el tiempo de inicio de la próxima clase
                                 const nextClassStart = new Date(now);
                                 nextClassStart.setDate(nextClassStart.getDate() + i);
                                 nextClassStart.setHours(nextClassTime[0], nextClassTime[1], 0, 0);
@@ -329,6 +373,25 @@
             
             nextClassDisplay.textContent = nextClass ? `Siguiente clase: ${nextClass}` : "Siguiente clase: Ninguna";
         }
+
+        // Lógica del tema oscuro/claro
+        const themeToggle = document.getElementById('theme-toggle');
+        const htmlElement = document.documentElement;
+
+        // Cargar el tema guardado
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            htmlElement.dataset.theme = savedTheme;
+            themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌑';
+        }
+
+        themeToggle.addEventListener('click', () => {
+            let currentTheme = htmlElement.dataset.theme;
+            let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            htmlElement.dataset.theme = newTheme;
+            localStorage.setItem('theme', newTheme);
+            themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌑';
+        });
 
         // Hacer que el botón abra la imagen horario.jpg
         document.getElementById('next-class-display').addEventListener('click', () => {
