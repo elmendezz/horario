@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Horario 1CV</title>
     <style>
-        /* Versión: 26 */
+        /* Versión: 27 */
         /* Changelog:
         - Version 17: Nuevo horario corregido.
         - Version 18: "Siguiente clase" movido fuera del contenedor.
@@ -17,6 +17,7 @@
         - Version 24: El modo oscuro es ahora el tema predeterminado al cargar la página por primera vez.
         - Version 25: Se modificó el contador nocturno para que muestre "Próxima clase a las" seguido de la hora de inicio de la primera clase del siguiente día hábil y el tiempo restante.
         - Version 26: Se añadió un salto de línea en el contador del tiempo restante para una presentación más formal.
+        - Version 27: Se agregó la notación de 12 horas (AM/PM) a la hora de la próxima clase para una mejor legibilidad.
         */
         
         :root {
@@ -141,8 +142,9 @@
     <div id="countdown"></div>
 
     <script>
-        // Versión: 26
+        // Versión: 27
         // Changelog:
+        // - Version 27: Se agregó la notación de 12 horas (AM/PM) a la hora de la próxima clase para una mejor legibilidad.
         // - Version 26: Se añadió un salto de línea en el contador del tiempo restante para una presentación más formal.
         // - Version 25: Se modificó el contador nocturno para que muestre "Próxima clase a las" seguido de la hora de inicio de la primera clase del siguiente día hábil y el tiempo restante.
         // - Version 24: El modo oscuro es ahora el tema predeterminado al cargar la página por primera vez.
@@ -252,15 +254,17 @@
                         const secondsLeft = Math.floor((diff % (1000 * 60)) / 1000);
                         
                         let countdownText = "Tiempo restante:";
-                        if (days > 0) countdownText += `${days}d `;
-                        countdownText += `${hoursLeft}h ${minutesLeft}m ${secondsLeft}s`;
+                        if (days > 0) countdownText += ` ${days}d`;
+                        countdownText += ` ${hoursLeft}h ${minutesLeft}m ${secondsLeft}s`;
                         
-                        // Nuevo formato con salto de línea
-                        if (nextClassTimeDisplay) {
-                            countdownEl.innerHTML = `Próxima clase a las ${nextClassTimeDisplay} <br> ${countdownText}`;
-                        } else {
-                            countdownEl.innerHTML = `Próxima clase... <br> ${countdownText}`;
-                        }
+                        const nextClassHours = nextClassStartTime.getHours();
+                        const nextClassMinutes = String(nextClassStartTime.getMinutes()).padStart(2, '0');
+                        const nextClassAmPm = nextClassHours >= 12 ? 'PM' : 'AM';
+                        const displayHours = nextClassHours % 12 || 12;
+                        
+                        const fullNextClassTime = `${displayHours}:${nextClassMinutes} ${nextClassAmPm}`;
+
+                        countdownEl.innerHTML = `Próxima clase a las ${fullNextClassTime}<br>${countdownText}`;
 
                     } else {
                         countdownEl.textContent = "";
