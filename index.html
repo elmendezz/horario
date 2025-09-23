@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Horario Escolar</title>
     <style>
-        /* Version: 18 */
+        /* Version: 19 */
         /* Changelog:
-        - Version 17: Replaced the entire schedule with a new, corrected one provided by the user. The new schedule features classes of 50 minutes and a Receso from 3:00 PM to 3:20 PM. This should fix all previous time mismatches.
-        - Version 18: Restructured the HTML to move the "Siguiente clase" display outside of the main container and used CSS to position it above the main class display card, as requested by the user.
+        - Version 17: Nuevo horario corregido.
+        - Version 18: "Siguiente clase" movido fuera del contenedor.
+        - Version 19: Se añadió un contador de cuánto tiempo falta para que termine la clase actual.
         */
         
         body {
@@ -66,6 +67,11 @@
             color: #555;
             margin-top: 1em;
         }
+        #countdown {
+            font-size: 1.2em;
+            color: #444;
+            margin-top: 0.5em;
+        }
         @media (max-width: 600px) {
             .container {
                 width: 90%;
@@ -87,12 +93,11 @@
         <div id="teacher-display"></div>
     </div>
     <div id="clock"></div>
+    <div id="countdown"></div>
 
     <script>
-        // Version: 18
-        // Changelog:
-        // - Version 17: Replaced the entire schedule with a new, corrected one provided by the user. The new schedule features classes of 50 minutes and a Receso from 3:00 PM to 3:20 PM. This should fix all previous time mismatches.
-        // - Version 18: Restructured the HTML to move the "Siguiente clase" display outside of the main container and used CSS to position it above the main class display card, as requested by the user.
+        // Version: 19
+        // Se añadió un contador regresivo hasta que termine la clase actual.
 
         const schedule = [
             // Lunes (1)
@@ -149,6 +154,7 @@
 
         let serverTime = null;
         let startTime = Date.now();
+        let currentClassEnd = null;
 
         async function fetchTime() {
             try {
@@ -158,7 +164,7 @@
                 serverTime = new Date(data.datetime);
             } catch (error) {
                 console.error('Error fetching time from API:', error);
-                serverTime = new Date(); // Fallback to local time
+                serverTime = new Date(); // Fallback
             }
         }
         
@@ -172,9 +178,23 @@
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
             const am_pm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12;
-            hours = hours ? hours : 12;
+            hours = hours % 12 || 12;
             document.getElementById('clock').textContent = `Hora: ${hours}:${minutes}:${seconds} ${am_pm}`;
+
+            // Actualizar contador
+            const countdownEl = document.getElementById('countdown');
+            if (currentClassEnd) {
+                const diff = currentClassEnd - now;
+                if (diff > 0) {
+                    const mins = Math.floor(diff / 60000);
+                    const secs = Math.floor((diff % 60000) / 1000);
+                    countdownEl.textContent = `Faltan: ${mins}m ${secs}s para terminar`;
+                } else {
+                    countdownEl.textContent = "Clase finalizada";
+                }
+            } else {
+                countdownEl.textContent = "";
+            }
         }
         
         function updateSchedule() {
@@ -190,6 +210,8 @@
             const teacherDisplay = document.getElementById('teacher-display');
             const nextClassDisplay = document.getElementById('next-class-display');
 
+            currentClassEnd = null;
+
             if (dayOfWeek === 0 || dayOfWeek === 6) {
                 currentClassDisplay.textContent = "¡Sin Clases!";
                 teacherDisplay.textContent = "Disfruta el fin de semana";
@@ -202,7 +224,6 @@
             let currentTeacher = "";
             let nextClass = "No hay más clases hoy";
 
-            // Encuentra la clase actual y la siguiente
             let foundCurrent = false;
             for (let i = 0; i < todaySchedule.length; i++) {
                 const classStartMinutes = todaySchedule[i].time[0] * 60 + todaySchedule[i].time[1];
@@ -213,6 +234,10 @@
                     currentClass = todaySchedule[i].name;
                     currentTeacher = todaySchedule[i].teacher;
                     foundCurrent = true;
+
+                    currentClassEnd = new Date(now);
+                    currentClassEnd.setHours(Math.floor(classEndMinutes / 60), classEndMinutes % 60, 0, 0);
+
                     if (i + 1 < todaySchedule.length) {
                         nextClass = todaySchedule[i + 1].name;
                     } else {
@@ -222,7 +247,6 @@
                 }
             }
             
-            // Si no se encontró una clase actual, busca la siguiente
             if (!foundCurrent) {
                 for (let i = 0; i < todaySchedule.length; i++) {
                     const classStartMinutes = todaySchedule[i].time[0] * 60 + todaySchedule[i].time[1];
@@ -231,8 +255,6 @@
                         break;
                     }
                 }
-                
-                // Si la hora actual es después del final de la última clase
                 const lastClassEndMinutes = todaySchedule[todaySchedule.length - 1].time[0] * 60 + todaySchedule[todaySchedule.length - 1].duration;
                 if (currentTimeInMinutes >= lastClassEndMinutes) {
                     currentClass = "¡Clases terminadas por hoy!";
@@ -241,21 +263,16 @@
                 }
             }
 
-            // Actualiza el display
             currentClassDisplay.textContent = currentClass;
             teacherDisplay.textContent = currentTeacher;
             
-            if (nextClass) {
-                nextClassDisplay.textContent = `Siguiente clase: ${nextClass}`;
-            } else {
-                nextClassDisplay.textContent = "";
-            }
+            nextClassDisplay.textContent = nextClass ? `Siguiente clase: ${nextClass}` : "";
         }
 
         fetchTime().then(() => {
             updateSchedule();
             setInterval(updateSchedule, 10000);
-            setInterval(updateClock, 100);
+            setInterval(updateClock, 1000);
         });
     </script>
 </body>
