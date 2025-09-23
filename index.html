@@ -5,12 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Horario Escolar</title>
     <style>
-        /* Version: 21 */
+        /* Version: 22 */
         /* Changelog:
-        - Version 20: "Siguiente clase" en botón que abre horario.jpg.
-        - Version 21: Modo oscuro + contador hacia la siguiente clase cuando no hay clase actual.
+        - Version 17: Nuevo horario corregido.
+        - Version 18: "Siguiente clase" movido fuera del contenedor.
+        - Version 19: Se añadió contador regresivo.
+        - Version 20: "Siguiente clase" ahora es un botón que redirige a horario.jpg.
+        - Version 21: Se agregó un contador para la próxima clase del siguiente día hábil.
+        - Version 22: Se corrigió un error que causaba que el contador no apareciera al final del día. Ahora calcula correctamente la próxima clase del siguiente día hábil.
         */
-
+        
         body {
             font-family: Arial, sans-serif;
             display: flex;
@@ -19,8 +23,8 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #121212; /* Modo oscuro */
-            color: #e0e0e0;
+            background-color: #f0f0f0;
+            color: #333;
             text-align: center;
             padding: 1em;
         }
@@ -30,29 +34,28 @@
             justify-content: center;
             align-items: center;
             padding: 2em 1.5em;
-            background-color: #1e1e1e;
+            background-color: #fff;
             border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             position: relative;
             max-width: 90%;
             margin-bottom: 1em;
         }
         #current-class-display {
-            font-size: 2.2em;
+            font-size: 2.5em;
             font-weight: bold;
-            margin-bottom: 0.2em;
+            margin-bottom: 0.1em;
             line-height: 1.2;
             word-wrap: break-word;
-            color: #fff;
         }
         #teacher-display {
-            font-size: 1.2em;
-            color: #aaa;
+            font-size: 1.3em;
+            color: #666;
             margin-bottom: 0.8em;
         }
         #next-class-display {
-            font-size: 1em;
-            padding: 10px 18px;
+            font-size: 0.9em;
+            padding: 8px 14px;
             border-radius: 12px;
             background-color: #4CAF50;
             color: white;
@@ -68,19 +71,14 @@
             background-color: #45a049;
         }
         #clock {
-            font-size: 1.4em;
+            font-size: 1.5em;
             font-weight: bold;
-            color: #bbb;
+            color: #555;
             margin-top: 1em;
         }
         #countdown {
             font-size: 1.2em;
-            color: #ddd;
-            margin-top: 0.5em;
-        }
-        #next-countdown {
-            font-size: 1.1em;
-            color: #aaa;
+            color: #444;
             margin-top: 0.5em;
         }
         @media (max-width: 600px) {
@@ -105,11 +103,11 @@
     </div>
     <div id="clock"></div>
     <div id="countdown"></div>
-    <div id="next-countdown"></div>
 
     <script>
-        // Version: 21
-        // Modo oscuro + contador de la siguiente clase (solo fuera de clase actual).
+        // Version: 22
+        // "Siguiente clase" es botón que redirige a horario.jpg.
+        // Se corrigió la lógica del contador para la próxima clase del siguiente día hábil.
 
         const schedule = [
             // Lunes (1)
@@ -167,7 +165,6 @@
         let serverTime = null;
         let startTime = Date.now();
         let currentClassEnd = null;
-        let nextClassStart = null;
 
         async function fetchTime() {
             try {
@@ -195,32 +192,39 @@
             document.getElementById('clock').textContent = `Hora: ${hours}:${minutes}:${seconds} ${am_pm}`;
 
             const countdownEl = document.getElementById('countdown');
-            const nextCountdownEl = document.getElementById('next-countdown');
-
             if (currentClassEnd) {
                 const diff = currentClassEnd - now;
                 if (diff > 0) {
                     const mins = Math.floor(diff / 60000);
                     const secs = Math.floor((diff % 60000) / 1000);
-                    countdownEl.textContent = `⏳ Tiempo restante de clase: ${mins}m ${secs}s`;
+                    countdownEl.textContent = `Faltan: ${mins}m ${secs}s para terminar`;
                 } else {
                     countdownEl.textContent = "Clase finalizada";
                 }
             } else {
-                countdownEl.textContent = "";
-            }
-
-            if (!currentClassEnd && nextClassStart) {
-                const diff = nextClassStart - now;
-                if (diff > 0) {
-                    const mins = Math.floor(diff / 60000);
-                    const secs = Math.floor((diff % 60000) / 1000);
-                    nextCountdownEl.textContent = `⏭️ Falta para la siguiente clase: ${mins}m ${secs}s`;
+                // Lógica del nuevo contador para la siguiente clase
+                const nextClassStartTime = countdownEl.dataset.nextClassStart ? new Date(countdownEl.dataset.nextClassStart) : null;
+                if (nextClassStartTime) {
+                    const diff = nextClassStartTime - now;
+                    if (diff > 0) {
+                        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                        
+                        let countdownText = "Próxima clase en: ";
+                        if (days > 0) countdownText += `${days}d `;
+                        countdownText += `${hours}h ${minutes}m ${seconds}s`;
+                        
+                        countdownEl.textContent = countdownText;
+                    } else {
+                        countdownEl.textContent = "";
+                        // Limpiamos el dataset una vez que el contador llega a 0 o pasa
+                        countdownEl.dataset.nextClassStart = "";
+                    }
                 } else {
-                    nextCountdownEl.textContent = "";
+                    countdownEl.textContent = "";
                 }
-            } else {
-                nextCountdownEl.textContent = "";
             }
         }
         
@@ -236,9 +240,10 @@
             const currentClassDisplay = document.getElementById('current-class-display');
             const teacherDisplay = document.getElementById('teacher-display');
             const nextClassDisplay = document.getElementById('next-class-display');
+            const countdownEl = document.getElementById('countdown');
 
             currentClassEnd = null;
-            nextClassStart = null;
+            countdownEl.dataset.nextClassStart = "";
 
             if (dayOfWeek === 0 || dayOfWeek === 6) {
                 currentClassDisplay.textContent = "¡Sin Clases!";
@@ -250,7 +255,7 @@
             const todaySchedule = schedule[dayOfWeek - 1];
             let currentClass = "Aún no empiezan las clases";
             let currentTeacher = "";
-            let nextClass = "No hay más clases hoy";
+            let nextClass = "";
 
             let foundCurrent = false;
             for (let i = 0; i < todaySchedule.length; i++) {
@@ -268,8 +273,6 @@
 
                     if (i + 1 < todaySchedule.length) {
                         nextClass = todaySchedule[i + 1].name;
-                        nextClassStart = new Date(now);
-                        nextClassStart.setHours(todaySchedule[i + 1].time[0], todaySchedule[i + 1].time[1], 0, 0);
                     } else {
                         nextClass = "Clases terminadas por hoy";
                     }
@@ -282,8 +285,6 @@
                     const classStartMinutes = todaySchedule[i].time[0] * 60 + todaySchedule[i].time[1];
                     if (currentTimeInMinutes < classStartMinutes) {
                         nextClass = todaySchedule[i].name;
-                        nextClassStart = new Date(now);
-                        nextClassStart.setHours(todaySchedule[i].time[0], todaySchedule[i].time[1], 0, 0);
                         break;
                     }
                 }
@@ -291,7 +292,35 @@
                 if (currentTimeInMinutes >= lastClassEndMinutes) {
                     currentClass = "¡Clases terminadas por hoy!";
                     currentTeacher = "";
-                    nextClass = "";
+                    
+                    // Lógica para encontrar la próxima clase del siguiente día hábil
+                    let nextDayIndex = 0;
+                    let foundNextDay = false;
+                    
+                    // Buscar el siguiente día hábil (de lunes a viernes)
+                    for (let i = 1; i < 8; i++) {
+                        nextDayIndex = (dayOfWeek + i) % 7;
+                        if (nextDayIndex >= 1 && nextDayIndex <= 5) { // Lunes (1) a Viernes (5)
+                            if (schedule[nextDayIndex - 1] && schedule[nextDayIndex - 1].length > 0) {
+                                foundNextDay = true;
+                                const nextDaySchedule = schedule[nextDayIndex - 1];
+                                const nextClassTime = nextDaySchedule[0].time;
+                                nextClass = nextDaySchedule[0].name;
+
+                                // Calcular el tiempo de inicio de la próxima clase
+                                const nextClassStart = new Date(now);
+                                nextClassStart.setDate(nextClassStart.getDate() + i);
+                                nextClassStart.setHours(nextClassTime[0], nextClassTime[1], 0, 0);
+                                
+                                countdownEl.dataset.nextClassStart = nextClassStart.toISOString();
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!foundNextDay) {
+                        nextClass = "No hay clases próximamente";
+                    }
                 }
             }
 
@@ -301,7 +330,7 @@
             nextClassDisplay.textContent = nextClass ? `Siguiente clase: ${nextClass}` : "Siguiente clase: Ninguna";
         }
 
-        // Botón que abre horario.jpg
+        // Hacer que el botón abra la imagen horario.jpg
         document.getElementById('next-class-display').addEventListener('click', () => {
             window.location.href = "horario.jpg";
         });
