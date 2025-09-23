@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horario 1CV</title>
+    <style>
+        /* Versión: 25 */
+        /* Changelog:
+        - Version 17: Nuevo horario corregido.
+        - Version 18: "Siguiente clase" movido fuera del contenedor.
+        - Version 19: Se añadió contador regresivo.
+        - Version 20: "Siguiente clase" ahora es un botón que redirige a horario.jpg.
+        - Version 21: Se agregó un contador para la próxima clase del siguiente día hábil.
+        - Version 22: Se corrigió un error que causaba que el contador no apareciera al final del día. Ahora calcula correctamente la próxima clase del siguiente día hábil.
+        - Version 23: Se añadió un botón para alternar entre el tema claro y oscuro, con persistencia a través del almacenamiento local.
+        - Version 24: El modo oscuro es ahora el tema predeterminado al cargar la página por primera vez.
+        - Version 25: Se modificó el contador nocturno para que muestre "Próxima clase a las" seguido de la hora de inicio de la primera clase del siguiente día hábil y el tiempo restante.
+        */
+        
+        :root {
+            --bg-color: #f0f0f0;
+            --text-color: #333;
+            --container-bg: #fff;
+            --container-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            --next-class-bg: #4CAF50;
+            --next-class-hover-bg: #45a049;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --container-bg: #1e1e1e;
+            --container-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            --next-class-bg: #6200ea;
+            --next-class-hover-bg: #3700b3;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            text-align: center;
+            padding: 1em;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2em 1.5em;
+            background-color: var(--container-bg);
+            border-radius: 15px;
+            box-shadow: var(--container-shadow);
+            position: relative;
+            max-width: 90%;
+            margin-bottom: 1em;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        #current-class-display {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 0.1em;
+            line-height: 1.2;
+            word-wrap: break-word;
+        }
+        #teacher-display {
+            font-size: 1.1em;
+            color: var(--text-color);
+            margin-bottom: 0.8em;
+        }
+        #next-class-display {
+            font-size: 0.8em;
+            padding: 8px 14px;
+            border-radius: 12px;
+            background-color: var(--next-class-bg);
+            color: white;
+            cursor: pointer;
+            border: none;
+            margin-bottom: 0px;
+            z-index: 1;
+            position: relative;
+            transform: translateY(15px);
+            transition: background-color 0.2s ease;
+        }
+        #next-class-display:hover {
+            background-color: var(--next-class-hover-bg);
+        }
+        #clock {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--text-color);
+            margin-top: 1em;
+        }
+        #countdown {
+            font-size: 1.2em;
+            color: var(--text-color);
+            margin-top: 0.5em;
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 1em;
+            right: 1em;
+            font-size: 1.5em;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: var(--text-color);
+            transition: color 0.3s ease;
+        }
+        @media (max-width: 600px) {
+            .container {
+                width: 90%;
+                padding: 1.5em 1em;
+            }
+            #current-class-display {
+                font-size: 1.8em;
+            }
+            #teacher-display {
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button id="theme-toggle" aria-label="Cambiar tema">🌑</button>
+    <button id="next-class-display">Siguiente clase: Cargando...</button>
+    <div class="container">
+        <div id="current-class-display">Cargando horario...</div>
+        <div id="teacher-display"></div>
+    </div>
+    <div id="clock"></div>
+    <div id="countdown"></div>
+
+    <script>
+        // Versión: 25
+        // Changelog:
+        // - Version 25: Se modificó el contador nocturno para que muestre "Próxima clase a las" seguido de la hora de inicio de la primera clase del siguiente día hábil y el tiempo restante.
+        // - Version 24: El modo oscuro es ahora el tema predeterminado al cargar la página por primera vez.
+        
+        const schedule = [
+            // Lunes (1)
+            [
+                { time: [12, 20], name: "Cultura Digital I", teacher: "Armenta Felix Ana Cristina", duration: 50 },
+                { time: [13, 20], name: "Ingles I", teacher: "Falcón Olovanni Andrea Mariel", duration: 50 },
+                { time: [14, 10], name: "Ingles I", teacher: "Falcón Olovanni Andrea Mariel", duration: 50 },
+                { time: [15, 0], name: "Receso", teacher: "Pausa De 20 Minutos.", duration: 20 },
+                { time: [15, 20], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
+                { time: [16, 10], name: "Lengua y Comunicación I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
+                { time: [17, 0], name: "La Materia y sus Interacciones", teacher: "Vara López José Alberto", duration: 50 },
+            ],
+            // Martes (2)
+            [
+                { time: [12, 20], name: "Cultura Digital I", teacher: "Armenta Felix Ana Cristina", duration: 50 },
+                { time: [13, 20], name: "Cultura Digital I", teacher: "Armenta Felix Ana Cristina", duration: 50 },
+                { time: [14, 10], name: "— (Libre)", teacher: "", duration: 50 },
+                { time: [15, 0], name: "Receso", teacher: "Pausa De 20 Minutos.", duration: 20 },
+                { time: [15, 20], name: "Lengua y Comunicación I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
+                { time: [16, 10], name: "La Materia y sus Interacciones", teacher: "Vara López José Alberto", duration: 50 },
+                { time: [17, 0], name: "Ingles I", teacher: "Falcón Olovanni Andrea Mariel", duration: 50 },
+            ],
+            // Miércoles (3)
+            [
+                { time: [12, 20], name: "— (Libre)", teacher: "", duration: 50 },
+                { time: [13, 20], name: "— (Libre)", teacher: "", duration: 50 },
+                { time: [14, 10], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
+                { time: [15, 0], name: "Receso", teacher: "Pausa De 20 Minutos.", duration: 20 },
+                { time: [15, 20], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
+                { time: [16, 10], name: "Pensamiento Matemático I", teacher: "Hernández Vargas Keina Yovanna", duration: 50 },
+                { time: [17, 0], name: "La Materia y sus Interacciones", teacher: "Vara López José Alberto", duration: 50 },
+            ],
+            // Jueves (4)
+            [
+                { time: [12, 20], name: "— (Libre)", teacher: "", duration: 50 },
+                { time: [13, 20], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
+                { time: [14, 10], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
+                { time: [15, 0], name: "Receso", teacher: "Pausa De 20 Minutos.", duration: 20 },
+                { time: [15, 20], name: "Pensamiento Matemático I", teacher: "Hernández Vargas Keina Yovanna", duration: 50 },
+                { time: [16, 10], name: "Pensamiento Matemático I", teacher: "Hernández Vargas Keina Yovanna", duration: 50 },
+                { time: [17, 0], name: "Ciencias Sociales I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
+            ],
+            // Viernes (5)
+            [
+                { time: [12, 20], name: "Formación Socioemocional I", teacher: "Chávez Arriola Luis Mario", duration: 50 },
+                { time: [13, 20], name: "Ciencias Sociales I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
+                { time: [14, 10], name: "Ciencias Sociales I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
+                { time: [15, 0], name: "Receso", teacher: "Pausa De 20 Minutos.", duration: 20 },
+                { time: [15, 20], name: "Lengua y Comunicación I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
+                { time: [16, 10], name: "La Materia y sus Interacciones", teacher: "Vara López José Alberto", duration: 50 },
+                { time: [17, 0], name: "Pensamiento Matemático I", teacher: "Hernández Vargas Keina Yovanna", duration: 50 },
+            ],
+        ];
+
+        let serverTime = null;
+        let startTime = Date.now();
+        let currentClassEnd = null;
+
+        async function fetchTime() {
+            try {
+                const response = await fetch('http://worldtimeapi.org/api/timezone/America/Tijuana');
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                serverTime = new Date(data.datetime);
+            } catch (error) {
+                console.error('Error fetching time from API:', error);
+                serverTime = new Date();
+            }
+        }
+        
+        function updateClock() {
+            if (!serverTime) {
+                document.getElementById('clock').textContent = 'Sincronizando reloj...';
+                return;
+            }
+            const now = new Date(serverTime.getTime() + (Date.now() - startTime));
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const am_pm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12;
+            document.getElementById('clock').textContent = `Hora: ${hours}:${minutes}:${seconds} ${am_pm}`;
+
+            const countdownEl = document.getElementById('countdown');
+            if (currentClassEnd) {
+                const diff = currentClassEnd - now;
+                if (diff > 0) {
+                    const mins = Math.floor(diff / 60000);
+                    const secs = Math.floor((diff % 60000) / 1000);
+                    countdownEl.textContent = `Faltan: ${mins}m ${secs}s para terminar`;
+                } else {
+                    countdownEl.textContent = "Clase finalizada";
+                }
+            } else {
+                const nextClassStartTime = countdownEl.dataset.nextClassStart ? new Date(countdownEl.dataset.nextClassStart) : null;
+                const nextClassTimeDisplay = countdownEl.dataset.nextClassTimeDisplay;
+                
+                if (nextClassStartTime) {
+                    const diff = nextClassStartTime - now;
+                    if (diff > 0) {
+                        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                        const hoursLeft = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const minutesLeft = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                        const secondsLeft = Math.floor((diff % (1000 * 60)) / 1000);
+                        
+                        let countdownText = "Tiempo restante: ";
+                        if (days > 0) countdownText += `${days}d `;
+                        countdownText += `${hoursLeft}h ${minutesLeft}m ${secondsLeft}s`;
+                        
+                        // Modificar el texto del countdown para el nuevo formato
+                        if (nextClassTimeDisplay) {
+                            countdownEl.textContent = `Próxima clase a las ${nextClassTimeDisplay} ${countdownText}`;
+                        } else {
+                            countdownEl.textContent = countdownText;
+                        }
+
+                    } else {
+                        countdownEl.textContent = "";
+                        countdownEl.dataset.nextClassStart = "";
+                        countdownEl.dataset.nextClassTimeDisplay = "";
+                    }
+                } else {
+                    countdownEl.textContent = "";
+                }
+            }
+        }
+        
+        function updateSchedule() {
+            if (!serverTime) return;
+
+            const now = new Date(serverTime.getTime() + (Date.now() - startTime));
+            const dayOfWeek = now.getDay();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            const currentTimeInMinutes = currentHour * 60 + currentMinute;
+            
+            const currentClassDisplay = document.getElementById('current-class-display');
+            const teacherDisplay = document.getElementById('teacher-display');
+            const nextClassDisplay = document.getElementById('next-class-display');
+            const countdownEl = document.getElementById('countdown');
+
+            currentClassEnd = null;
+            countdownEl.dataset.nextClassStart = "";
+            countdownEl.dataset.nextClassTimeDisplay = "";
+
+            if (dayOfWeek === 0 || dayOfWeek === 6) {
+                currentClassDisplay.textContent = "¡Sin Clases!";
+                teacherDisplay.textContent = "Disfruta el fin de semana";
+                
+                // Lógica para el contador de la próxima clase del lunes
+                const nextDayIndex = 1; // Lunes
+                const nextDaySchedule = schedule[nextDayIndex - 1];
+                const nextClassTime = nextDaySchedule[0].time;
+                const nextClass = nextDaySchedule[0].name;
+
+                const nextClassStart = new Date(now);
+                nextClassStart.setDate(nextClassStart.getDate() + (nextDayIndex - dayOfWeek + 7) % 7);
+                nextClassStart.setHours(nextClassTime[0], nextClassTime[1], 0, 0);
+                
+                countdownEl.dataset.nextClassStart = nextClassStart.toISOString();
+                countdownEl.dataset.nextClassTimeDisplay = `${String(nextClassTime[0]).padStart(2, '0')}:${String(nextClassTime[1]).padStart(2, '0')}`;
+                nextClassDisplay.textContent = `Siguiente clase: ${nextClass}`;
+
+                return;
+            }
+
+            const todaySchedule = schedule[dayOfWeek - 1];
+            let currentClass = "Aún no empiezan las clases";
+            let currentTeacher = "";
+            let nextClass = "";
+            let foundCurrent = false;
+
+            for (let i = 0; i < todaySchedule.length; i++) {
+                const classStartMinutes = todaySchedule[i].time[0] * 60 + todaySchedule[i].time[1];
+                const classDuration = todaySchedule[i].duration;
+                const classEndMinutes = classStartMinutes + classDuration;
+
+                if (currentTimeInMinutes >= classStartMinutes && currentTimeInMinutes < classEndMinutes) {
+                    currentClass = todaySchedule[i].name;
+                    currentTeacher = todaySchedule[i].teacher;
+                    foundCurrent = true;
+
+                    currentClassEnd = new Date(now);
+                    currentClassEnd.setHours(Math.floor(classEndMinutes / 60), classEndMinutes % 60, 0, 0);
+
+                    if (i + 1 < todaySchedule.length) {
+                        nextClass = todaySchedule[i + 1].name;
+                    } else {
+                        nextClass = "Clases terminadas por hoy.";
+                    }
+                    break;
+                }
+            }
+            
+            if (!foundCurrent) {
+                for (let i = 0; i < todaySchedule.length; i++) {
+                    const classStartMinutes = todaySchedule[i].time[0] * 60 + todaySchedule[i].time[1];
+                    if (currentTimeInMinutes < classStartMinutes) {
+                        nextClass = todaySchedule[i].name;
+                        
+                        const nextClassTime = todaySchedule[i].time;
+                        const nextClassStart = new Date(now);
+                        nextClassStart.setHours(nextClassTime[0], nextClassTime[1], 0, 0);
+
+                        countdownEl.dataset.nextClassStart = nextClassStart.toISOString();
+                        countdownEl.dataset.nextClassTimeDisplay = `${String(nextClassTime[0]).padStart(2, '0')}:${String(nextClassTime[1]).padStart(2, '0')}`;
+                        break;
+                    }
+                }
+                const lastClassEndMinutes = todaySchedule[todaySchedule.length - 1].time[0] * 60 + todaySchedule[todaySchedule.length - 1].duration;
+                if (currentTimeInMinutes >= lastClassEndMinutes) {
+                    currentClass = "Clases terminadas por hoy.";
+                    currentTeacher = "";
+                    
+                    let nextDayIndex = 0;
+                    let foundNextDay = false;
+                    
+                    for (let i = 1; i < 8; i++) {
+                        nextDayIndex = (dayOfWeek + i) % 7;
+                        if (nextDayIndex >= 1 && nextDayIndex <= 5) {
+                            if (schedule[nextDayIndex - 1] && schedule[nextDayIndex - 1].length > 0) {
+                                foundNextDay = true;
+                                const nextDaySchedule = schedule[nextDayIndex - 1];
+                                const nextClassTime = nextDaySchedule[0].time;
+                                nextClass = nextDaySchedule[0].name;
+
+                                const nextClassStart = new Date(now);
+                                nextClassStart.setDate(nextClassStart.getDate() + i);
+                                nextClassStart.setHours(nextClassTime[0], nextClassTime[1], 0, 0);
+                                
+                                countdownEl.dataset.nextClassStart = nextClassStart.toISOString();
+                                countdownEl.dataset.nextClassTimeDisplay = `${String(nextClassTime[0]).padStart(2, '0')}:${String(nextClassTime[1]).padStart(2, '0')}`;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!foundNextDay) {
+                        nextClass = "No hay clases próximamente";
+                    }
+                }
+            }
+
+            currentClassDisplay.textContent = currentClass;
+            teacherDisplay.textContent = currentTeacher;
+            
+            nextClassDisplay.textContent = nextClass ? `Siguiente clase: ${nextClass}` : "Siguiente clase: Ninguna";
+        }
+
+        // Lógica del tema oscuro/claro
+        const themeToggle = document.getElementById('theme-toggle');
+        const htmlElement = document.documentElement;
+
+        let savedTheme = localStorage.getItem('theme');
+        if (!savedTheme) {
+            savedTheme = 'dark';
+            localStorage.setItem('theme', 'dark');
+        }
+        htmlElement.dataset.theme = savedTheme;
+        themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌑';
+
+        themeToggle.addEventListener('click', () => {
+            let currentTheme = htmlElement.dataset.theme;
+            let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            htmlElement.dataset.theme = newTheme;
+            localStorage.setItem('theme', newTheme);
+            themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌑';
+        });
+
+        document.getElementById('next-class-display').addEventListener('click', () => {
+            window.location.href = "horario.jpg";
+        });
+
+        fetchTime().then(() => {
+            updateSchedule();
+            setInterval(updateSchedule, 10000);
+            setInterval(updateClock, 1000);
+        });
+    </script>
+</body>
+</html>
