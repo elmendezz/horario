@@ -321,7 +321,7 @@
                     if (i + 1 < todaySchedule.length) {
                         nextClass = todaySchedule[i + 1].name;
                     } else {
-                        nextClass = "Clases terminadas por hoy";
+                        nextClass = "Clases terminadas por hoy.";
                     }
                     break;
                 }
@@ -337,7 +337,7 @@
                 }
                 const lastClassEndMinutes = todaySchedule[todaySchedule.length - 1].time[0] * 60 + todaySchedule[todaySchedule.length - 1].duration;
                 if (currentTimeInMinutes >= lastClassEndMinutes) {
-                    currentClass = "Sin Clases Por Hoy.";
+                    currentClass = "Clases terminadas por hoy";
                     currentTeacher = "";
                     
                     // Lógica para encontrar la próxima clase del siguiente día hábil
