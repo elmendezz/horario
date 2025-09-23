@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Horario Escolar</title>
     <style>
-        /* Versión: 23 */
+        /* Versión: 24 */
         /* Changelog:
         - Version 17: Nuevo horario corregido.
         - Version 18: "Siguiente clase" movido fuera del contenedor.
@@ -14,6 +14,7 @@
         - Version 21: Se agregó un contador para la próxima clase del siguiente día hábil.
         - Version 22: Se corrigió un error que causaba que el contador no apareciera al final del día. Ahora calcula correctamente la próxima clase del siguiente día hábil.
         - Version 23: Se añadió un botón para alternar entre el tema claro y oscuro, con persistencia a través del almacenamiento local.
+        - Version 24: El modo oscuro es ahora el tema predeterminado al cargar la página por primera vez.
         */
         
         :root {
@@ -138,8 +139,8 @@
     <div id="countdown"></div>
 
     <script>
-        // Versión: 23
-        // Se agregó la funcionalidad para cambiar entre tema claro y oscuro, con persistencia.
+        // Versión: 24
+        // El modo oscuro es ahora el tema predeterminado al cargar la página por primera vez.
 
         const schedule = [
             // Lunes (1)
@@ -177,7 +178,7 @@
                 { time: [12, 20], name: "— (Libre)", teacher: "", duration: 50 },
                 { time: [13, 20], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
                 { time: [14, 10], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
-                { time: [15, 0], name: "Receso", teacher: "¡A descansar!", duration: 2.0 },
+                { time: [15, 0], name: "Receso", teacher: "¡A descansar!", duration: 20 },
                 { time: [15, 20], name: "Pensamiento Matemático I", teacher: "Hernández Vargas Keina Yovanna", duration: 50 },
                 { time: [16, 10], name: "Pensamiento Matemático I", teacher: "Hernández Vargas Keina Yovanna", duration: 50 },
                 { time: [17, 0], name: "Ciencias Sociales I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
@@ -378,12 +379,14 @@
         const themeToggle = document.getElementById('theme-toggle');
         const htmlElement = document.documentElement;
 
-        // Cargar el tema guardado
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) {
-            htmlElement.dataset.theme = savedTheme;
-            themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌑';
+        // Cargar el tema guardado, si no hay, usar oscuro por defecto
+        let savedTheme = localStorage.getItem('theme');
+        if (!savedTheme) {
+            savedTheme = 'dark';
+            localStorage.setItem('theme', 'dark');
         }
+        htmlElement.dataset.theme = savedTheme;
+        themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌑';
 
         themeToggle.addEventListener('click', () => {
             let currentTheme = htmlElement.dataset.theme;
