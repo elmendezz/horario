@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Horario Escolar</title>
     <style>
-        /* Version: 18 */
+        /* Version: 17 */
         /* Changelog:
-        - Version 17: Replaced the entire schedule with a new, corrected one provided by the user. The new schedule features classes of 50 minutes and a Receso from 3:00 PM to 3:20 PM. This should fix all previous time mismatches.
-        - Version 18: Restructured the HTML to move the "Siguiente clase" display outside of the main container and used CSS to position it above the main class display card, as requested by the user.
+        - Version 15: Fixed class times to accurately reflect afternoon schedule and corrected Receso time for Monday.
+        - Version 16: Adjusted the Receso time on ALL days to correctly show the 20-minute break between 14:15 and 14:35 as per the provided schedule image. Also, corrected the class times that follow the receso.
+        - Version 17: Added a margin-bottom to the #next-class-display element to create a separation between the 'Siguiente clase' bubble and the 'Current class' text, improving the visual layout.
         */
         
         body {
@@ -50,15 +51,16 @@
             margin-bottom: 0.8em;
         }
         #next-class-display {
+            position: absolute;
+            top: 10px;
+            right: 10px;
             font-size: 0.9em;
             background-color: #e9e9e9;
             padding: 5px 10px;
             border-radius: 10px;
             white-space: nowrap;
-            margin-bottom: -15px;
-            z-index: 1;
-            position: relative;
-            transform: translateY(15px);
+            /* ¡Cambio aquí! Se agrega un margen inferior para separar la burbuja. */
+            margin-bottom: 15px; 
         }
         #clock {
             font-size: 1.5em;
@@ -81,69 +83,60 @@
     </style>
 </head>
 <body>
-    <div id="next-class-display">Siguiente clase: Cargando...</div>
     <div class="container">
+        <p id="next-class-display">Siguiente clase: Cargando...</p>
         <div id="current-class-display">Cargando horario...</div>
         <div id="teacher-display"></div>
     </div>
     <div id="clock"></div>
 
     <script>
-        // Version: 18
+        // Version: 17
         // Changelog:
-        // - Version 17: Replaced the entire schedule with a new, corrected one provided by the user. The new schedule features classes of 50 minutes and a Receso from 3:00 PM to 3:20 PM. This should fix all previous time mismatches.
-        // - Version 18: Restructured the HTML to move the "Siguiente clase" display outside of the main container and used CSS to position it above the main class display card, as requested by the user.
-
+        // - Version 15: Corrected the start time for the Receso on Monday and adjusted subsequent class times to match the provided schedule image. The previous code had a slight mismatch that caused it to show "Receso" at 4:10 PM. This version fixes that by setting the correct class start times.
+        // - Version 16: Adjusted ALL schedules to correctly reflect the afternoon schedule and the 20-minute Receso starting at 14:15. This fixes the issue of the schedule showing an incorrect class at 4:12 PM.
+        // - Version 17: No changes to the JavaScript logic, but the CSS was updated to improve the visual spacing of the 'Siguiente clase' bubble.
+        
         const schedule = [
             // Lunes (1)
             [
-                { time: [12, 20], name: "Cultura Digital I", teacher: "Armenta Felix Ana Cristina", duration: 50 },
-                { time: [13, 20], name: "Ingles I", teacher: "Falcón Olovanni Andrea Mariel", duration: 50 },
-                { time: [14, 10], name: "Ingles I", teacher: "Falcón Olovanni Andrea Mariel", duration: 50 },
-                { time: [15, 0], name: "Receso", teacher: "¡A descansar!", duration: 20 },
-                { time: [15, 20], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
-                { time: [16, 10], name: "Lengua y Comunicación I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
-                { time: [17, 0], name: "La Materia y sus Interacciones", teacher: "Vara López José Alberto", duration: 50 },
+                { time: [13, 20], name: "Cultura Digital I", teacher: "ARMENTA FELIX ANA CRISTINA", duration: 75 },
+                { time: [14, 45], name: "Ingles I", teacher: "FALCON OLIVOANI ANDREA MAREL", duration: 75 },
+                { time: [16, 10], name: "Receso de 20 min.", teacher: "¡A descansar!", duration: 20 },
+                { time: [16, 30], name: "Humanidades I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 75 },
+                { time: [17, 55], name: "Lengua y Comunicación I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 75 },
+                { time: [19, 20], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO", duration: 75 },
             ],
             // Martes (2)
             [
-                { time: [12, 20], name: "Cultura Digital I", teacher: "Armenta Felix Ana Cristina", duration: 50 },
-                { time: [13, 20], name: "Cultura Digital I", teacher: "Armenta Felix Ana Cristina", duration: 50 },
-                { time: [14, 10], name: "— (Libre)", teacher: "", duration: 50 },
-                { time: [15, 0], name: "Receso", teacher: "¡A descansar!", duration: 20 },
-                { time: [15, 20], name: "Lengua y Comunicación I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
-                { time: [16, 10], name: "La Materia y sus Interacciones", teacher: "Vara López José Alberto", duration: 50 },
-                { time: [17, 0], name: "Ingles I", teacher: "Falcón Olovanni Andrea Mariel", duration: 50 },
+                { time: [14, 45], name: "Cultura Digital I", teacher: "ARMENTA FELIX ANA CRISTINA", duration: 75 },
+                { time: [16, 10], name: "Receso de 20 min.", teacher: "¡A descansar!", duration: 20 },
+                { time: [16, 30], name: "Lengua y Comunicación I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 75 },
+                { time: [17, 55], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO", duration: 75 },
+                { time: [19, 20], name: "Ingles I", teacher: "FALCON OLIVOANI ANDREA MAREL", duration: 75 },
             ],
             // Miércoles (3)
             [
-                { time: [12, 20], name: "— (Libre)", teacher: "", duration: 50 },
-                { time: [13, 20], name: "— (Libre)", teacher: "", duration: 50 },
-                { time: [14, 10], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
-                { time: [15, 0], name: "Receso", teacher: "¡A descansar!", duration: 20 },
-                { time: [15, 20], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
-                { time: [16, 10], name: "Pensamiento Matemático I", teacher: "Hernández Vargas Keina Yovanna", duration: 50 },
-                { time: [17, 0], name: "La Materia y sus Interacciones", teacher: "Vara López José Alberto", duration: 50 },
+                { time: [16, 10], name: "Humanidades I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 75 },
+                { time: [17, 35], name: "Humanidades I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 75 },
+                { time: [19, 0], name: "Pensamiento matematico I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA", duration: 75 },
+                { time: [20, 25], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO", duration: 75 },
             ],
             // Jueves (4)
             [
-                { time: [12, 20], name: "— (Libre)", teacher: "", duration: 50 },
-                { time: [13, 20], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
-                { time: [14, 10], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
-                { time: [15, 0], name: "Receso", teacher: "¡A descansar!", duration: 20 },
-                { time: [15, 20], name: "Pensamiento Matemático I", teacher: "Hernández Vargas Keina Yovanna", duration: 50 },
-                { time: [16, 10], name: "Pensamiento Matemático I", teacher: "Hernández Vargas Keina Yovanna", duration: 50 },
-                { time: [17, 0], name: "Ciencias Sociales I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
+                { time: [16, 10], name: "Humanidades I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 75 },
+                { time: [17, 35], name: "Pensamiento matematico I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA", duration: 75 },
+                { time: [19, 0], name: "Pensamiento matematico I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA", duration: 75 },
+                { time: [20, 25], name: "Ciencias Sociales I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 75 },
             ],
             // Viernes (5)
             [
-                { time: [12, 20], name: "Formación Socioemocional I", teacher: "Chávez Arriola Luis Mario", duration: 50 },
-                { time: [13, 20], name: "Ciencias Sociales I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
-                { time: [14, 10], name: "Ciencias Sociales I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
-                { time: [15, 0], name: "Receso", teacher: "¡A descansar!", duration: 20 },
-                { time: [15, 20], name: "Lengua y Comunicación I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
-                { time: [16, 10], name: "La Materia y sus Interacciones", teacher: "Vara López José Alberto", duration: 50 },
-                { time: [17, 0], name: "Pensamiento Matemático I", teacher: "Hernández Vargas Keina Yovanna", duration: 50 },
+                { time: [13, 20], name: "Formación socioemocional I", teacher: "CHAVEZ ARRIOLA LUIS MARIO", duration: 50 },
+                { time: [14, 10], name: "Receso de 20 min.", teacher: "¡A descansar!", duration: 20 },
+                { time: [14, 30], name: "Ciencias Sociales I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 50 },
+                { time: [15, 20], name: "Lengua y Comunicación I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA", duration: 50 },
+                { time: [16, 10], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO", duration: 50 },
+                { time: [17, 0], name: "Pensamiento matematico I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA", duration: 50 },
             ],
         ];
 
