@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Horario 1CV</title>
     <style>
-        /* Versión: 25 */
+        /* Versión: 26 */
         /* Changelog:
         - Version 17: Nuevo horario corregido.
         - Version 18: "Siguiente clase" movido fuera del contenedor.
@@ -16,6 +16,7 @@
         - Version 23: Se añadió un botón para alternar entre el tema claro y oscuro, con persistencia a través del almacenamiento local.
         - Version 24: El modo oscuro es ahora el tema predeterminado al cargar la página por primera vez.
         - Version 25: Se modificó el contador nocturno para que muestre "Próxima clase a las" seguido de la hora de inicio de la primera clase del siguiente día hábil y el tiempo restante.
+        - Version 26: Se añadió un salto de línea en el contador del tiempo restante para una presentación más formal.
         */
         
         :root {
@@ -140,8 +141,9 @@
     <div id="countdown"></div>
 
     <script>
-        // Versión: 25
+        // Versión: 26
         // Changelog:
+        // - Version 26: Se añadió un salto de línea en el contador del tiempo restante para una presentación más formal.
         // - Version 25: Se modificó el contador nocturno para que muestre "Próxima clase a las" seguido de la hora de inicio de la primera clase del siguiente día hábil y el tiempo restante.
         // - Version 24: El modo oscuro es ahora el tema predeterminado al cargar la página por primera vez.
         
@@ -249,15 +251,15 @@
                         const minutesLeft = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
                         const secondsLeft = Math.floor((diff % (1000 * 60)) / 1000);
                         
-                        let countdownText = "Tiempo restante: ";
+                        let countdownText = "Tiempo restante:";
                         if (days > 0) countdownText += `${days}d `;
                         countdownText += `${hoursLeft}h ${minutesLeft}m ${secondsLeft}s`;
                         
-                        // Modificar el texto del countdown para el nuevo formato
+                        // Nuevo formato con salto de línea
                         if (nextClassTimeDisplay) {
-                            countdownEl.textContent = `Próxima clase a las ${nextClassTimeDisplay} ${countdownText}`;
+                            countdownEl.innerHTML = `Próxima clase a las ${nextClassTimeDisplay} <br> ${countdownText}`;
                         } else {
-                            countdownEl.textContent = countdownText;
+                            countdownEl.innerHTML = `Próxima clase... <br> ${countdownText}`;
                         }
 
                     } else {
@@ -293,7 +295,6 @@
                 currentClassDisplay.textContent = "¡Sin Clases!";
                 teacherDisplay.textContent = "Disfruta el fin de semana";
                 
-                // Lógica para el contador de la próxima clase del lunes
                 const nextDayIndex = 1; // Lunes
                 const nextDaySchedule = schedule[nextDayIndex - 1];
                 const nextClassTime = nextDaySchedule[0].time;
