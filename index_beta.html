@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Horario 1CV</title>
     <style>
-        /* Versión: 31 */
+        /* Versión: 32 */
         /* Changelog:
         - Version 17: Nuevo horario corregido.
         - Version 18: "Siguiente clase" movido fuera del contenedor.
@@ -22,6 +22,7 @@
         - Version 29: Se reestructuró la tabla de horario para que los días de la semana sean los encabezados de las columnas.
         - Version 30: Se corrigió el nombre de la maestra de inglés, se añadió a la maestra de Cultura Digital del martes y se añadió un scroll lateral para que el horario se vea completo en pantallas pequeñas. Se mejoró la visualización del receso.
         - Version 31: El botón "Siguiente clase" ahora abre un recuadro (modal) con la imagen de 'horario.jpg' y un botón para cerrarlo, sin salir de la página.
+        - Version 32: El modal ahora cambia de tema (claro/oscuro) y el botón de aceptar está centrado.
         */
         
         :root {
@@ -194,14 +195,16 @@
         }
         .modal-content {
             position: relative;
-            background-color: #fefefe;
+            background-color: var(--container-bg); /* Usa variable de tema */
+            color: var(--text-color); /* Usa variable de tema */
             margin: 15% auto;
             padding: 20px;
-            border: 1px solid #888;
+            border: 1px solid var(--text-color); /* Usa variable de tema */
             width: 90%;
             max-width: 800px;
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         .modal-content img {
             width: 100%;
@@ -210,7 +213,7 @@
         }
         .modal-footer {
             margin-top: 15px;
-            text-align: right;
+            text-align: center; /* Centra el botón */
         }
         .modal-footer button {
             background-color: var(--next-class-bg);
@@ -283,7 +286,7 @@
     </div>
     
     <script>
-        // Versión: 31
+        // Versión: 32
         // Changelog:
         // - Version 26: Se añadió un salto de línea en el contador del tiempo restante para una presentación más formal.
         // - Version 27: Se modificó la visualización del contador de la próxima clase para que use el formato de 12 horas (AM/PM).
@@ -291,6 +294,7 @@
         // - Version 29: Se reestructuró la tabla de horario para que los días de la semana sean los encabezados de las columnas.
         // - Version 30: Se corrigió el nombre de la maestra de inglés, se añadió a la maestra de Cultura Digital del martes y se añadió un scroll lateral para que el horario se vea completo en pantallas pequeñas. Se mejoró la visualización del receso.
         // - Version 31: El botón "Siguiente clase" ahora abre un recuadro (modal) con la imagen de 'horario.jpg' y un botón para cerrarlo, sin salir de la página.
+        // - Version 32: El modal ahora cambia de tema (claro/oscuro) y el botón de aceptar está centrado.
 
         const schedule = [
             // Lunes (1)
