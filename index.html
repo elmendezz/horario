@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Horario 1CV</title>
     <style>
-        /* Versión: 26 */
+        /* Versión: 27 */
         /* Changelog:
         - Version 17: Nuevo horario corregido.
         - Version 18: "Siguiente clase" movido fuera del contenedor.
@@ -17,6 +17,7 @@
         - Version 24: El modo oscuro es ahora el tema predeterminado al cargar la página por primera vez.
         - Version 25: Se modificó el contador nocturno para que muestre "Próxima clase a las" seguido de la hora de inicio de la primera clase del siguiente día hábil y el tiempo restante.
         - Version 26: Se añadió un salto de línea en el contador del tiempo restante para una presentación más formal.
+        - Version 27: Se modificó la visualización del contador de la próxima clase para que use el formato de 12 horas (AM/PM).
         */
         
         :root {
@@ -141,11 +142,12 @@
     <div id="countdown"></div>
 
     <script>
-        // Versión: 26
+        // Versión: 27
         // Changelog:
         // - Version 26: Se añadió un salto de línea en el contador del tiempo restante para una presentación más formal.
         // - Version 25: Se modificó el contador nocturno para que muestre "Próxima clase a las" seguido de la hora de inicio de la primera clase del siguiente día hábil y el tiempo restante.
         // - Version 24: El modo oscuro es ahora el tema predeterminado al cargar la página por primera vez.
+        // - Version 27: Se modificó la visualización del contador de la próxima clase para que use el formato de 12 horas (AM/PM).
         
         const schedule = [
             // Lunes (1)
@@ -304,7 +306,16 @@
                 nextClassStart.setHours(nextClassTime[0], nextClassTime[1], 0, 0);
                 
                 countdownEl.dataset.nextClassStart = nextClassStart.toISOString();
-                countdownEl.dataset.nextClassTimeDisplay = `${String(nextClassTime[0]).padStart(2, '0')}:${String(nextClassTime[1]).padStart(2, '0')}`;
+                
+                // Función auxiliar para convertir a 12 horas
+                const formatTime = (hours, minutes) => {
+                    const am_pm = hours >= 12 ? 'PM' : 'AM';
+                    hours = hours % 12 || 12;
+                    const formattedMinutes = String(minutes).padStart(2, '0');
+                    return `${hours}:${formattedMinutes} ${am_pm}`;
+                };
+
+                countdownEl.dataset.nextClassTimeDisplay = formatTime(nextClassTime[0], nextClassTime[1]);
                 nextClassDisplay.textContent = `Siguiente clase: ${nextClass}`;
 
                 return;
@@ -349,7 +360,16 @@
                         nextClassStart.setHours(nextClassTime[0], nextClassTime[1], 0, 0);
 
                         countdownEl.dataset.nextClassStart = nextClassStart.toISOString();
-                        countdownEl.dataset.nextClassTimeDisplay = `${String(nextClassTime[0]).padStart(2, '0')}:${String(nextClassTime[1]).padStart(2, '0')}`;
+                        
+                        // Función auxiliar para convertir a 12 horas
+                        const formatTime = (hours, minutes) => {
+                            const am_pm = hours >= 12 ? 'PM' : 'AM';
+                            hours = hours % 12 || 12;
+                            const formattedMinutes = String(minutes).padStart(2, '0');
+                            return `${hours}:${formattedMinutes} ${am_pm}`;
+                        };
+                        
+                        countdownEl.dataset.nextClassTimeDisplay = formatTime(nextClassTime[0], nextClassTime[1]);
                         break;
                     }
                 }
@@ -375,7 +395,16 @@
                                 nextClassStart.setHours(nextClassTime[0], nextClassTime[1], 0, 0);
                                 
                                 countdownEl.dataset.nextClassStart = nextClassStart.toISOString();
-                                countdownEl.dataset.nextClassTimeDisplay = `${String(nextClassTime[0]).padStart(2, '0')}:${String(nextClassTime[1]).padStart(2, '0')}`;
+
+                                // Función auxiliar para convertir a 12 horas
+                                const formatTime = (hours, minutes) => {
+                                    const am_pm = hours >= 12 ? 'PM' : 'AM';
+                                    hours = hours % 12 || 12;
+                                    const formattedMinutes = String(minutes).padStart(2, '0');
+                                    return `${hours}:${formattedMinutes} ${am_pm}`;
+                                };
+
+                                countdownEl.dataset.nextClassTimeDisplay = formatTime(nextClassTime[0], nextClassTime[1]);
                                 break;
                             }
                         }
