@@ -5,19 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Horario 1CV</title>
     <style>
-        /* Versión: 27 */
+        /* Versi�n: 27 */
         /* Changelog:
         - Version 17: Nuevo horario corregido.
         - Version 18: "Siguiente clase" movido fuera del contenedor.
-        - Version 19: Se añadió contador regresivo.
-        - Version 20: "Siguiente clase" ahora es un botón que redirige a horario.jpg.
-        - Version 21: Se agregó un contador para la próxima clase del siguiente día hábil.
-        - Version 22: Se corrigió un error que causaba que el contador no apareciera al final del día. Ahora calcula correctamente la próxima clase del siguiente día hábil.
-        - Version 23: Se añadió un botón para alternar entre el tema claro y oscuro, con persistencia a través del almacenamiento local.
-        - Version 24: El modo oscuro es ahora el tema predeterminado al cargar la página por primera vez.
-        - Version 25: Se modificó el contador nocturno para que muestre "Próxima clase a las" seguido de la hora de inicio de la primera clase del siguiente día hábil y el tiempo restante.
-        - Version 26: Se añadió un salto de línea en el contador del tiempo restante para una presentación más formal.
-        - Version 27: Se agregó la notación de 12 horas (AM/PM) a la hora de la próxima clase para una mejor legibilidad.
+        - Version 19: Se a�adi� contador regresivo.
+        - Version 20: "Siguiente clase" ahora es un bot�n que redirige a horario.jpg.
+        - Version 21: Se agreg� un contador para la pr�xima clase del siguiente d�a h�bil.
+        - Version 22: Se corrigi� un error que causaba que el contador no apareciera al final del d�a. Ahora calcula correctamente la pr�xima clase del siguiente d�a h�bil.
+        - Version 23: Se a�adi� un bot�n para alternar entre el tema claro y oscuro, con persistencia a trav�s del almacenamiento local.
+        - Version 24: El modo oscuro es ahora el tema predeterminado al cargar la p�gina por primera vez.
+        - Version 25: Se modific� el contador nocturno para que muestre "Pr�xima clase a las" seguido de la hora de inicio de la primera clase del siguiente d�a h�bil y el tiempo restante.
+        - Version 26: Se a�adi� un salto de l�nea en el contador del tiempo restante para una presentaci�n m�s formal.
+        - Version 27: Se agreg� la notaci�n de 12 horas (AM/PM) a la hora de la pr�xima clase para una mejor legibilidad.
         */
         
         :root {
@@ -132,7 +132,7 @@
     </style>
 </head>
 <body>
-    <button id="theme-toggle" aria-label="Cambiar tema">🌑</button>
+    <button id="theme-toggle" aria-label="Cambiar tema"></button>
     <button id="next-class-display">Siguiente clase: Cargando...</button>
     <div class="container">
         <div id="current-class-display">Cargando horario...</div>
@@ -142,63 +142,62 @@
     <div id="countdown"></div>
 
     <script>
-        // Versión: 27
+        // Versi�n: 27
         // Changelog:
-        // - Version 27: Se agregó la notación de 12 horas (AM/PM) a la hora de la próxima clase para una mejor legibilidad.
-        // - Version 26: Se añadió un salto de línea en el contador del tiempo restante para una presentación más formal.
-        // - Version 25: Se modificó el contador nocturno para que muestre "Próxima clase a las" seguido de la hora de inicio de la primera clase del siguiente día hábil y el tiempo restante.
-        // - Version 24: El modo oscuro es ahora el tema predeterminado al cargar la página por primera vez.
+        // - Version 27: Se agreg� la notaci�n de 12 horas (AM/PM) a la hora de la pr�xima clase para una mejor legibilidad.
+        // - Version 26: Se a�adi� un salto de l�nea en el contador del tiempo restante para una presentaci�n m�s formal.
+        // - Version 25: Se modific� el contador nocturno para que muestre "Pr�xima clase a las" seguido de la hora de inicio de la primera clase del siguiente d�a h�bil y el tiempo restante.
+        // - Version 24: El modo oscuro es ahora el tema predeterminado al cargar la p�gina por primera vez.
         
         const schedule = [
             // Lunes (1)
             [
                 { time: [12, 20], name: "Cultura Digital I", teacher: "Armenta Felix Ana Cristina", duration: 50 },
-                { time: [13, 20], name: "Ingles I", teacher: "Falcón Olovanni Andrea Mariel", duration: 50 },
-                { time: [14, 10], name: "Ingles I", teacher: "Falcón Olovanni Andrea Mariel", duration: 50 },
+                { time: [13, 20], name: "Ingles I", teacher: "Falc�n Olovanni Andrea Mariel", duration: 50 },
+                { time: [14, 10], name: "Ingles I", teacher: "Falc�n Olovanni Andrea Mariel", duration: 50 },
                 { time: [15, 0], name: "Receso", teacher: "Pausa De 20 Minutos.", duration: 20 },
-                { time: [15, 20], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
-                { time: [16, 10], name: "Lengua y Comunicación I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
-                { time: [17, 0], name: "La Materia y sus Interacciones", teacher: "Vara López José Alberto", duration: 50 },
+                { time: [15, 20], name: "Humanidades I", teacher: "Ya�ez N��ez Lorena Esmeralda", duration: 50 },
+                { time: [16, 10], name: "Lengua y Comunicaci�n I", teacher: "Ya�ez N��ez Lorena Esmeralda", duration: 50 },
+                { time: [17, 0], name: "La Materia y sus Interacciones", teacher: "Vara L�pez Jos� Alberto", duration: 50 },
             ],
             // Martes (2)
             [
-                { time: [12, 20], name: "Cultura Digital I", teacher: "Armenta Felix Ana Cristina", duration: 50 },
+          
                 { time: [13, 20], name: "Cultura Digital I", teacher: "Armenta Felix Ana Cristina", duration: 50 },
-                { time: [14, 10], name: "Cultura Digital I", teacher: "Armenta Felix Ana Cristina", duration: 50 },
+                { time: [14, 10], name: "Cultura Digital I", teacher: "", duration: 50 },
                 { time: [15, 0], name: "Receso", teacher: "Pausa De 20 Minutos.", duration: 20 },
-                { time: [15, 20], name: "Lengua y Comunicación I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
-                { time: [16, 10], name: "La Materia y sus Interacciones", teacher: "Vara López José Alberto", duration: 50 },
-                { time: [17, 0], name: "Ingles I", teacher: "Falcón Olovanni Andrea Mariel", duration: 50 },
+                { time: [15, 20], name: "Lengua y Comunicaci�n I", teacher: "Ya�ez N��ez Lorena Esmeralda", duration: 50 },
+                { time: [16, 10], name: "La Materia y sus Interacciones", teacher: "Vara L�pez Jos� Alberto", duration: 50 },
+                { time: [17, 0], name: "Ingles I", teacher: "Falc�n Olovanni Andrea Mariel", duration: 50 },
             ],
-            // Miércoles (3)
+            // Mi�rcoles (3)
             [
-                { time: [12, 20], name: "— (Libre)", teacher: "", duration: 50 },
-                { time: [13, 20], name: "— (Libre)", teacher: "", duration: 50 },
-                { time: [14, 10], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
+               
+                { time: [14, 10], name: "Humanidades I", teacher: "Ya�ez N��ez Lorena Esmeralda", duration: 50 },
                 { time: [15, 0], name: "Receso", teacher: "Pausa De 20 Minutos.", duration: 20 },
-                { time: [15, 20], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
-                { time: [16, 10], name: "Pensamiento Matemático I", teacher: "Hernández Vargas Keina Yovanna", duration: 50 },
-                { time: [17, 0], name: "La Materia y sus Interacciones", teacher: "Vara López José Alberto", duration: 50 },
+                { time: [15, 20], name: "Humanidades I", teacher: "Ya�ez N��ez Lorena Esmeralda", duration: 50 },
+                { time: [16, 10], name: "Pensamiento Matem�tico I", teacher: "Hern�ndez Vargas Keina Yovanna", duration: 50 },
+                { time: [17, 0], name: "La Materia y sus Interacciones", teacher: "Vara L�pez Jos� Alberto", duration: 50 },
             ],
             // Jueves (4)
             [
-                { time: [12, 20], name: "— (Libre)", teacher: "", duration: 50 },
-                { time: [13, 20], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
-                { time: [14, 10], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
+                
+                { time: [13, 20], name: "Humanidades I", teacher: "Ya�ez N��ez Lorena Esmeralda", duration: 50 },
+                { time: [14, 10], name: "Humanidades I", teacher: "Ya�ez N��ez Lorena Esmeralda", duration: 50 },
                 { time: [15, 0], name: "Receso", teacher: "Pausa De 20 Minutos.", duration: 20 },
-                { time: [15, 20], name: "Pensamiento Matemático I", teacher: "Hernández Vargas Keina Yovanna", duration: 50 },
-                { time: [16, 10], name: "Pensamiento Matemático I", teacher: "Hernández Vargas Keina Yovanna", duration: 50 },
-                { time: [17, 0], name: "Ciencias Sociales I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
+                { time: [15, 20], name: "Pensamiento Matem�tico I", teacher: "Hern�ndez Vargas Keina Yovanna", duration: 50 },
+                { time: [16, 10], name: "Pensamiento Matem�tico I", teacher: "Hern�ndez Vargas Keina Yovanna", duration: 50 },
+                { time: [17, 0], name: "Ciencias Sociales I", teacher: "Ya�ez N��ez Lorena Esmeralda", duration: 50 },
             ],
             // Viernes (5)
             [
-                { time: [12, 20], name: "Formación Socioemocional I", teacher: "Chávez Arriola Luis Mario", duration: 50 },
-                { time: [13, 20], name: "Ciencias Sociales I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
-                { time: [14, 10], name: "Ciencias Sociales I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
+                
+                { time: [13, 20], name: "Ciencias Sociales I", teacher: "Ya�ez N��ez Lorena Esmeralda", duration: 50 },
+                { time: [14, 10], name: "Ciencias Sociales I", teacher: "Ya�ez N��ez Lorena Esmeralda", duration: 50 },
                 { time: [15, 0], name: "Receso", teacher: "Pausa De 20 Minutos.", duration: 20 },
-                { time: [15, 20], name: "Lengua y Comunicación I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
-                { time: [16, 10], name: "La Materia y sus Interacciones", teacher: "Vara López José Alberto", duration: 50 },
-                { time: [17, 0], name: "Pensamiento Matemático I", teacher: "Hernández Vargas Keina Yovanna", duration: 50 },
+                { time: [15, 20], name: "Lengua y Comunicaci�n I", teacher: "Ya�ez N��ez Lorena Esmeralda", duration: 50 },
+                { time: [16, 10], name: "La Materia y sus Interacciones", teacher: "Vara L�pez Jos� Alberto", duration: 50 },
+                { time: [17, 0], name: "Pensamiento Matem�tico I", teacher: "Hern�ndez Vargas Keina Yovanna", duration: 50 },
             ],
         ];
 
@@ -264,7 +263,7 @@
                         
                         const fullNextClassTime = `${displayHours}:${nextClassMinutes} ${nextClassAmPm}`;
 
-                        countdownEl.innerHTML = `Próxima clase a las ${fullNextClassTime}<br>${countdownText}`;
+                        countdownEl.innerHTML = `Pr�xima clase a las ${fullNextClassTime}<br>${countdownText}`;
 
                     } else {
                         countdownEl.textContent = "";
@@ -296,7 +295,7 @@
             countdownEl.dataset.nextClassTimeDisplay = "";
 
             if (dayOfWeek === 0 || dayOfWeek === 6) {
-                currentClassDisplay.textContent = "¡Sin Clases!";
+                currentClassDisplay.textContent = "�Sin Clases!";
                 teacherDisplay.textContent = "Disfruta el fin de semana";
                 
                 const nextDayIndex = 1; // Lunes
@@ -316,7 +315,7 @@
             }
 
             const todaySchedule = schedule[dayOfWeek - 1];
-            let currentClass = "Aún no empiezan las clases";
+            let currentClass = "A�n no empiezan las clases";
             let currentTeacher = "";
             let nextClass = "";
             let foundCurrent = false;
@@ -387,7 +386,7 @@
                     }
 
                     if (!foundNextDay) {
-                        nextClass = "No hay clases próximamente";
+                        nextClass = "No hay clases pr�ximamente";
                     }
                 }
             }
@@ -398,7 +397,7 @@
             nextClassDisplay.textContent = nextClass ? `Siguiente clase: ${nextClass}` : "Siguiente clase: Ninguna";
         }
 
-        // Lógica del tema oscuro/claro
+        // L�gica del tema oscuro/claro
         const themeToggle = document.getElementById('theme-toggle');
         const htmlElement = document.documentElement;
 
@@ -408,14 +407,14 @@
             localStorage.setItem('theme', 'dark');
         }
         htmlElement.dataset.theme = savedTheme;
-        themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌑';
+        themeToggle.textContent = savedTheme === 'dark' ? '' : '';
 
         themeToggle.addEventListener('click', () => {
             let currentTheme = htmlElement.dataset.theme;
             let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             htmlElement.dataset.theme = newTheme;
             localStorage.setItem('theme', newTheme);
-            themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌑';
+            themeToggle.textContent = newTheme === 'dark' ? '' : '';
         });
 
         document.getElementById('next-class-display').addEventListener('click', () => {
