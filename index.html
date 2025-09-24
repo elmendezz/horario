@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Horario 1CV</title>
     <style>
-        /* Versión: 27 */
+        /* Versión: 30 */
         /* Changelog:
         - Version 17: Nuevo horario corregido.
         - Version 18: "Siguiente clase" movido fuera del contenedor.
@@ -18,6 +18,9 @@
         - Version 25: Se modificó el contador nocturno para que muestre "Próxima clase a las" seguido de la hora de inicio de la primera clase del siguiente día hábil y el tiempo restante.
         - Version 26: Se añadió un salto de línea en el contador del tiempo restante para una presentación más formal.
         - Version 27: Se modificó la visualización del contador de la próxima clase para que use el formato de 12 horas (AM/PM).
+        - Version 28: Se añadió un botón para mostrar/ocultar un horario interactivo en formato de tabla, reemplazando la redirección a una imagen.
+        - Version 29: Se reestructuró la tabla de horario para que los días de la semana sean los encabezados de las columnas.
+        - Version 30: Se corrigió el nombre de la maestra de inglés, se añadió a la maestra de Cultura Digital del martes y se añadió un scroll lateral para que el horario se vea completo en pantallas pequeñas. Se mejoró la visualización del receso.
         */
         
         :root {
@@ -27,6 +30,8 @@
             --container-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             --next-class-bg: #4CAF50;
             --next-class-hover-bg: #45a049;
+            --table-header-bg: #4CAF50;
+            --table-row-bg: #f9f9f9;
         }
 
         [data-theme="dark"] {
@@ -36,6 +41,8 @@
             --container-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             --next-class-bg: #6200ea;
             --next-class-hover-bg: #3700b3;
+            --table-header-bg: #3700b3;
+            --table-row-bg: #2a2a2a;
         }
         
         body {
@@ -44,7 +51,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
             background-color: var(--bg-color);
             color: var(--text-color);
@@ -117,6 +124,59 @@
             color: var(--text-color);
             transition: color 0.3s ease;
         }
+
+        #schedule-container {
+            margin-top: 2em;
+            max-width: 90%;
+            width: 100%;
+        }
+
+        #schedule-table {
+            width: 100%;
+            min-width: 700px; /* Ancho mínimo para que no se vea feo en escritorio */
+            border-collapse: collapse;
+            margin-top: 1em;
+            display: none; /* Oculta por defecto */
+        }
+        #schedule-table.visible {
+            display: table;
+        }
+
+        #schedule-table th, #schedule-table td {
+            padding: 12px 8px;
+            text-align: center; /* Se cambió a centrado para que se vea como en la imagen */
+            border: 1px solid #ccc;
+        }
+        
+        #schedule-table td:first-child {
+            text-align: left; /* Se mantiene la hora a la izquierda */
+        }
+
+        #schedule-table th {
+            background-color: var(--table-header-bg);
+            color: white;
+        }
+
+        #schedule-table tr:nth-child(even) {
+            background-color: var(--table-row-bg);
+        }
+        
+        #schedule-table .receso-row {
+            background-color: #6c757d;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+        }
+        #schedule-table .receso-row td {
+            border: 1px solid #5a6268;
+        }
+        
+        .table-wrapper {
+            overflow-x: auto; /* Esto es la clave para el scroll */
+            width: 100%;
+            max-width: 100%;
+        }
+        
         @media (max-width: 600px) {
             .container {
                 width: 90%;
@@ -127,6 +187,10 @@
             }
             #teacher-display {
                 font-size: 1em;
+            }
+            #schedule-table th, #schedule-table td {
+                font-size: 0.8em;
+                padding: 8px 4px;
             }
         }
     </style>
@@ -140,21 +204,42 @@
     </div>
     <div id="clock"></div>
     <div id="countdown"></div>
-
+    
+    <div id="schedule-container">
+        <button id="show-schedule-btn">Mostrar Horario Completo</button>
+        <div class="table-wrapper">
+            <table id="schedule-table">
+                <thead>
+                    <tr>
+                        <th>Hora</th>
+                        <th>Lunes</th>
+                        <th>Martes</th>
+                        <th>Miércoles</th>
+                        <th>Jueves</th>
+                        <th>Viernes</th>
+                    </tr>
+                </thead>
+                <tbody id="schedule-table-body">
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
     <script>
-        // Versión: 27
+        // Versión: 30
         // Changelog:
         // - Version 26: Se añadió un salto de línea en el contador del tiempo restante para una presentación más formal.
-        // - Version 25: Se modificó el contador nocturno para que muestre "Próxima clase a las" seguido de la hora de inicio de la primera clase del siguiente día hábil y el tiempo restante.
-        // - Version 24: El modo oscuro es ahora el tema predeterminado al cargar la página por primera vez.
         // - Version 27: Se modificó la visualización del contador de la próxima clase para que use el formato de 12 horas (AM/PM).
-        
+        // - Version 28: Se añadió un botón para mostrar/ocultar un horario interactivo en formato de tabla, reemplazando la redirección a una imagen.
+        // - Version 29: Se reestructuró la tabla de horario para que los días de la semana sean los encabezados de las columnas.
+        // - Version 30: Se corrigió el nombre de la maestra de inglés, se añadió a la maestra de Cultura Digital del martes y se añadió un scroll lateral para que el horario se vea completo en pantallas pequeñas. Se mejoró la visualización del receso.
+
         const schedule = [
             // Lunes (1)
             [
                 { time: [12, 20], name: "Cultura Digital I", teacher: "Armenta Felix Ana Cristina", duration: 50 },
-                { time: [13, 20], name: "Ingles I", teacher: "Falcón Olovanni Andrea Mariel", duration: 50 },
-                { time: [14, 10], name: "Ingles I", teacher: "Falcón Olovanni Andrea Mariel", duration: 50 },
+                { time: [13, 20], name: "Ingles I", teacher: "Falcon Oliovan Andrea Mariel", duration: 50 },
+                { time: [14, 10], name: "Ingles I", teacher: "Falcon Oliovan Andrea Mariel", duration: 50 },
                 { time: [15, 0], name: "Receso", teacher: "Pausa De 20 Minutos.", duration: 20 },
                 { time: [15, 20], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
                 { time: [16, 10], name: "Lengua y Comunicación I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
@@ -164,11 +249,11 @@
             [
                 
                 { time: [13, 20], name: "Cultura Digital I", teacher: "Armenta Felix Ana Cristina", duration: 50 },
-                { time: [14, 10], name: "Cultura Digital I", teacher: "", duration: 50 },
+                { time: [14, 10], name: "Cultura Digital I", teacher: "Armenta Felix Ana Cristina", duration: 50 },
                 { time: [15, 0], name: "Receso", teacher: "Pausa De 20 Minutos.", duration: 20 },
                 { time: [15, 20], name: "Lengua y Comunicación I", teacher: "Yañez Núñez Lorena Esmeralda", duration: 50 },
                 { time: [16, 10], name: "La Materia y sus Interacciones", teacher: "Vara López José Alberto", duration: 50 },
-                { time: [17, 0], name: "Ingles I", teacher: "Falcón Olovanni Andrea Mariel", duration: 50 },
+                { time: [17, 0], name: "Ingles I", teacher: "Falcon Oliovan Andrea Mariel", duration: 50 },
             ],
             // Miércoles (3)
             [
@@ -419,6 +504,7 @@
             currentClassDisplay.textContent = currentClass;
             teacherDisplay.textContent = currentTeacher;
             
+            // Esta línea se mantiene para la parte superior de la página
             nextClassDisplay.textContent = nextClass ? `Siguiente clase: ${nextClass}` : "Siguiente clase: Ninguna";
         }
 
@@ -442,12 +528,90 @@
             themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌑';
         });
 
-        document.getElementById('next-class-display').addEventListener('click', () => {
-            window.location.href = "horario.jpg";
+        // Lógica de la tabla de horario
+        const showScheduleBtn = document.getElementById('show-schedule-btn');
+        const scheduleTable = document.getElementById('schedule-table');
+        const scheduleTableBody = document.getElementById('schedule-table-body');
+
+        // Función para renderizar la tabla
+        function renderScheduleTable() {
+            scheduleTableBody.innerHTML = '';
+            
+            const formatTime = (hours, minutes) => {
+                const am_pm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12 || 12;
+                const formattedMinutes = String(minutes).padStart(2, '0');
+                return `${hours}:${formattedMinutes} ${am_pm}`;
+            };
+            
+            // Obtener todos los tiempos únicos de inicio de clase
+            const allTimes = new Set();
+            schedule.forEach(daySchedule => {
+                daySchedule.forEach(classItem => {
+                    allTimes.add(classItem.time[0] * 60 + classItem.time[1]);
+                });
+            });
+            const sortedTimes = Array.from(allTimes).sort((a, b) => a - b);
+            
+            // Crear un mapa de clases por tiempo y día para una búsqueda más rápida
+            const classesByTimeAndDay = new Map();
+            schedule.forEach((daySchedule, dayIndex) => {
+                daySchedule.forEach(classItem => {
+                    const timeInMinutes = classItem.time[0] * 60 + classItem.time[1];
+                    const key = `${timeInMinutes}-${dayIndex}`;
+                    classesByTimeAndDay.set(key, classItem);
+                });
+            });
+
+            sortedTimes.forEach(timeInMinutes => {
+                if (timeInMinutes === 15 * 60) { // Si el tiempo es 15:00 (Receso)
+                    const recesoRow = document.createElement('tr');
+                    recesoRow.classList.add('receso-row');
+                    const recesoCell = document.createElement('td');
+                    recesoCell.colSpan = 6;
+                    recesoCell.textContent = "RECESO DE 20 MIN.";
+                    recesoRow.appendChild(recesoCell);
+                    scheduleTableBody.appendChild(recesoRow);
+                    return;
+                }
+                
+                const row = document.createElement('tr');
+                const timeCell = document.createElement('td');
+                const hours = Math.floor(timeInMinutes / 60);
+                const minutes = timeInMinutes % 60;
+                timeCell.textContent = formatTime(hours, minutes);
+                row.appendChild(timeCell);
+
+                for (let dayIndex = 0; dayIndex < 5; dayIndex++) { // 5 días de Lunes a Viernes
+                    const classCell = document.createElement('td');
+                    const key = `${timeInMinutes}-${dayIndex}`;
+                    const foundClass = classesByTimeAndDay.get(key);
+                    
+                    if (foundClass) {
+                        classCell.innerHTML = `<strong>${foundClass.name}</strong><br>${foundClass.teacher}`;
+                    } else {
+                        classCell.textContent = '';
+                    }
+                    row.appendChild(classCell);
+                }
+                scheduleTableBody.appendChild(row);
+            });
+        }
+
+        // Evento para mostrar/ocultar la tabla
+        showScheduleBtn.addEventListener('click', () => {
+            scheduleTable.classList.toggle('visible');
+            if (scheduleTable.classList.contains('visible')) {
+                showScheduleBtn.textContent = 'Ocultar Horario Completo';
+            } else {
+                showScheduleBtn.textContent = 'Mostrar Horario Completo';
+            }
         });
 
+        // Carga inicial y actualización
         fetchTime().then(() => {
             updateSchedule();
+            renderScheduleTable();
             setInterval(updateSchedule, 10000);
             setInterval(updateClock, 1000);
         });
