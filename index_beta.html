@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Horario 1CV</title>
+    <title>Horario 1CV - Salón C2/Cómputo 2</title>
     <style>
-        /* Versión: 37 */
+        /* Versión: 36 */
         /* Changelog:
         - Version 17: Nuevo horario corregido.
         - Version 18: "Siguiente clase" movido fuera del contenedor.
@@ -26,8 +26,7 @@
         - Version 33: Se eliminó el fondo borroso del modal, haciéndolo semitransparente. La imagen del horario en el modal ahora es clickeable y te redirige a la imagen. Se añadió un nuevo botón "Página Beta" y se mejoró la estética de los botones de "Mostrar Horario" y "Página Beta".
         - Version 34: Los botones "Mostrar Horario Completo" y "Página Beta" ahora usan los colores del tema (verde/azul) y su texto se adapta.
         - Version 35: El botón "Página Beta" ahora redirige a 'index_beta.html' y se le ajustó el tamaño de la fuente para que coincida con el botón de "Siguiente clase".
-        - Version 36: Se añadió una API de notificaciones para avisar 5 minutos antes de cada clase. Se implementó la estructura de un chat con botón para mostrar/ocultar y campo para nombre, aunque la funcionalidad de conexión con GitHub se dejó como esqueleto por motivos de seguridad.
-        - Version 37: Se eliminó toda la funcionalidad del chat. Se agregó un botón para permitir notificaciones y se eliminó la transformación a mayúsculas de los botones principales para un estilo más informal y amigable.
+        - Version 36: Se agregó un sistema de prueba de hora, que permite simular el tiempo a través de un admin.html que guarda los cambios en el localStorage.
         */
         
         :root {
@@ -135,7 +134,7 @@
         #schedule-container {
             margin-top: 2em;
             max-width: 90%;
-            width: 100%;
+            width: 50%;
         }
 
         #schedule-table {
@@ -245,8 +244,9 @@
             padding: 12px 25px;
             border-radius: 50px;
             border: none;
-            font-size: 0.8em;
+            font-size: 0.8em; /* Ajustado al mismo tamaño que el botón principal */
             font-weight: bold;
+            text-transform: uppercase;
             color: white;
             background-color: var(--next-class-bg);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -301,7 +301,7 @@
         <div class="button-group">
             <button id="show-schedule-btn" class="styled-button">Mostrar Horario Completo</button>
             <a href="index_beta.html" class="styled-button" style="text-decoration: none;">Página Beta</a>
-            <button id="request-notifications-btn" class="styled-button">Recibir Notificaciones</button>
+            <a href="admin.html" class="styled-button" style="text-decoration: none;">Página Admin</a>
         </div>
         <div class="table-wrapper">
             <table id="schedule-table">
@@ -333,7 +333,7 @@
     </div>
     
     <script>
-        // Versión: 37
+        // Versión: 36
         // Changelog:
         // - Version 26: Se añadió un salto de línea en el contador del tiempo restante para una presentación más formal.
         // - Version 27: Se modificó la visualización del contador de la próxima clase para que use el formato de 12 horas (AM/PM).
@@ -345,9 +345,8 @@
         // - Version 33: Se eliminó el fondo borroso del modal, haciéndolo semitransparente. La imagen del horario en el modal ahora es clickeable y te redirige a la imagen. Se añadió un nuevo botón "Página Beta" y se mejoró la estética de los botones de "Mostrar Horario" y "Página Beta".
         // - Version 34: Los botones "Mostrar Horario Completo" y "Página Beta" ahora usan los colores del tema (verde/azul) y su texto se adapta.
         // - Version 35: El botón "Página Beta" ahora redirige a 'index_beta.html' y se le ajustó el tamaño de la fuente para que coincida con el botón de "Siguiente clase".
-        // - Version 36: Se añadió una API de notificaciones para avisar 5 minutos antes de cada clase. Se implementó la estructura de un chat con botón para mostrar/ocultar y campo para nombre, aunque la funcionalidad de conexión con GitHub se dejó como esqueleto por motivos de seguridad.
-        // - Version 37: Se eliminó toda la funcionalidad del chat. Se agregó un botón para permitir notificaciones y se eliminó la transformación a mayúsculas de los botones principales para un estilo más informal y amigable.
-
+        // - Version 36: Se agregó un sistema de prueba de hora, que permite simular el tiempo a través de un admin.html que guarda los cambios en el localStorage.
+        
         const schedule = [
             // Lunes (1)
             [
@@ -403,17 +402,38 @@
         let serverTime = null;
         let startTime = Date.now();
         let currentClassEnd = null;
-        let notificationSent = {}; // Para evitar notificaciones duplicadas
+        let isSimulated = false; // Nueva variable para saber si la hora es simulada
 
         async function fetchTime() {
-            try {
-                const response = await fetch('http://worldtimeapi.org/api/timezone/America/Tijuana');
-                if (!response.ok) throw new Error('Network response was not ok');
-                const data = await response.json();
-                serverTime = new Date(data.datetime);
-            } catch (error) {
-                console.error('Error fetching time from API:', error);
-                serverTime = new Date();
+            // Revisa si hay una hora simulada guardada en el almacenamiento local
+            const simulatedTime = localStorage.getItem('simulatedTime');
+            if (simulatedTime) {
+                const { day, hour, minute } = JSON.parse(simulatedTime);
+                const now = new Date();
+                
+                // Crea un objeto Date con el día y la hora simulada
+                serverTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay() + day, hour, minute, 0);
+                
+                // Si el día simulado es anterior al día actual, avanza una semana
+                if (serverTime < now) {
+                    serverTime.setDate(serverTime.getDate() + 7);
+                }
+                
+                isSimulated = true;
+                console.log('Usando hora simulada:', serverTime);
+            } else {
+                try {
+                    const response = await fetch('http://worldtimeapi.org/api/timezone/America/Tijuana');
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    const data = await response.json();
+                    serverTime = new Date(data.datetime);
+                    isSimulated = false;
+                    console.log('Usando hora real');
+                } catch (error) {
+                    console.error('Error fetching time from API:', error);
+                    serverTime = new Date();
+                    isSimulated = false;
+                }
             }
         }
         
@@ -428,7 +448,10 @@
             const seconds = String(now.getSeconds()).padStart(2, '0');
             const am_pm = hours >= 12 ? 'PM' : 'AM';
             hours = hours % 12 || 12;
-            document.getElementById('clock').textContent = `Hora: ${hours}:${minutes}:${seconds} ${am_pm}`;
+            
+            // Muestra "Hora Simulada" si corresponde
+            const clockText = isSimulated ? `Hora Simulada: ${hours}:${minutes}:${seconds} ${am_pm}` : `Hora: ${hours}:${minutes}:${seconds} ${am_pm}`;
+            document.getElementById('clock').textContent = clockText;
 
             const countdownEl = document.getElementById('countdown');
             if (currentClassEnd) {
@@ -446,12 +469,6 @@
                 
                 if (nextClassStartTime) {
                     const diff = nextClassStartTime - now;
-                    
-                    if (diff > 0 && diff <= 5 * 60 * 1000 && !notificationSent[nextClassTimeDisplay]) {
-                        sendNotification(`Próxima clase: ${nextClassDisplay.textContent}`, '¡La clase empieza en 5 minutos!');
-                        notificationSent[nextClassTimeDisplay] = true;
-                    }
-
                     if (diff > 0) {
                         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
                         const hoursLeft = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -462,11 +479,13 @@
                         if (days > 0) countdownText += `${days}d `;
                         countdownText += `${hoursLeft}h ${minutesLeft}m ${secondsLeft}s`;
                         
+                        // Nuevo formato con salto de línea
                         if (nextClassTimeDisplay) {
                             countdownEl.innerHTML = `Próxima clase a las ${nextClassTimeDisplay} <br> ${countdownText}`;
                         } else {
                             countdownEl.innerHTML = `Próxima clase... <br> ${countdownText}`;
                         }
+
                     } else {
                         countdownEl.textContent = "";
                         countdownEl.dataset.nextClassStart = "";
@@ -477,27 +496,6 @@
                 }
             }
         }
-
-        function sendNotification(title, body) {
-            if ("Notification" in window && Notification.permission === "granted") {
-                new Notification(title, { body: body });
-            }
-        }
-
-        const requestNotificationsBtn = document.getElementById('request-notifications-btn');
-        requestNotificationsBtn.addEventListener('click', () => {
-            if ("Notification" in window) {
-                Notification.requestPermission().then(permission => {
-                    if (permission === "granted") {
-                        alert("Notificaciones activadas. ¡Te avisaremos 5 minutos antes de cada clase!");
-                    } else {
-                        alert("Permiso de notificaciones denegado.");
-                    }
-                });
-            } else {
-                alert("Tu navegador no soporta notificaciones.");
-            }
-        });
         
         function updateSchedule() {
             if (!serverTime) return;
@@ -516,13 +514,12 @@
             currentClassEnd = null;
             countdownEl.dataset.nextClassStart = "";
             countdownEl.dataset.nextClassTimeDisplay = "";
-            notificationSent = {};
 
             if (dayOfWeek === 0 || dayOfWeek === 6) {
                 currentClassDisplay.textContent = "¡Sin Clases!";
                 teacherDisplay.textContent = "Disfruta el fin de semana";
                 
-                const nextDayIndex = 1;
+                const nextDayIndex = 1; // Lunes
                 const nextDaySchedule = schedule[nextDayIndex - 1];
                 const nextClassTime = nextDaySchedule[0].time;
                 const nextClass = nextDaySchedule[0].name;
@@ -533,6 +530,7 @@
                 
                 countdownEl.dataset.nextClassStart = nextClassStart.toISOString();
                 
+                // Función auxiliar para convertir a 12 horas
                 const formatTime = (hours, minutes) => {
                     const am_pm = hours >= 12 ? 'PM' : 'AM';
                     hours = hours % 12 || 12;
@@ -586,6 +584,7 @@
 
                         countdownEl.dataset.nextClassStart = nextClassStart.toISOString();
                         
+                        // Función auxiliar para convertir a 12 horas
                         const formatTime = (hours, minutes) => {
                             const am_pm = hours >= 12 ? 'PM' : 'AM';
                             hours = hours % 12 || 12;
@@ -620,6 +619,7 @@
                                 
                                 countdownEl.dataset.nextClassStart = nextClassStart.toISOString();
 
+                                // Función auxiliar para convertir a 12 horas
                                 const formatTime = (hours, minutes) => {
                                     const am_pm = hours >= 12 ? 'PM' : 'AM';
                                     hours = hours % 12 || 12;
@@ -642,6 +642,7 @@
             currentClassDisplay.textContent = currentClass;
             teacherDisplay.textContent = currentTeacher;
             
+            // Esta línea se mantiene para la parte superior de la página
             nextClassDisplay.textContent = nextClass ? `Siguiente clase: ${nextClass}` : "Siguiente clase: Ninguna";
         }
 
@@ -670,6 +671,7 @@
         const scheduleTable = document.getElementById('schedule-table');
         const scheduleTableBody = document.getElementById('schedule-table-body');
         
+        // Función para renderizar la tabla
         function renderScheduleTable() {
             scheduleTableBody.innerHTML = '';
             
@@ -680,6 +682,7 @@
                 return `${hours}:${formattedMinutes} ${am_pm}`;
             };
             
+            // Obtener todos los tiempos únicos de inicio de clase
             const allTimes = new Set();
             schedule.forEach(daySchedule => {
                 daySchedule.forEach(classItem => {
@@ -688,6 +691,7 @@
             });
             const sortedTimes = Array.from(allTimes).sort((a, b) => a - b);
             
+            // Crear un mapa de clases por tiempo y día para una búsqueda más rápida
             const classesByTimeAndDay = new Map();
             schedule.forEach((daySchedule, dayIndex) => {
                 daySchedule.forEach(classItem => {
@@ -698,7 +702,7 @@
             });
 
             sortedTimes.forEach(timeInMinutes => {
-                if (timeInMinutes === 15 * 60) {
+                if (timeInMinutes === 15 * 60) { // Si el tiempo es 15:00 (Receso)
                     const recesoRow = document.createElement('tr');
                     recesoRow.classList.add('receso-row');
                     const recesoCell = document.createElement('td');
@@ -716,7 +720,7 @@
                 timeCell.textContent = formatTime(hours, minutes);
                 row.appendChild(timeCell);
 
-                for (let dayIndex = 0; dayIndex < 5; dayIndex++) {
+                for (let dayIndex = 0; dayIndex < 5; dayIndex++) { // 5 días de Lunes a Viernes
                     const classCell = document.createElement('td');
                     const key = `${timeInMinutes}-${dayIndex}`;
                     const foundClass = classesByTimeAndDay.get(key);
@@ -732,6 +736,7 @@
             });
         }
 
+        // Evento para mostrar/ocultar la tabla
         showScheduleBtn.addEventListener('click', () => {
             scheduleTable.classList.toggle('visible');
             if (scheduleTable.classList.contains('visible')) {
@@ -741,6 +746,7 @@
             }
         });
         
+        // Lógica del modal (el recuadro)
         const modal = document.getElementById('imageModal');
         const nextClassBtn = document.getElementById('next-class-display');
         const closeModalBtn = document.getElementById('closeModalBtn');
@@ -753,19 +759,13 @@
             modal.style.display = "none";
         });
         
+        // Carga inicial y actualización
         fetchTime().then(() => {
             updateSchedule();
             renderScheduleTable();
-            if ("Notification" in window) {
-                if (Notification.permission === "granted") {
-                    console.log("Notificaciones ya están permitidas.");
-                } else if (Notification.permission === "denied") {
-                    console.log("El permiso de notificaciones ha sido denegado por el usuario.");
-                } else {
-                    console.log("Aún no se ha solicitado el permiso de notificaciones.");
-                }
-            }
-            setInterval(updateSchedule, 10000);
+            // Si la hora es simulada, actualiza cada 1 segundo. Si no, cada 10.
+            const updateInterval = isSimulated ? 1000 : 10000;
+            setInterval(updateSchedule, updateInterval);
             setInterval(updateClock, 1000);
         });
     </script>
