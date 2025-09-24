@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Horario 1CV</title>
     <style>
-        /* Versión: 32 */
+        /* Versión: 35 */
         /* Changelog:
         - Version 17: Nuevo horario corregido.
         - Version 18: "Siguiente clase" movido fuera del contenedor.
@@ -23,6 +23,9 @@
         - Version 30: Se corrigió el nombre de la maestra de inglés, se añadió a la maestra de Cultura Digital del martes y se añadió un scroll lateral para que el horario se vea completo en pantallas pequeñas. Se mejoró la visualización del receso.
         - Version 31: El botón "Siguiente clase" ahora abre un recuadro (modal) con la imagen de 'horario.jpg' y un botón para cerrarlo, sin salir de la página.
         - Version 32: El modal ahora cambia de tema (claro/oscuro) y el botón de aceptar está centrado.
+        - Version 33: Se eliminó el fondo borroso del modal, haciéndolo semitransparente. La imagen del horario en el modal ahora es clickeable y te redirige a la imagen. Se añadió un nuevo botón "Página Beta" y se mejoró la estética de los botones de "Mostrar Horario" y "Página Beta".
+        - Version 34: Los botones "Mostrar Horario Completo" y "Página Beta" ahora usan los colores del tema (verde/azul) y su texto se adapta.
+        - Version 35: El botón "Página Beta" ahora redirige a 'index_beta.html' y se le ajustó el tamaño de la fuente para que coincida con el botón de "Siguiente clase".
         */
         
         :root {
@@ -189,17 +192,15 @@
             width: 100%;
             height: 100%;
             overflow: auto;
-            background-color: rgba(0,0,0,0.8);
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
+            background-color: rgba(0,0,0,0.5); /* Semitransparente */
         }
         .modal-content {
             position: relative;
-            background-color: var(--container-bg); /* Usa variable de tema */
-            color: var(--text-color); /* Usa variable de tema */
+            background-color: var(--container-bg);
+            color: var(--text-color);
             margin: 15% auto;
             padding: 20px;
-            border: 1px solid var(--text-color); /* Usa variable de tema */
+            border: 1px solid var(--text-color);
             width: 90%;
             max-width: 800px;
             border-radius: 10px;
@@ -210,10 +211,11 @@
             width: 100%;
             height: auto;
             display: block;
+            cursor: pointer; /* Agrega cursor para indicar que es clickeable */
         }
         .modal-footer {
             margin-top: 15px;
-            text-align: center; /* Centra el botón */
+            text-align: center;
         }
         .modal-footer button {
             background-color: var(--next-class-bg);
@@ -228,6 +230,44 @@
             background-color: var(--next-class-hover-bg);
         }
 
+        /* Nuevos estilos para los botones de abajo */
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 2em;
+            gap: 10px; /* Espacio entre los botones */
+        }
+
+        .styled-button {
+            padding: 12px 25px;
+            border-radius: 50px;
+            border: none;
+            font-size: 0.8em; /* Ajustado al mismo tamaño que el botón principal */
+            font-weight: bold;
+            text-transform: uppercase;
+            color: white;
+            background-color: var(--next-class-bg);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease;
+        }
+
+        .styled-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            background-color: var(--next-class-hover-bg);
+        }
+
+        .styled-button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        [data-theme="dark"] .styled-button {
+            color: white;
+        }
+        
         @media (max-width: 600px) {
             .container {
                 width: 90%;
@@ -257,7 +297,10 @@
     <div id="countdown"></div>
     
     <div id="schedule-container">
-        <button id="show-schedule-btn">Mostrar Horario Completo</button>
+        <div class="button-group">
+            <button id="show-schedule-btn" class="styled-button">Mostrar Horario Completo</button>
+            <a href="index_beta.html" class="styled-button" style="text-decoration: none;">Página Beta</a>
+        </div>
         <div class="table-wrapper">
             <table id="schedule-table">
                 <thead>
@@ -278,7 +321,9 @@
 
     <div id="imageModal" class="modal">
         <div class="modal-content">
-            <img id="modalImage" src="horario.jpg" alt="Horario 1CV">
+            <a href="horario.jpg" target="_blank">
+                <img id="modalImage" src="horario.jpg" alt="Horario 1CV">
+            </a>
             <div class="modal-footer">
                 <button id="closeModalBtn">Aceptar</button>
             </div>
@@ -286,7 +331,7 @@
     </div>
     
     <script>
-        // Versión: 32
+        // Versión: 35
         // Changelog:
         // - Version 26: Se añadió un salto de línea en el contador del tiempo restante para una presentación más formal.
         // - Version 27: Se modificó la visualización del contador de la próxima clase para que use el formato de 12 horas (AM/PM).
@@ -295,6 +340,9 @@
         // - Version 30: Se corrigió el nombre de la maestra de inglés, se añadió a la maestra de Cultura Digital del martes y se añadió un scroll lateral para que el horario se vea completo en pantallas pequeñas. Se mejoró la visualización del receso.
         // - Version 31: El botón "Siguiente clase" ahora abre un recuadro (modal) con la imagen de 'horario.jpg' y un botón para cerrarlo, sin salir de la página.
         // - Version 32: El modal ahora cambia de tema (claro/oscuro) y el botón de aceptar está centrado.
+        // - Version 33: Se eliminó el fondo borroso del modal, haciéndolo semitransparente. La imagen del horario en el modal ahora es clickeable y te redirige a la imagen. Se añadió un nuevo botón "Página Beta" y se mejoró la estética de los botones de "Mostrar Horario" y "Página Beta".
+        // - Version 34: Los botones "Mostrar Horario Completo" y "Página Beta" ahora usan los colores del tema (verde/azul) y su texto se adapta.
+        // - Version 35: El botón "Página Beta" ahora redirige a 'index_beta.html' y se le ajustó el tamaño de la fuente para que coincida con el botón de "Siguiente clase".
 
         const schedule = [
             // Lunes (1)
@@ -594,7 +642,7 @@
         const showScheduleBtn = document.getElementById('show-schedule-btn');
         const scheduleTable = document.getElementById('schedule-table');
         const scheduleTableBody = document.getElementById('schedule-table-body');
-
+        
         // Función para renderizar la tabla
         function renderScheduleTable() {
             scheduleTableBody.innerHTML = '';
@@ -682,7 +730,7 @@
         closeModalBtn.addEventListener('click', () => {
             modal.style.display = "none";
         });
-
+        
         // Carga inicial y actualización
         fetchTime().then(() => {
             updateSchedule();
