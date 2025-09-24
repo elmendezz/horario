@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Horario 1CV - Salón C2/Cómputo 2</title>
     <style>
-        /* Versión: 35 */
+        /* Versión: 36 */
         /* Changelog:
         - Version 17: Nuevo horario corregido.
         - Version 18: "Siguiente clase" movido fuera del contenedor.
@@ -26,6 +26,7 @@
         - Version 33: Se eliminó el fondo borroso del modal, haciéndolo semitransparente. La imagen del horario en el modal ahora es clickeable y te redirige a la imagen. Se añadió un nuevo botón "Página Beta" y se mejoró la estética de los botones de "Mostrar Horario" y "Página Beta".
         - Version 34: Los botones "Mostrar Horario Completo" y "Página Beta" ahora usan los colores del tema (verde/azul) y su texto se adapta.
         - Version 35: El botón "Página Beta" ahora redirige a 'index_beta.html' y se le ajustó el tamaño de la fuente para que coincida con el botón de "Siguiente clase".
+        - Version 36: Se agregó un sistema de prueba de hora, que permite simular el tiempo a través de un admin.html que guarda los cambios en el localStorage.
         */
         
         :root {
@@ -133,7 +134,7 @@
         #schedule-container {
             margin-top: 2em;
             max-width: 90%;
-            width: 50%;
+            width: 100%;
         }
 
         #schedule-table {
@@ -300,6 +301,7 @@
         <div class="button-group">
             <button id="show-schedule-btn" class="styled-button">Mostrar Horario Completo</button>
             <a href="index_beta.html" class="styled-button" style="text-decoration: none;">Página Beta</a>
+            
         </div>
         <div class="table-wrapper">
             <table id="schedule-table">
@@ -331,7 +333,7 @@
     </div>
     
     <script>
-        // Versión: 35
+        // Versión: 36
         // Changelog:
         // - Version 26: Se añadió un salto de línea en el contador del tiempo restante para una presentación más formal.
         // - Version 27: Se modificó la visualización del contador de la próxima clase para que use el formato de 12 horas (AM/PM).
@@ -343,7 +345,8 @@
         // - Version 33: Se eliminó el fondo borroso del modal, haciéndolo semitransparente. La imagen del horario en el modal ahora es clickeable y te redirige a la imagen. Se añadió un nuevo botón "Página Beta" y se mejoró la estética de los botones de "Mostrar Horario" y "Página Beta".
         // - Version 34: Los botones "Mostrar Horario Completo" y "Página Beta" ahora usan los colores del tema (verde/azul) y su texto se adapta.
         // - Version 35: El botón "Página Beta" ahora redirige a 'index_beta.html' y se le ajustó el tamaño de la fuente para que coincida con el botón de "Siguiente clase".
-
+        // - Version 36: Se agregó un sistema de prueba de hora, que permite simular el tiempo a través de un admin.html que guarda los cambios en el localStorage.
+        
         const schedule = [
             // Lunes (1)
             [
@@ -399,16 +402,38 @@
         let serverTime = null;
         let startTime = Date.now();
         let currentClassEnd = null;
+        let isSimulated = false; // Nueva variable para saber si la hora es simulada
 
         async function fetchTime() {
-            try {
-                const response = await fetch('http://worldtimeapi.org/api/timezone/America/Tijuana');
-                if (!response.ok) throw new Error('Network response was not ok');
-                const data = await response.json();
-                serverTime = new Date(data.datetime);
-            } catch (error) {
-                console.error('Error fetching time from API:', error);
-                serverTime = new Date();
+            // Revisa si hay una hora simulada guardada en el almacenamiento local
+            const simulatedTime = localStorage.getItem('simulatedTime');
+            if (simulatedTime) {
+                const { day, hour, minute } = JSON.parse(simulatedTime);
+                const now = new Date();
+                
+                // Crea un objeto Date con el día y la hora simulada
+                serverTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay() + day, hour, minute, 0);
+                
+                // Si el día simulado es anterior al día actual, avanza una semana
+                if (serverTime < now) {
+                    serverTime.setDate(serverTime.getDate() + 7);
+                }
+                
+                isSimulated = true;
+                console.log('Usando hora simulada:', serverTime);
+            } else {
+                try {
+                    const response = await fetch('http://worldtimeapi.org/api/timezone/America/Tijuana');
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    const data = await response.json();
+                    serverTime = new Date(data.datetime);
+                    isSimulated = false;
+                    console.log('Usando hora real');
+                } catch (error) {
+                    console.error('Error fetching time from API:', error);
+                    serverTime = new Date();
+                    isSimulated = false;
+                }
             }
         }
         
@@ -423,7 +448,10 @@
             const seconds = String(now.getSeconds()).padStart(2, '0');
             const am_pm = hours >= 12 ? 'PM' : 'AM';
             hours = hours % 12 || 12;
-            document.getElementById('clock').textContent = `Hora: ${hours}:${minutes}:${seconds} ${am_pm}`;
+            
+            // Muestra "Hora Simulada" si corresponde
+            const clockText = isSimulated ? `Hora Simulada: ${hours}:${minutes}:${seconds} ${am_pm}` : `Hora: ${hours}:${minutes}:${seconds} ${am_pm}`;
+            document.getElementById('clock').textContent = clockText;
 
             const countdownEl = document.getElementById('countdown');
             if (currentClassEnd) {
@@ -735,7 +763,9 @@
         fetchTime().then(() => {
             updateSchedule();
             renderScheduleTable();
-            setInterval(updateSchedule, 10000);
+            // Si la hora es simulada, actualiza cada 1 segundo. Si no, cada 10.
+            const updateInterval = isSimulated ? 1000 : 10000;
+            setInterval(updateSchedule, updateInterval);
             setInterval(updateClock, 1000);
         });
     </script>
