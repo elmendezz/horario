@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Horario 1CV</title>
     <style>
-        /* Versión: 36 */
+        /* Versión: 37 */
         /* Changelog:
         - Version 17: Nuevo horario corregido.
         - Version 18: "Siguiente clase" movido fuera del contenedor.
@@ -27,6 +27,7 @@
         - Version 34: Los botones "Mostrar Horario Completo" y "Página Beta" ahora usan los colores del tema (verde/azul) y su texto se adapta.
         - Version 35: El botón "Página Beta" ahora redirige a 'index_beta.html' y se le ajustó el tamaño de la fuente para que coincida con el botón de "Siguiente clase".
         - Version 36: Se añadió una API de notificaciones para avisar 5 minutos antes de cada clase. Se implementó la estructura de un chat con botón para mostrar/ocultar y campo para nombre, aunque la funcionalidad de conexión con GitHub se dejó como esqueleto por motivos de seguridad.
+        - Version 37: Se eliminó toda la funcionalidad del chat. Se agregó un botón para permitir notificaciones y se eliminó la transformación a mayúsculas de los botones principales para un estilo más informal y amigable.
         */
         
         :root {
@@ -246,7 +247,6 @@
             border: none;
             font-size: 0.8em;
             font-weight: bold;
-            text-transform: uppercase;
             color: white;
             background-color: var(--next-class-bg);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -285,91 +285,6 @@
                 padding: 8px 4px;
             }
         }
-
-        /* Estilos del chat */
-        #chat-container {
-            display: none;
-            flex-direction: column;
-            background-color: var(--container-bg);
-            border-radius: 15px;
-            box-shadow: var(--container-shadow);
-            padding: 1em;
-            margin-top: 1em;
-            width: 90%;
-            max-width: 600px;
-            transition: background-color 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        #chat-container.visible {
-            display: flex;
-        }
-
-        #chat-messages {
-            height: 300px;
-            overflow-y: auto;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 10px;
-            background-color: var(--table-row-bg);
-            transition: background-color 0.3s ease;
-        }
-
-        #chat-input-container {
-            display: flex;
-            gap: 10px;
-        }
-
-        #chat-username, #chat-message {
-            flex-grow: 1;
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-        }
-
-        #send-chat-btn {
-            background-color: var(--next-class-bg);
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-        }
-
-        #send-chat-btn:hover {
-            background-color: var(--next-class-hover-bg);
-        }
-
-        .chat-message-box {
-            background-color: var(--container-bg);
-            border-radius: 8px;
-            padding: 8px;
-            margin-bottom: 8px;
-            word-wrap: break-word;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .chat-username {
-            font-weight: bold;
-            color: var(--next-class-bg);
-        }
-
-        .admin-glow {
-            animation: glowing 1.5s infinite alternate;
-        }
-        
-        @keyframes glowing {
-            from {
-                text-shadow: 0 0 5px var(--next-class-bg);
-            }
-            to {
-                text-shadow: 0 0 20px var(--next-class-hover-bg), 0 0 30px var(--next-class-bg);
-            }
-        }
     </style>
 </head>
 <body>
@@ -386,7 +301,7 @@
         <div class="button-group">
             <button id="show-schedule-btn" class="styled-button">Mostrar Horario Completo</button>
             <a href="index_beta.html" class="styled-button" style="text-decoration: none;">Página Beta</a>
-            <button id="toggle-chat-btn" class="styled-button">Mostrar Chat</button>
+            <button id="request-notifications-btn" class="styled-button">Recibir Notificaciones</button>
         </div>
         <div class="table-wrapper">
             <table id="schedule-table">
@@ -406,18 +321,6 @@
         </div>
     </div>
 
-    <div id="chat-container">
-        <h3>Chat de Clase</h3>
-        <p>Aviso: El chat solo funciona como un prototipo visual. La conexión a un repositorio de GitHub requiere un servidor seguro y no puede ser implementada aquí.</p>
-        <p id="chat-status"></p>
-        <div id="chat-messages"></div>
-        <div id="chat-input-container">
-            <input type="text" id="chat-username" placeholder="Tu nombre..." required>
-            <input type="text" id="chat-message" placeholder="Escribe un mensaje..." disabled>
-            <button id="send-chat-btn" disabled>Enviar</button>
-        </div>
-    </div>
-
     <div id="imageModal" class="modal">
         <div class="modal-content">
             <a href="horario.jpg" target="_blank">
@@ -430,7 +333,7 @@
     </div>
     
     <script>
-        // Versión: 36
+        // Versión: 37
         // Changelog:
         // - Version 26: Se añadió un salto de línea en el contador del tiempo restante para una presentación más formal.
         // - Version 27: Se modificó la visualización del contador de la próxima clase para que use el formato de 12 horas (AM/PM).
@@ -443,6 +346,7 @@
         // - Version 34: Los botones "Mostrar Horario Completo" y "Página Beta" ahora usan los colores del tema (verde/azul) y su texto se adapta.
         // - Version 35: El botón "Página Beta" ahora redirige a 'index_beta.html' y se le ajustó el tamaño de la fuente para que coincida con el botón de "Siguiente clase".
         // - Version 36: Se añadió una API de notificaciones para avisar 5 minutos antes de cada clase. Se implementó la estructura de un chat con botón para mostrar/ocultar y campo para nombre, aunque la funcionalidad de conexión con GitHub se dejó como esqueleto por motivos de seguridad.
+        // - Version 37: Se eliminó toda la funcionalidad del chat. Se agregó un botón para permitir notificaciones y se eliminó la transformación a mayúsculas de los botones principales para un estilo más informal y amigable.
 
         const schedule = [
             // Lunes (1)
@@ -543,9 +447,8 @@
                 if (nextClassStartTime) {
                     const diff = nextClassStartTime - now;
                     
-                    // Lógica de la notificación 5 minutos antes
                     if (diff > 0 && diff <= 5 * 60 * 1000 && !notificationSent[nextClassTimeDisplay]) {
-                        sendNotification(`Próxima clase: ${nextClassDisplay}`, '¡La clase empieza en 5 minutos!');
+                        sendNotification(`Próxima clase: ${nextClassDisplay.textContent}`, '¡La clase empieza en 5 minutos!');
                         notificationSent[nextClassTimeDisplay] = true;
                     }
 
@@ -576,18 +479,25 @@
         }
 
         function sendNotification(title, body) {
-            if (!("Notification" in window)) {
-                console.log("Este navegador no soporta notificaciones.");
-            } else if (Notification.permission === "granted") {
+            if ("Notification" in window && Notification.permission === "granted") {
                 new Notification(title, { body: body });
-            } else if (Notification.permission !== "denied") {
-                Notification.requestPermission().then(permission => {
-                    if (permission === "granted") {
-                        new Notification(title, { body: body });
-                    }
-                });
             }
         }
+
+        const requestNotificationsBtn = document.getElementById('request-notifications-btn');
+        requestNotificationsBtn.addEventListener('click', () => {
+            if ("Notification" in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        alert("Notificaciones activadas. ¡Te avisaremos 5 minutos antes de cada clase!");
+                    } else {
+                        alert("Permiso de notificaciones denegado.");
+                    }
+                });
+            } else {
+                alert("Tu navegador no soporta notificaciones.");
+            }
+        });
         
         function updateSchedule() {
             if (!serverTime) return;
@@ -606,13 +516,13 @@
             currentClassEnd = null;
             countdownEl.dataset.nextClassStart = "";
             countdownEl.dataset.nextClassTimeDisplay = "";
-            notificationSent = {}; // Reiniciar las notificaciones para el nuevo día/horario
+            notificationSent = {};
 
             if (dayOfWeek === 0 || dayOfWeek === 6) {
                 currentClassDisplay.textContent = "¡Sin Clases!";
                 teacherDisplay.textContent = "Disfruta el fin de semana";
                 
-                const nextDayIndex = 1; // Lunes
+                const nextDayIndex = 1;
                 const nextDaySchedule = schedule[nextDayIndex - 1];
                 const nextClassTime = nextDaySchedule[0].time;
                 const nextClass = nextDaySchedule[0].name;
@@ -843,79 +753,17 @@
             modal.style.display = "none";
         });
         
-        // Lógica del chat
-        const toggleChatBtn = document.getElementById('toggle-chat-btn');
-        const chatContainer = document.getElementById('chat-container');
-        const chatUsernameInput = document.getElementById('chat-username');
-        const chatMessageInput = document.getElementById('chat-message');
-        const sendChatBtn = document.getElementById('send-chat-btn');
-        const chatStatus = document.getElementById('chat-status');
-
-        toggleChatBtn.addEventListener('click', () => {
-            chatContainer.classList.toggle('visible');
-            if (chatContainer.classList.contains('visible')) {
-                toggleChatBtn.textContent = 'Ocultar Chat';
-            } else {
-                toggleChatBtn.textContent = 'Mostrar Chat';
-            }
-        });
-
-        chatUsernameInput.addEventListener('input', () => {
-            const username = chatUsernameInput.value.trim();
-            if (username.length > 0) {
-                chatMessageInput.disabled = false;
-                sendChatBtn.disabled = false;
-                chatStatus.textContent = `¡Hola, ${username}!`;
-            } else {
-                chatMessageInput.disabled = true;
-                sendChatBtn.disabled = true;
-                chatStatus.textContent = "Ingresa un nombre para chatear.";
-            }
-        });
-        
-        // Simulación de envío de mensaje (sin funcionalidad real de GitHub)
-        sendChatBtn.addEventListener('click', () => {
-            const username = chatUsernameInput.value.trim();
-            const message = chatMessageInput.value.trim();
-
-            if (username && message) {
-                // Aquí iría la lógica para enviar el mensaje al backend
-                // Por ahora, solo se simula la adición del mensaje al chat
-                addMessageToChat(username, message);
-                chatMessageInput.value = '';
-            }
-        });
-        
-        function addMessageToChat(username, message) {
-            const messagesContainer = document.getElementById('chat-messages');
-            const messageBox = document.createElement('div');
-            messageBox.classList.add('chat-message-box');
-
-            const usernameSpan = document.createElement('span');
-            usernameSpan.classList.add('chat-username');
-            // Simulación de un usuario admin para el efecto de glow
-            if (username.toLowerCase() === 'admin') {
-                usernameSpan.classList.add('admin-glow');
-            }
-            usernameSpan.textContent = username;
-            
-            const messageText = document.createElement('p');
-            messageText.textContent = `: ${message}`;
-            messageText.style.display = 'inline';
-
-            messageBox.appendChild(usernameSpan);
-            messageBox.appendChild(messageText);
-            messagesContainer.appendChild(messageBox);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-
-        // Carga inicial y actualización
         fetchTime().then(() => {
             updateSchedule();
             renderScheduleTable();
-            // Permiso de notificaciones
-            if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
-                Notification.requestPermission();
+            if ("Notification" in window) {
+                if (Notification.permission === "granted") {
+                    console.log("Notificaciones ya están permitidas.");
+                } else if (Notification.permission === "denied") {
+                    console.log("El permiso de notificaciones ha sido denegado por el usuario.");
+                } else {
+                    console.log("Aún no se ha solicitado el permiso de notificaciones.");
+                }
             }
             setInterval(updateSchedule, 10000);
             setInterval(updateClock, 1000);
