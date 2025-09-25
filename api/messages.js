@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
   const repo = "elmendezz/horario-messages";  // cambia a tu repo
-  const file = "messages.json";
+  const file = "mensajes.json";
   const branch = "main";
 
   const headers = {
