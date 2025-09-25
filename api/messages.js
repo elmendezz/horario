@@ -51,3 +51,35 @@ export default async function handler(req, res) {
 
   return res.status(405).json({ error: "Método no permitido" });
 }
+if (req.method === "DELETE") {
+  const { index } = req.body;
+  if (index === undefined) return res.status(400).json({ error: "Index requerido" });
+
+  // Leer archivo actual
+  const ghFile = await fetch(`https://api.github.com/repos/${repo}/contents/${file}?ref=${branch}`, { headers });
+  const ghData = await ghFile.json();
+  const sha = ghData.sha;
+  let messages = JSON.parse(Buffer.from(ghData.content, "base64").toString("utf-8"));
+
+  // Borrar mensaje en índice
+  messages.splice(index, 1);
+
+  // Subir archivo actualizado
+  const update = await fetch(`https://api.github.com/repos/${repo}/contents/${file}`, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify({
+      message: "Mensaje borrado desde admin",
+      content: Buffer.from(JSON.stringify(messages, null, 2)).toString("base64"),
+      sha,
+      branch
+    })
+  });
+
+  if (!update.ok) {
+    const err = await update.json();
+    return res.status(500).json({ error: err });
+  }
+
+  return res.status(200).json({ success: true });
+}
