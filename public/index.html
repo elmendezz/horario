@@ -343,7 +343,7 @@
 let lastMsgCount = 0;
 
 async function loadMessages() {
-  const res = await fetch("/api/messages");
+  const res = await fetch("/api/messages.js");
   const messages = await res.json();
   const container = document.getElementById("messages");
   container.innerHTML = "";
