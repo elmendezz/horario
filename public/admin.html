@@ -10,7 +10,9 @@
     button { margin-top: 10px; padding: 10px 20px; border: none; border-radius: 8px; background: #4CAF50; color: white; cursor: pointer; }
     button:hover { background: #45a049; }
     .msg-list { margin-top: 20px; text-align: left; }
-    .msg-item { background: #333; padding: 10px; border-radius: 6px; margin-bottom: 10px; }
+    .msg-item { background: #333; padding: 10px; border-radius: 6px; margin-bottom: 10px; position: relative; }
+    .delete-btn { position: absolute; right: 10px; top: 10px; background: #e53935; border: none; color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+    .delete-btn:hover { background: #c62828; }
   </style>
 </head>
 <body>
@@ -40,15 +42,33 @@
       }
     }
 
+    async function deleteMessage(index) {
+      const res = await fetch("/api/messages", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ index })
+      });
+      if (res.ok) {
+        loadMessages();
+      } else {
+        alert("Error al borrar mensaje");
+      }
+    }
+
     async function loadMessages() {
       const res = await fetch("/api/messages");
       const msgs = await res.json();
       const list = document.getElementById("msgList");
       list.innerHTML = "";
-      msgs.slice().reverse().forEach(m => {
+      msgs.slice().reverse().forEach((m, i) => {
         const div = document.createElement("div");
         div.className = "msg-item";
         div.innerHTML = `<b>${m.time}</b><br>${m.text}`;
+        const btn = document.createElement("button");
+        btn.className = "delete-btn";
+        btn.textContent = "X";
+        btn.onclick = () => deleteMessage(msgs.length - 1 - i); // índice real
+        div.appendChild(btn);
         list.appendChild(div);
       });
     }
