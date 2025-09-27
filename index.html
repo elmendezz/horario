@@ -287,12 +287,11 @@
     <div id="clock"></div>
     <div id="countdown"></div>
     
-    <div id="schedule-container">
-        <div class="button-group">
-            <button id="show-schedule-btn" class="styled-button">Mostrar Horario Completo</button>
-            <button id="fullscreen-btn" class="styled-button">Pantalla Completa</button>
-            
-        </div>
+    <div class="button-group">
+    <button id="show-schedule-btn" class="styled-button">Mostrar Horario Completo</button>
+    <button id="fullscreen-btn" class="styled-button">Pantalla Completa</button>
+    <button id="notifications-btn" class="styled-button">Activar Notificaciones</button>
+</div>
         <div class="table-wrapper">
             <table id="schedule-table">
                 <thead>
@@ -757,6 +756,63 @@
             setInterval(updateSchedule, updateInterval);
             setInterval(updateClock, 1000);
         });
+        // ============ CÓDIGO PARA LAS NOTIFICACIONES ============
+const notificationsBtn = document.getElementById('notifications-btn');
+
+// Función para inicializar el botón y el estado de las notificaciones
+function initializeNotifications() {
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+        notificationsBtn.disabled = true;
+        notificationsBtn.textContent = "Notificaciones no soportadas";
+        return;
+    }
+
+    // Al cargar la página, revisamos si las notificaciones ya estaban activadas
+    const areNotificationsEnabled = localStorage.getItem('notificationsEnabled') === 'true';
+    if (areNotificationsEnabled && Notification.permission === 'granted') {
+        notificationsBtn.textContent = 'Desactivar Notificaciones';
+        // Le decimos al Service Worker que se asegure de programar las notificaciones
+        sendMessageToSW({ type: 'SET_NOTIFICATIONS', enabled: true });
+    } else {
+        notificationsBtn.textContent = 'Activar Notificaciones';
+        localStorage.setItem('notificationsEnabled', 'false');
+    }
+}
+
+// Evento de clic para el botón
+notificationsBtn.addEventListener('click', () => {
+    const areNotificationsEnabled = localStorage.getItem('notificationsEnabled') === 'true';
+
+    if (areNotificationsEnabled) {
+        // Desactivar notificaciones
+        localStorage.setItem('notificationsEnabled', 'false');
+        notificationsBtn.textContent = 'Activar Notificaciones';
+        sendMessageToSW({ type: 'SET_NOTIFICATIONS', enabled: false });
+        console.log('Notificaciones desactivadas.');
+    } else {
+        // Activar notificaciones, primero pedimos permiso
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                localStorage.setItem('notificationsEnabled', 'true');
+                notificationsBtn.textContent = 'Desactivar Notificaciones';
+                sendMessageToSW({ type: 'SET_NOTIFICATIONS', enabled: true });
+                console.log('Notificaciones activadas y programadas.');
+            } else {
+                alert('No has dado permiso para recibir notificaciones.');
+            }
+        });
+    }
+});
+
+// Función para enviar mensajes al Service Worker
+function sendMessageToSW(message) {
+    if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage(message);
+    }
+}
+
+// Llamamos a la función de inicialización cuando la página carga
+initializeNotifications();
         // ============ CÓDIGO PARA EL BOTÓN DE PANTALLA COMPLETA! ============
 const fullscreenBtn = document.getElementById('fullscreen-btn');
 
