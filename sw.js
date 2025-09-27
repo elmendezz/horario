@@ -5,9 +5,7 @@ const CACHE_NAME = 'horario-1cv-cache-v1';
 const urlsToCache = [
   '/',
   'index.html',
-  'horario.jpg',
-  'admin.html',
-  'index_beta.html'
+  'horario.jpg'
 ];
 
 // Evento de instalación: se abre la caché y se añaden los archivos
