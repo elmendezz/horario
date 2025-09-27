@@ -769,45 +769,40 @@
             setInterval(updateSchedule, updateInterval);
             setInterval(updateClock, 1000);
         });
-        // ============ CÓDIGO PARA LAS NOTIFICACIONES ============
+     // ============ CÓDIGO PARA LAS NOTIFICACIONES (VERSIÓN ICONO) ============
 const notificationsBtn = document.getElementById('notifications-btn');
 
-// Función para inicializar el botón y el estado de las notificaciones
 function initializeNotifications() {
     if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-        notificationsBtn.disabled = true;
-        notificationsBtn.textContent = "Notificaciones no soportadas";
+        notificationsBtn.style.display = 'none'; // Ocultamos el botón si no es compatible
         return;
     }
 
-    // Al cargar la página, revisamos si las notificaciones ya estaban activadas
     const areNotificationsEnabled = localStorage.getItem('notificationsEnabled') === 'true';
     if (areNotificationsEnabled && Notification.permission === 'granted') {
-        notificationsBtn.textContent = 'Desactivar Notificaciones';
-        // Le decimos al Service Worker que se asegure de programar las notificaciones
+        notificationsBtn.textContent = '🔔'; // Icono de notificaciones activadas
         sendMessageToSW({ type: 'SET_NOTIFICATIONS', enabled: true });
     } else {
-        notificationsBtn.textContent = 'Activar Notificaciones';
+        notificationsBtn.textContent = '🔕'; // Icono de notificaciones desactivadas
         localStorage.setItem('notificationsEnabled', 'false');
     }
 }
 
-// Evento de clic para el botón
 notificationsBtn.addEventListener('click', () => {
     const areNotificationsEnabled = localStorage.getItem('notificationsEnabled') === 'true';
 
     if (areNotificationsEnabled) {
-        // Desactivar notificaciones
+        // Desactivar
         localStorage.setItem('notificationsEnabled', 'false');
-        notificationsBtn.textContent = 'Activar Notificaciones';
+        notificationsBtn.textContent = '🔕';
         sendMessageToSW({ type: 'SET_NOTIFICATIONS', enabled: false });
         console.log('Notificaciones desactivadas.');
     } else {
-        // Activar notificaciones, primero pedimos permiso
+        // Activar
         Notification.requestPermission().then(permission => {
             if (permission === 'granted') {
                 localStorage.setItem('notificationsEnabled', 'true');
-                notificationsBtn.textContent = 'Desactivar Notificaciones';
+                notificationsBtn.textContent = '🔔';
                 sendMessageToSW({ type: 'SET_NOTIFICATIONS', enabled: true });
                 console.log('Notificaciones activadas y programadas.');
             } else {
@@ -817,14 +812,12 @@ notificationsBtn.addEventListener('click', () => {
     }
 });
 
-// Función para enviar mensajes al Service Worker
 function sendMessageToSW(message) {
     if (navigator.serviceWorker.controller) {
         navigator.serviceWorker.controller.postMessage(message);
     }
 }
 
-// Llamamos a la función de inicialización cuando la página carga
 initializeNotifications();
         // ============ CÓDIGO PARA EL BOTÓN DE PANTALLA COMPLETA! ============
 const fullscreenBtn = document.getElementById('fullscreen-btn');
