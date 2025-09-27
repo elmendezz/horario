@@ -21,6 +21,36 @@ const schedule = [
     // Viernes (5)
     [{ time: [13, 20], name: "Formación Socioemocional I" }, { time: [14, 10], name: "Ciencias Sociales I" }, { time: [15, 20], name: "Lengua y Comunicación I" }, { time: [16, 10], name: "La Materia y sus Interacciones" }, { time: [17, 0], name: "Pensamiento Matemático I" }]
 ];
+// Escuchamos mensajes de la página
+self.addEventListener('message', event => {
+    if (event.data.type === 'SET_NOTIFICATIONS') {
+        if (event.data.enabled) {
+            console.log('SW: Recibida orden para activar notificaciones. Programando...');
+            scheduleNextNotification();
+        } else {
+            console.log('SW: Recibida orden para desactivar notificaciones. Cancelando...');
+            clearTimeout(notificationTimer);
+        }
+    }
+
+
+
+    // === NUEVA LÓGICA PARA LA NOTIFICACIÓN DE PRUEBA ===
+    if (event.data.type === 'SCHEDULE_TEST_NOTIFICATION') {
+        console.log('SW: Orden de prueba recibida. Notificación programada en 10 segundos.');
+        
+        // Programamos que la notificación se muestre en 10 segundos
+        setTimeout(() => {
+            self.registration.showNotification('🔔 ¡Notificación de Prueba! 🔔', {
+                body: 'Si puedes ver esto, ¡las notificaciones funcionan correctamente!',
+                icon: 'images/icons/icon-192x192.png' // Asegúrate que este icono exista
+            });
+            console.log('SW: Notificación de prueba enviada.');
+        }, 10000); // 10000 milisegundos = 10 segundos
+    }
+});
+
+
 
 let notificationTimer = null;
 
