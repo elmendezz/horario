@@ -759,6 +759,22 @@
         });
     </script>
     
+    // ============ CÓDIGO PARA EL BOTÓN DE PANTALLA COMPLETA ============
+const fullscreenBtn = document.getElementById('fullscreen-btn');
+
+fullscreenBtn.addEventListener('click', () => {
+    // Si ya estamos en pantalla completa, salimos.
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+    } 
+    // Si no, la pedimos.
+    else {
+        document.documentElement.requestFullscreen().catch(err => {
+            alert(`Error al intentar entrar en pantalla completa: ${err.message}`);
+        });
+    }
+});
+
     <script>
         if ('serviceWorker' in navigator) {
           window.addEventListener('load', () => {
