@@ -303,7 +303,8 @@
     <div class="button-group">
     <button id="show-schedule-btn" class="styled-button">Mostrar Horario Completo</button>
     <button id="fullscreen-btn" class="styled-button">Pantalla Completa</button>
-    
+    <!-- === BOTÓN TEMPORAL PARA PROBAR NOTIFICACIONES === -->
+    <button id="test-notification-btn" class="styled-button" style="background-color: #ffc107; color: #000;">Probar Notificación (10s)</button>
 </div>
         <div class="table-wrapper">
             <table id="schedule-table">
@@ -350,6 +351,39 @@
         // - Version 35: El botón "Página Beta" ahora redirige a 'index_beta.html' y se le ajustó el tamaño de la fuente para que coincida con el botón de "Siguiente clase".
         // - Version 36: Se agregó un sistema de prueba de hora, que permite simular el tiempo a través de un admin.html que guarda los cambios en el localStorage.
         
+        // ============ CÓDIGO TEMPORAL PARA PRUEBA DE NOTIFICACIONES ============
+const testNotificationBtn = document.getElementById('test-notification-btn');
+
+testNotificationBtn.addEventListener('click', () => {
+    // Primero, verificamos que el navegador soporte notificaciones
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+        alert('Tu navegador no soporta notificaciones.');
+        return;
+    }
+
+    console.log('Iniciando prueba de notificación...');
+    
+    // Pedimos permiso. Si ya lo tenemos, no volverá a preguntar.
+    Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+            // Guardamos en localStorage que estamos probando (como pediste)
+            localStorage.setItem('notificationTestInProgress', 'true');
+            
+            console.log('Permiso concedido. Enviando orden de prueba al Service Worker.');
+
+            // Le decimos al Service Worker que envíe una notificación en 10 segundos
+            sendMessageToSW({ type: 'SCHEDULE_TEST_NOTIFICATION' });
+            
+            // Damos instrucciones al usuario
+            alert('¡Permiso concedido! Tienes 10 segundos para salir de la app, ir a la pantalla de inicio o bloquear el teléfono. La notificación aparecerá en breve.');
+            
+        } else {
+            localStorage.removeItem('notificationTestInProgress');
+            alert('No has dado permiso para las notificaciones, por lo que no se puede realizar la prueba.');
+        }
+    });
+});
+
         const schedule = [
             // Lunes (1)
             [
