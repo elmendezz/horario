@@ -1,11 +1,11 @@
 {
   "name": "Horario 1CV",
   "short_name": "Horario",
-  "description": "Horario escolar para el grupo 1CV.",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#121212",
   "theme_color": "#6200ea",
+  "description": "Horario escolar para el grupo 1CV.",
   "icons": [
     {
       "src": "images/icons/icon-192x192.png",
