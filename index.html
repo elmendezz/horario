@@ -3,32 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="theme-color" content="#6200ea"/>
+    <link rel="manifest" href="manifest.json">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Horario 1CV">
+    <link rel="apple-touch-icon" href="images/icons/apple-touch-icon.png">
+
+
     <title>Horario 1CV - Salón C2/Cómputo 2</title>
     <style>
         /* Versión: 36 */
-        /* Changelog:
-        - Version 17: Nuevo horario corregido.
-        - Version 18: "Siguiente clase" movido fuera del contenedor.
-        - Version 19: Se añadió contador regresivo.
-        - Version 20: "Siguiente clase" ahora es un botón que redirige a horario.jpg.
-        - Version 21: Se agregó un contador para la próxima clase del siguiente día hábil.
-        - Version 22: Se corrigió un error que causaba que el contador no apareciera al final del día. Ahora calcula correctamente la próxima clase del siguiente día hábil.
-        - Version 23: Se añadió un botón para alternar entre el tema claro y oscuro, con persistencia a través del almacenamiento local.
-        - Version 24: El modo oscuro es ahora el tema predeterminado al cargar la página por primera vez.
-        - Version 25: Se modificó el contador nocturno para que muestre "Próxima clase a las" seguido de la hora de inicio de la primera clase del siguiente día hábil y el tiempo restante.
-        - Version 26: Se añadió un salto de línea en el contador del tiempo restante para una presentación más formal.
-        - Version 27: Se modificó la visualización del contador de la próxima clase para que use el formato de 12 horas (AM/PM).
-        - Version 28: Se añadió un botón para mostrar/ocultar un horario interactivo en formato de tabla, reemplazando la redirección a una imagen.
-        - Version 29: Se reestructuró la tabla de horario para que los días de la semana sean los encabezados de las columnas.
-        - Version 30: Se corrigió el nombre de la maestra de inglés, se añadió a la maestra de Cultura Digital del martes y se añadió un scroll lateral para que el horario se vea completo en pantallas pequeñas. Se mejoró la visualización del receso.
-        - Version 31: El botón "Siguiente clase" ahora abre un recuadro (modal) con la imagen de 'horario.jpg' y un botón para cerrarlo, sin salir de la página.
-        - Version 32: El modal ahora cambia de tema (claro/oscuro) y el botón de aceptar está centrado.
-        - Version 33: Se eliminó el fondo borroso del modal, haciéndolo semitransparente. La imagen del horario en el modal ahora es clickeable y te redirige a la imagen. Se añadió un nuevo botón "Página Beta" y se mejoró la estética de los botones de "Mostrar Horario" y "Página Beta".
-        - Version 34: Los botones "Mostrar Horario Completo" y "Página Beta" ahora usan los colores del tema (verde/azul) y su texto se adapta.
-        - Version 35: El botón "Página Beta" ahora redirige a 'index_beta.html' y se le ajustó el tamaño de la fuente para que coincida con el botón de "Siguiente clase".
-        - Version 36: Se agregó un sistema de prueba de hora, que permite simular el tiempo a través de un admin.html que guarda los cambios en el localStorage.
-        */
-        
+        /* ... (tu CSS existente va aquí, no es necesario cambiarlo) ... */
         :root {
             --bg-color: #f0f0f0;
             --text-color: #333;
@@ -335,6 +323,7 @@
     </div>
     
     <script>
+        // ... (Tu JavaScript existente va aquí, no es necesario cambiarlo) ...
         // Versión: 36
         // Changelog:
         // - Version 26: Se añadió un salto de línea en el contador del tiempo restante para una presentación más formal.
@@ -769,5 +758,20 @@
             setInterval(updateClock, 1000);
         });
     </script>
+    
+    <script>
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+              .then(registration => {
+                console.log('ServiceWorker registrado con éxito:', registration.scope);
+              })
+              .catch(error => {
+                console.log('Fallo en el registro de ServiceWorker:', error);
+              });
+          });
+        }
+    </script>
+
 </body>
 </html>
