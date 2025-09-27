@@ -290,7 +290,7 @@
     <div id="schedule-container">
         <div class="button-group">
             <button id="show-schedule-btn" class="styled-button">Mostrar Horario Completo</button>
-            <a href="index_beta.html" class="styled-button" style="text-decoration: none;">Página Beta</a>
+            <button id="fullscreen-btn" class="styled-button">Pantalla Completa</button>
             
         </div>
         <div class="table-wrapper">
@@ -757,6 +757,21 @@
             setInterval(updateSchedule, updateInterval);
             setInterval(updateClock, 1000);
         });
+        // ============ CÓDIGO PARA EL BOTÓN DE PANTALLA COMPLETA ============
+const fullscreenBtn = document.getElementById('fullscreen-btn');
+
+fullscreenBtn.addEventListener('click', () => {
+    // Si ya estamos en pantalla completa, salimos.
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+    } 
+    // Si no, la pedimos.
+    else {
+        document.documentElement.requestFullscreen().catch(err => {
+            alert(`Error al intentar entrar en pantalla completa: ${err.message}`);
+        });
+    }
+});
     </script>
     
     <script>
