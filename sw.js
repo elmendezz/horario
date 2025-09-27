@@ -1,5 +1,5 @@
 // Nombre de la caché
-const CACHE_NAME = 'horario-1cv-cache-v1';
+const CACHE_NAME = 'horario-1cv-cache-v2';
 
 // Archivos para cachear
 const urlsToCache = [
