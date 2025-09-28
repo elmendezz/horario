@@ -38,6 +38,15 @@
             --table-row-bg: #2a2a2a;
         }
         
+        #aviso {
+        	font-family: Arial, sans-serif;
+            text-align: center;
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            font-size: 0.8em;
+            }
+     
+        
         body {
             font-family: Arial, sans-serif;
             display: flex;
@@ -290,7 +299,7 @@
 <body>
     <button id="theme-toggle" aria-label="Cambiar tema">🌑</button>
     <button id="notifications-btn" aria-label="Activar notificaciones">🔕</button>
-     ⓘ Está Web App Está En Desarrollo...
+    <div id="aviso"> ⓘ Está Web App Está En Desarrollo...</div>
     <button id="next-class-display">Siguiente clase: Cargando...</button>
     <div class="container">
         <div id="current-class-display">Cargando horario...</div>
