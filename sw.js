@@ -1,12 +1,14 @@
-// sw.js (Versión con notificaciones y actualizaciones)
+// sw.js (Versión 5 - Corregida y unificada)
 
 // 1. Define un nombre y versión para tu caché.
-const CACHE_NAME = 'horario-1cv-cache-v4'; // <-- CAMBIA ESTE NÚMERO CADA VEZ QUE ACTUALICES
+const CACHE_NAME = 'horario-1cv-cache-v5'; // <-- VERSIÓN ACTUALIZADA
 
 // 2. Lista de archivos esenciales de tu app.
-const urlsToCache = ['/', 'index.html', 'horario.jpg', 'manifest.json'];
+const urlsToCache = ['/', 'index.html', 'horario.jpg', 'manifest.json', 'images/icons/icon-192x192.png'];
 
 // =================== LÓGICA DE NOTIFICACIONES ===================
+
+let notificationTimer = null;
 
 // **IMPORTANTE**: El horario debe estar aquí porque el SW no puede ver el de index.html
 const schedule = [
@@ -21,38 +23,6 @@ const schedule = [
     // Viernes (5)
     [{ time: [13, 20], name: "Formación Socioemocional I" }, { time: [14, 10], name: "Ciencias Sociales I" }, { time: [15, 20], name: "Lengua y Comunicación I" }, { time: [16, 10], name: "La Materia y sus Interacciones" }, { time: [17, 0], name: "Pensamiento Matemático I" }]
 ];
-// Escuchamos mensajes de la página
-self.addEventListener('message', event => {
-    if (event.data.type === 'SET_NOTIFICATIONS') {
-        if (event.data.enabled) {
-            console.log('SW: Recibida orden para activar notificaciones. Programando...');
-            scheduleNextNotification();
-        } else {
-            console.log('SW: Recibida orden para desactivar notificaciones. Cancelando...');
-            clearTimeout(notificationTimer);
-        }
-    }
-
-
-
-    // === NUEVA LÓGICA PARA LA NOTIFICACIÓN DE PRUEBA ===
-    if (event.data.type === 'SCHEDULE_TEST_NOTIFICATION') {
-        console.log('SW: Orden de prueba recibida. Notificación programada en 10 segundos.');
-        
-        // Programamos que la notificación se muestre en 10 segundos
-        setTimeout(() => {
-            self.registration.showNotification('🔔 ¡Notificación de Prueba! 🔔', {
-                body: 'Si puedes ver esto, ¡las notificaciones funcionan correctamente!',
-                icon: 'images/icons/icon-192x192.png' // Asegúrate que este icono exista
-            });
-            console.log('SW: Notificación de prueba enviada.');
-        }, 10000); // 10000 milisegundos = 10 segundos
-    }
-});
-
-
-
-let notificationTimer = null;
 
 // Función que calcula y programa la próxima notificación
 function scheduleNextNotification() {
@@ -89,7 +59,7 @@ function scheduleNextNotification() {
 
     if (nextNotificationTime && nextClass) {
         const delay = nextNotificationTime.getTime() - now.getTime();
-        console.log(`Próxima notificación programada para: ${nextClass.name} en ${Math.round(delay / 60000)} minutos.`);
+        console.log(`SW: Próxima notificación programada para "${nextClass.name}" en ${Math.round(delay / 60000)} minutos.`);
         
         notificationTimer = setTimeout(() => {
             self.registration.showNotification('Próxima Clase en 5 Minutos', {
@@ -99,19 +69,36 @@ function scheduleNextNotification() {
             // Una vez mostrada, reprogramamos la siguiente
             scheduleNextNotification();
         }, delay);
+    } else {
+        console.log('SW: No hay más clases para notificar en los próximos 7 días.');
     }
 }
 
-// Escuchamos mensajes de la página
+// Escuchamos mensajes de la página (VERSIÓN CORREGIDA Y ÚNICA)
 self.addEventListener('message', event => {
+    // Maneja la activación y desactivación de notificaciones
     if (event.data.type === 'SET_NOTIFICATIONS') {
         if (event.data.enabled) {
-            console.log('SW: Recibida orden para activar notificaciones. Programando...');
+            console.log('SW: Activando y programando notificaciones.');
             scheduleNextNotification();
         } else {
-            console.log('SW: Recibida orden para desactivar notificaciones. Cancelando...');
+            console.log('SW: Desactivando y cancelando notificaciones.');
             clearTimeout(notificationTimer);
         }
+    }
+
+    // Maneja la notificación de prueba
+    if (event.data.type === 'TEST_NOTIFICATION') {
+        const delaySeconds = event.data.delay || 5;
+        console.log(`SW: Notificación de prueba programada en ${delaySeconds} segundos.`);
+        
+        setTimeout(() => {
+            self.registration.showNotification('🔔 ¡Notificación de Prueba! 🔔', {
+                body: 'Si puedes ver esto, ¡las notificaciones funcionan correctamente!',
+                icon: 'images/icons/icon-192x192.png'
+            });
+            console.log('SW: Notificación de prueba enviada.');
+        }, delaySeconds * 1000);
     }
 });
 
@@ -119,6 +106,7 @@ self.addEventListener('message', event => {
 // =================== LÓGICA DE INSTALACIÓN Y CACHÉ ===================
 
 self.addEventListener('install', event => {
+    console.log('SW: Instalando nueva versión...');
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
     );
@@ -126,6 +114,7 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('activate', event => {
+    console.log('SW: Activando nueva versión y limpiando cachés antiguos...');
     event.waitUntil(
         caches.keys().then(cacheNames => {
             return Promise.all(
@@ -138,13 +127,14 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
     event.respondWith(
-        caches.open(CACHE_NAME).then(cache => {
-            return cache.match(event.request).then(response => {
-                const fetchPromise = fetch(event.request).then(networkResponse => {
-                    cache.put(event.request, networkResponse.clone());
-                    return networkResponse;
+        caches.match(event.request).then(response => {
+            // Si está en caché, lo devuelve. Si no, lo busca en la red.
+            return response || fetch(event.request).then(fetchResponse => {
+                // Guarda la nueva respuesta en la caché para futuras visitas
+                return caches.open(CACHE_NAME).then(cache => {
+                    cache.put(event.request, fetchResponse.clone());
+                    return fetchResponse;
                 });
-                return response || fetchPromise;
             });
         })
     );
