@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prueba de Notificaciones - iOS</title>
+    <title>Prueba de Notificaciones - iOS (Corregido)</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -13,6 +13,8 @@
             height: 100vh;
             background-color: #f0f0f0;
             margin: 0;
+            text-align: center;
+            padding: 20px;
         }
         button {
             padding: 15px 30px;
@@ -24,32 +26,43 @@
             color: white;
             font-weight: bold;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            transition: background-color 0.3s, transform 0.2s;
-        }
-        button:hover {
-            background-color: #005ecb;
-        }
-        button:active {
-            transform: scale(0.98);
         }
     </style>
 </head>
 <body>
-
-    <button id="pruebaBtn">Prueba</button>
+    <div>
+        <h1>Prueba con Service Worker</h1>
+        <button id="pruebaBtn">Probar Notificación</button>
+    </div>
 
     <script>
+        // 1. Registrar el Service Worker al cargar la página
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('Service Worker registrado con éxito.');
+                    })
+                    .catch(error => {
+                        console.error('Error al registrar el Service Worker:', error);
+                    });
+            });
+        }
+
+        // 2. Escuchar el clic del botón
         document.getElementById('pruebaBtn').addEventListener('click', () => {
-            // 1. Pide permiso al usuario
+            // 3. Pedir permiso para notificaciones
             Notification.requestPermission().then(perm => {
                 if (perm === 'granted') {
-                    // 2. Si el permiso es aceptado, manda la notificación
-                    new Notification('Sistema Funcionando - iOS', {
-                        body: '¡Esta es una notificación de prueba en iOS!',
-                        icon: 'https://cdn-icons-png.flaticon.com/512/744/744983.png' // Un ícono genérico de notificación
+                    // 4. Usar el Service Worker para mostrar la notificación
+                    navigator.serviceWorker.ready.then(registration => {
+                        registration.showNotification('Sistema Funcionando - iOS', {
+                            body: '¡Esta notificación fue enviada por el Service Worker!',
+                            icon: 'https://cdn-icons-png.flaticon.com/512/744/744983.png'
+                        });
                     });
                 } else {
-                    alert('Permiso de notificaciones denegado. Por favor, habilítalo en los ajustes de tu navegador.');
+                    alert('Permiso de notificaciones denegado.');
                 }
             });
         });
