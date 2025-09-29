@@ -1,12 +1,12 @@
 {
   "name": "Horario 1CV Por elmendezz",
-  "short_name": "Horario 1CV - Release 45",
+  "short_name": "Horario 1CV - elmendezz",
   "start_url": ".",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#121212",
   "theme_color": "#6200ea",
-  "description": "Horario escolar para el grupo 1CV en la versión 45 out of beta.",
+  "description": "Horario escolar para el grupo 1CV.",
   "icons": [
     {
       "src": "images/icons/icon-192x192.png",
