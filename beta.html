@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Notificaciones - iOS</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 10px;
+            border: none;
+            background-color: #007aff;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        button:hover {
+            background-color: #005ecb;
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+
+    <button id="pruebaBtn">Prueba</button>
+
+    <script>
+        document.getElementById('pruebaBtn').addEventListener('click', () => {
+            // 1. Pide permiso al usuario
+            Notification.requestPermission().then(perm => {
+                if (perm === 'granted') {
+                    // 2. Si el permiso es aceptado, manda la notificación
+                    new Notification('Sistema Funcionando - iOS', {
+                        body: '¡Esta es una notificación de prueba en iOS!',
+                        icon: 'https://cdn-icons-png.flaticon.com/512/744/744983.png' // Un ícono genérico de notificación
+                    });
+                } else {
+                    alert('Permiso de notificaciones denegado. Por favor, habilítalo en los ajustes de tu navegador.');
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
