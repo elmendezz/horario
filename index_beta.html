@@ -15,7 +15,7 @@
 
     <title>Horario 1CV - Salón C2/Cómputo 2</title>
     <style>
-        /* Versión: 37 */
+        /* Versión: 38 */
         :root {
             --bg-color: #f0f0f0;
             --text-color: #333;
@@ -75,17 +75,21 @@
             margin-bottom: 1em;
             transition: background-color 0.3s ease, box-shadow 0.3s ease;
         }
+        
+        /* ↓↓↓ CAMBIO: BOTÓN OCULTO POR DEFECTO HASTA QUE EL SCRIPT LO ACTIVE ↓↓↓ */
         #notifications-btn {
-    position: absolute;
-    top: 1em;
-    left: 1em; /* Lo posiciona a la izquierda */
-    font-size: 1.5em;
-    cursor: pointer;
-    border: none;
-    background: none;
-    color: var(--text-color);
-    transition: color 0.3s ease;
-}
+            position: absolute;
+            top: 1em;
+            left: 1em;
+            font-size: 1.5em;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: var(--text-color);
+            transition: color 0.3s ease;
+            visibility: hidden; /* Oculto hasta que el SW esté listo */
+        }
+
         #current-class-display {
             font-size: 2.5em;
             font-weight: bold;
@@ -358,7 +362,7 @@
     </div>
     
     <script>
-        // Versión: 37 (con botón de prueba de notificaciones)
+        // Versión: 38 (Lógica de notificaciones para Android robustecida)
         
         const schedule = [
             // Lunes (1)
@@ -754,12 +758,12 @@
             modal.style.display = "none";
         });
         
+        // ↓↓↓ TODA LA LÓGICA DE NOTIFICACIONES FUE REEMPLAZADA POR ESTA VERSIÓN MÁS ROBUSTA ↓↓↓
         // =================== INICIO DE LA LÓGICA DE NOTIFICACIONES UNIFICADA ===================
         function sendMessageToSW(message) {
             if (navigator.serviceWorker && navigator.serviceWorker.controller) {
                 navigator.serviceWorker.controller.postMessage(message);
             } else if (navigator.serviceWorker) {
-                // Si el SW está registrado pero no activo, espera a que esté listo.
                 navigator.serviceWorker.ready.then(registration => {
                     registration.active.postMessage(message);
                 });
@@ -770,56 +774,74 @@
             const notificationsBtn = document.getElementById('notifications-btn');
             const iosInstallPrompt = document.getElementById('ios-install-prompt');
 
-            // --- Detección de Dispositivo ---
+            // --- Detección de Dispositivo (Sin cambios) ---
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
             const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
 
-            // --- Lógica para iOS ---
+            // --- Lógica para iOS (Sin cambios) ---
             if (isIOS && !isInStandaloneMode()) {
-                // Si es iOS y no está instalado, muestra el aviso y oculta el botón de notificaciones.
                 notificationsBtn.style.display = 'none';
                 iosInstallPrompt.style.display = 'block';
-                return; // Detiene la inicialización normal de notificaciones
-            }
-
-            // --- Lógica para Android, Escritorio y iOS Instalado ---
-            iosInstallPrompt.style.display = 'none'; // Oculta el prompt de iOS si no aplica
-
-            if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-                notificationsBtn.style.display = 'none'; // Oculta el botón si no es compatible
                 return;
             }
 
-            const areNotificationsEnabled = localStorage.getItem('notificationsEnabled') === 'true';
-            if (areNotificationsEnabled && Notification.permission === 'granted') {
-                notificationsBtn.textContent = '🔔';
-                sendMessageToSW({ type: 'SET_NOTIFICATIONS', enabled: true });
-            } else {
-                notificationsBtn.textContent = '🔕';
-                localStorage.setItem('notificationsEnabled', 'false');
-                // No es necesario enviar mensaje para desactivar al inicio, el SW lo asume por defecto.
+            // --- Lógica para Android, Escritorio y iOS Instalado (Mejorada) ---
+            iosInstallPrompt.style.display = 'none';
+
+            if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+                console.warn('Notificaciones o Service Workers no soportados.');
+                notificationsBtn.style.display = 'none';
+                return;
             }
+            
+            // Se espera a que el Service Worker esté listo antes de configurar el botón
+            navigator.serviceWorker.ready.then(registration => {
+                console.log('Service Worker está listo y activo.');
+
+                const areNotificationsEnabled = localStorage.getItem('notificationsEnabled') === 'true';
+
+                // Sincroniza el estado visual con el permiso real
+                if (areNotificationsEnabled && Notification.permission === 'granted') {
+                    notificationsBtn.textContent = '🔔';
+                    sendMessageToSW({ type: 'SET_NOTIFICATIONS', enabled: true });
+                } else {
+                    notificationsBtn.textContent = '🔕';
+                    if (Notification.permission !== 'granted') {
+                        localStorage.setItem('notificationsEnabled', 'false');
+                    }
+                }
+                
+                // Hace visible el botón solo cuando todo está listo
+                notificationsBtn.style.visibility = 'visible';
+
+            }).catch(error => {
+                console.error('Error al inicializar el Service Worker:', error);
+                notificationsBtn.style.display = 'none'; // Oculta si hay error
+            });
+
 
             notificationsBtn.addEventListener('click', () => {
-                const isCurrentlyEnabled = localStorage.getItem('notificationsEnabled') === 'true';
+                const isCurrentlyEnabled = localStorage.getItem('notificationsEnabled') === 'true' && Notification.permission === 'granted';
 
                 if (isCurrentlyEnabled) {
                     // Desactivar
                     localStorage.setItem('notificationsEnabled', 'false');
                     notificationsBtn.textContent = '🔕';
                     sendMessageToSW({ type: 'SET_NOTIFICATIONS', enabled: false });
-                    console.log('Notificaciones desactivadas.');
+                    console.log('Notificaciones desactivadas por el usuario.');
                 } else {
-                    // Activar
+                    // Activar o solicitar permiso
                     Notification.requestPermission().then(permission => {
                         if (permission === 'granted') {
                             localStorage.setItem('notificationsEnabled', 'true');
                             notificationsBtn.textContent = '🔔';
                             sendMessageToSW({ type: 'SET_NOTIFICATIONS', enabled: true });
-                            console.log('Notificaciones activadas y programadas.');
+                            console.log('Permiso concedido. Notificaciones activadas.');
                         } else {
-                            alert('No has dado permiso para recibir notificaciones.');
+                            localStorage.setItem('notificationsEnabled', 'false');
+                            notificationsBtn.textContent = '🔕';
                             console.log('Permiso de notificaciones denegado.');
+                            alert('Has denegado el permiso para notificaciones. Si cambias de opinión, puedes activarlo en la configuración de tu navegador.');
                         }
                     });
                 }
@@ -840,7 +862,6 @@
             }
         });
 
-        // ↓↓↓ CÓDIGO AÑADIDO PARA EL BOTÓN DE PRUEBA ↓↓↓
         const testNotificationBtn = document.getElementById('test-notification-btn');
         testNotificationBtn.addEventListener('click', () => {
             if (Notification.permission !== 'granted') {
@@ -848,7 +869,7 @@
                 return;
             }
             if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) {
-                alert('El controlador del Service Worker no está activo. Refresca la página e inténtalo de nuevo.');
+                alert('El sistema de notificaciones no está listo. Refresca la página e inténtalo de nuevo.');
                 return;
             }
 
