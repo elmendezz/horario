@@ -1,7 +1,7 @@
 // sw.js (Versión 5 - Corregida y unificada)
 
 // 1. Define un nombre y versión para tu caché.
-const CACHE_NAME = 'horario-1cv-cache-v5'; // <-- VERSIÓN ACTUALIZADA
+const CACHE_NAME = 'horario-1cv-cache-v6'; // <-- VERSIÓN ACTUALIZADA
 
 // 2. Lista de archivos esenciales de tu app.
 const urlsToCache = ['/', 'index.html', 'horario.jpg', 'manifest.json', 'images/icons/icon-192x192.png'];
