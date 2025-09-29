@@ -16,7 +16,6 @@
     <title>Horario 1CV - Salón C2/Cómputo 2</title>
     <style>
         /* Versión: 36 */
-        /* ... (tu CSS existente va aquí, no es necesario cambiarlo) ... */
         :root {
             --bg-color: #f0f0f0;
             --text-color: #333;
@@ -38,6 +37,15 @@
             --table-header-bg: #3700b3;
             --table-row-bg: #2a2a2a;
         }
+        
+        #aviso {
+        	font-family: Arial, sans-serif;
+            text-align: center;
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            font-size: 0.8em;
+            }
+     
         
         body {
             font-family: Arial, sans-serif;
@@ -67,6 +75,17 @@
             margin-bottom: 1em;
             transition: background-color 0.3s ease, box-shadow 0.3s ease;
         }
+        #notifications-btn {
+    position: absolute;
+    top: 1em;
+    left: 1em; /* Lo posiciona a la izquierda */
+    font-size: 1.5em;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: var(--text-color);
+    transition: color 0.3s ease;
+}
         #current-class-display {
             font-size: 2.5em;
             font-weight: bold;
@@ -279,6 +298,8 @@
 </head>
 <body>
     <button id="theme-toggle" aria-label="Cambiar tema">🌑</button>
+    <button id="notifications-btn" aria-label="Activar notificaciones">🔕</button>
+    <div id="aviso"> ⓘ Esta Web App Está En Desarrollo...</div>
     <button id="next-class-display">Siguiente clase: Cargando...</button>
     <div class="container">
         <div id="current-class-display">Cargando horario...</div>
@@ -287,12 +308,12 @@
     <div id="clock"></div>
     <div id="countdown"></div>
     
-    <div id="schedule-container">
-        <div class="button-group">
-            <button id="show-schedule-btn" class="styled-button">Mostrar Horario Completo</button>
-            <button id="fullscreen-btn" class="styled-button">Pantalla Completa</button>
-            
-        </div>
+    <div class="button-group">
+    <button id="show-schedule-btn" class="styled-button">Mostrar Horario Completo</button>
+    <button id="fullscreen-btn" class="styled-button">Pantalla Completa</button>
+    <!-- === BOTÓN TEMPORAL PARA PROBAR NOTIFICACIONES === -->
+    <button id="test-notification-btn" class="styled-button" style="background-color: #ffc107; color: #000;">Probar Notificación (10s)</button>
+</div>
         <div class="table-wrapper">
             <table id="schedule-table">
                 <thead>
@@ -338,6 +359,39 @@
         // - Version 35: El botón "Página Beta" ahora redirige a 'index_beta.html' y se le ajustó el tamaño de la fuente para que coincida con el botón de "Siguiente clase".
         // - Version 36: Se agregó un sistema de prueba de hora, que permite simular el tiempo a través de un admin.html que guarda los cambios en el localStorage.
         
+        // ============ CÓDIGO TEMPORAL PARA PRUEBA DE NOTIFICACIONES ============
+const testNotificationBtn = document.getElementById('test-notification-btn');
+
+testNotificationBtn.addEventListener('click', () => {
+    // Primero, verificamos que el navegador soporte notificaciones
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+        alert('Tu navegador no soporta notificaciones.');
+        return;
+    }
+
+    console.log('Iniciando prueba de notificación...');
+    
+    // Pedimos permiso. Si ya lo tenemos, no volverá a preguntar.
+    Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+            // Guardamos en localStorage que estamos probando (como pediste)
+            localStorage.setItem('notificationTestInProgress', 'true');
+            
+            console.log('Permiso concedido. Enviando orden de prueba al Service Worker.');
+
+            // Le decimos al Service Worker que envíe una notificación en 10 segundos
+            sendMessageToSW({ type: 'SCHEDULE_TEST_NOTIFICATION' });
+            
+            // Damos instrucciones al usuario
+            alert('¡Permiso concedido! Tienes 10 segundos para salir de la app, ir a la pantalla de inicio o bloquear el teléfono. La notificación aparecerá en breve.');
+            
+        } else {
+            localStorage.removeItem('notificationTestInProgress');
+            alert('No has dado permiso para las notificaciones, por lo que no se puede realizar la prueba.');
+        }
+    });
+});
+
         const schedule = [
             // Lunes (1)
             [
@@ -757,7 +811,57 @@
             setInterval(updateSchedule, updateInterval);
             setInterval(updateClock, 1000);
         });
-        // ============ CÓDIGO PARA EL BOTÓN DE PANTALLA COMPLETA ============
+     // ============ CÓDIGO PARA LAS NOTIFICACIONES (VERSIÓN ICONO) ============
+const notificationsBtn = document.getElementById('notifications-btn');
+
+function initializeNotifications() {
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+        notificationsBtn.style.display = 'none'; // Ocultamos el botón si no es compatible
+        return;
+    }
+
+    const areNotificationsEnabled = localStorage.getItem('notificationsEnabled') === 'true';
+    if (areNotificationsEnabled && Notification.permission === 'granted') {
+        notificationsBtn.textContent = '🔔'; // Icono de notificaciones activadas
+        sendMessageToSW({ type: 'SET_NOTIFICATIONS', enabled: true });
+    } else {
+        notificationsBtn.textContent = '🔕'; // Icono de notificaciones desactivadas
+        localStorage.setItem('notificationsEnabled', 'false');
+    }
+}
+
+notificationsBtn.addEventListener('click', () => {
+    const areNotificationsEnabled = localStorage.getItem('notificationsEnabled') === 'true';
+
+    if (areNotificationsEnabled) {
+        // Desactivar
+        localStorage.setItem('notificationsEnabled', 'false');
+        notificationsBtn.textContent = '🔕';
+        sendMessageToSW({ type: 'SET_NOTIFICATIONS', enabled: false });
+        console.log('Notificaciones desactivadas.');
+    } else {
+        // Activar
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                localStorage.setItem('notificationsEnabled', 'true');
+                notificationsBtn.textContent = '🔔';
+                sendMessageToSW({ type: 'SET_NOTIFICATIONS', enabled: true });
+                console.log('Notificaciones activadas y programadas.');
+            } else {
+                alert('No has dado permiso para recibir notificaciones.');
+            }
+        });
+    }
+});
+
+function sendMessageToSW(message) {
+    if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage(message);
+    }
+}
+
+initializeNotifications();
+        // ============ CÓDIGO PARA EL BOTÓN DE PANTALLA COMPLETA! ============
 const fullscreenBtn = document.getElementById('fullscreen-btn');
 
 fullscreenBtn.addEventListener('click', () => {
