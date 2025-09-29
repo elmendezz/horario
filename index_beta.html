@@ -15,7 +15,7 @@
 
     <title>Horario 1CV - Salón C2/Cómputo 2</title>
     <style>
-        /* Versión: 38 */
+        /* Versión: 39 */
         :root {
             --bg-color: #f0f0f0;
             --text-color: #333;
@@ -76,7 +76,6 @@
             transition: background-color 0.3s ease, box-shadow 0.3s ease;
         }
         
-        /* ↓↓↓ CAMBIO: BOTÓN OCULTO POR DEFECTO HASTA QUE EL SCRIPT LO ACTIVE ↓↓↓ */
         #notifications-btn {
             position: absolute;
             top: 1em;
@@ -87,7 +86,7 @@
             background: none;
             color: var(--text-color);
             transition: color 0.3s ease;
-            visibility: hidden; /* Oculto hasta que el SW esté listo */
+            visibility: hidden; /* Oculto por defecto hasta que JS lo active */
         }
 
         #current-class-display {
@@ -150,10 +149,10 @@
 
         #schedule-table {
             width: 100%;
-            min-width: 700px; /* Ancho mínimo para que no se vea feo en escritorio */
+            min-width: 700px;
             border-collapse: collapse;
             margin-top: 1em;
-            display: none; /* Oculta por defecto */
+            display: none;
         }
         #schedule-table.visible {
             display: table;
@@ -161,12 +160,12 @@
 
         #schedule-table th, #schedule-table td {
             padding: 12px 8px;
-            text-align: center; /* Se cambió a centrado para que se vea como en la imagen */
+            text-align: center;
             border: 1px solid #ccc;
         }
         
         #schedule-table td:first-child {
-            text-align: left; /* Se mantiene la hora a la izquierda */
+            text-align: left;
         }
 
         #schedule-table th {
@@ -189,12 +188,11 @@
         }
         
         .table-wrapper {
-            overflow-x: auto; /* Esto es la clave para el scroll */
+            overflow-x: auto;
             width: 100%;
             max-width: 100%;
         }
 
-        /* Estilos para el modal */
         .modal {
             display: none;
             position: fixed;
@@ -204,7 +202,7 @@
             width: 100%;
             height: 100%;
             overflow: auto;
-            background-color: rgba(0,0,0,0.5); /* Semitransparente */
+            background-color: rgba(0,0,0,0.5);
         }
         .modal-content {
             position: relative;
@@ -225,7 +223,7 @@
             border: none;
             border-radius:12px;
             display: block;
-            cursor: pointer; /* Agrega cursor para indicar que es clickeable */
+            cursor: pointer;
         }
         .modal-footer {
             margin-top: 15px;
@@ -244,20 +242,19 @@
             background-color: var(--next-class-hover-bg);
         }
 
-        /* Nuevos estilos para los botones de abajo */
         .button-group {
             display: flex;
             flex-direction: column;
             align-items: center;
             margin-top: 2em;
-            gap: 10px; /* Espacio entre los botones */
+            gap: 10px;
         }
 
         .styled-button {
             padding: 12px 25px;
             border-radius: 50px;
             border: none;
-            font-size: 0.8em; /* Ajustado al mismo tamaño que el botón principal */
+            font-size: 0.8em;
             font-weight: bold;
             text-transform: uppercase;
             color: white;
@@ -283,14 +280,14 @@
         }
 
         #ios-install-prompt {
-            display: none; /* Oculto por defecto */
+            display: none;
             margin-top: 20px;
             padding: 12px;
             background-color: #eef7ff;
             border: 1px solid #007aff;
             border-radius: 8px;
             font-size: 1em;
-            color: #333; /* Color de texto explícito para que se vea en ambos temas */
+            color: #333;
         }
         
         @media (max-width: 600px) {
@@ -362,7 +359,7 @@
     </div>
     
     <script>
-        // Versión: 38 (Lógica de notificaciones para Android robustecida)
+        // Versión: 39 (Lógica de notificaciones robustecida y unificada)
         
         const schedule = [
             // Lunes (1)
@@ -424,45 +421,35 @@
             if (simulatedTime) {
                 const { day, hour, minute } = JSON.parse(simulatedTime);
                 const now = new Date();
-                
                 serverTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay() + day, hour, minute, 0);
-                
                 if (serverTime < now) {
                     serverTime.setDate(serverTime.getDate() + 7);
                 }
-                
                 isSimulated = true;
-                console.log('Usando hora simulada:', serverTime);
             } else {
                 try {
                     const response = await fetch('http://worldtimeapi.org/api/timezone/America/Tijuana');
                     if (!response.ok) throw new Error('Network response was not ok');
                     const data = await response.json();
                     serverTime = new Date(data.datetime);
-                    isSimulated = false;
-                    console.log('Usando hora real');
                 } catch (error) {
-                    console.error('Error fetching time from API:', error);
+                    console.error('Error fetching time, using local time:', error);
                     serverTime = new Date();
+                } finally {
                     isSimulated = false;
                 }
             }
         }
         
         function updateClock() {
-            if (!serverTime) {
-                document.getElementById('clock').textContent = 'Sincronizando reloj...';
-                return;
-            }
+            if (!serverTime) return;
             const now = new Date(serverTime.getTime() + (Date.now() - startTime));
             let hours = now.getHours();
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
             const am_pm = hours >= 12 ? 'PM' : 'AM';
             hours = hours % 12 || 12;
-            
-            const clockText = isSimulated ? `Hora Simulada: ${hours}:${minutes}:${seconds} ${am_pm}` : `Hora: ${hours}:${minutes}:${seconds} ${am_pm}`;
-            document.getElementById('clock').textContent = clockText;
+            document.getElementById('clock').textContent = isSimulated ? `Hora Simulada: ${hours}:${minutes}:${seconds} ${am_pm}` : `Hora: ${hours}:${minutes}:${seconds} ${am_pm}`;
 
             const countdownEl = document.getElementById('countdown');
             if (currentClassEnd) {
@@ -476,30 +463,19 @@
                 }
             } else {
                 const nextClassStartTime = countdownEl.dataset.nextClassStart ? new Date(countdownEl.dataset.nextClassStart) : null;
-                const nextClassTimeDisplay = countdownEl.dataset.nextClassTimeDisplay;
-                
                 if (nextClassStartTime) {
                     const diff = nextClassStartTime - now;
                     if (diff > 0) {
-                        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                        const hoursLeft = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                        const minutesLeft = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                        const secondsLeft = Math.floor((diff % (1000 * 60)) / 1000);
-                        
-                        let countdownText = "Tiempo restante:";
+                        const days = Math.floor(diff / 86400000);
+                        const hoursLeft = Math.floor((diff % 86400000) / 3600000);
+                        const minsLeft = Math.floor((diff % 3600000) / 60000);
+                        const secsLeft = Math.floor((diff % 60000) / 1000);
+                        let countdownText = "Próxima clase en: ";
                         if (days > 0) countdownText += `${days}d `;
-                        countdownText += `${hoursLeft}h ${minutesLeft}m ${secondsLeft}s`;
-                        
-                        if (nextClassTimeDisplay) {
-                            countdownEl.innerHTML = `Próxima clase a las ${nextClassTimeDisplay} <br> ${countdownText}`;
-                        } else {
-                            countdownEl.innerHTML = `Próxima clase... <br> ${countdownText}`;
-                        }
-
+                        countdownText += `${hoursLeft}h ${minsLeft}m ${secsLeft}s`;
+                        countdownEl.innerHTML = countdownEl.dataset.nextClassTimeDisplay ? `Próxima clase a las ${countdownEl.dataset.nextClassTimeDisplay}<br>${countdownText}` : countdownText;
                     } else {
                         countdownEl.textContent = "";
-                        countdownEl.dataset.nextClassStart = "";
-                        countdownEl.dataset.nextClassTimeDisplay = "";
                     }
                 } else {
                     countdownEl.textContent = "";
@@ -509,163 +485,80 @@
         
         function updateSchedule() {
             if (!serverTime) return;
-
             const now = new Date(serverTime.getTime() + (Date.now() - startTime));
             const dayOfWeek = now.getDay();
-            const currentHour = now.getHours();
-            const currentMinute = now.getMinutes();
-            const currentTimeInMinutes = currentHour * 60 + currentMinute;
-            
+            const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
             const currentClassDisplay = document.getElementById('current-class-display');
             const teacherDisplay = document.getElementById('teacher-display');
             const nextClassDisplay = document.getElementById('next-class-display');
             const countdownEl = document.getElementById('countdown');
-
             currentClassEnd = null;
             countdownEl.dataset.nextClassStart = "";
-            countdownEl.dataset.nextClassTimeDisplay = "";
+            const formatTime = (h, m) => `${(h % 12 || 12)}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
 
-            if (dayOfWeek === 0 || dayOfWeek === 6) {
-                currentClassDisplay.textContent = "¡Sin Clases!";
-                teacherDisplay.textContent = "Disfruta el fin de semana";
-                
-                const nextDayIndex = 1;
-                const nextDaySchedule = schedule[nextDayIndex - 1];
-                const nextClassTime = nextDaySchedule[0].time;
-                const nextClass = nextDaySchedule[0].name;
-
-                const nextClassStart = new Date(now);
-                nextClassStart.setDate(nextClassStart.getDate() + (nextDayIndex - dayOfWeek + 7) % 7);
-                nextClassStart.setHours(nextClassTime[0], nextClassTime[1], 0, 0);
-                
-                countdownEl.dataset.nextClassStart = nextClassStart.toISOString();
-                
-                const formatTime = (hours, minutes) => {
-                    const am_pm = hours >= 12 ? 'PM' : 'AM';
-                    hours = hours % 12 || 12;
-                    const formattedMinutes = String(minutes).padStart(2, '0');
-                    return `${hours}:${formattedMinutes} ${am_pm}`;
-                };
-
-                countdownEl.dataset.nextClassTimeDisplay = formatTime(nextClassTime[0], nextClassTime[1]);
-                nextClassDisplay.textContent = `Siguiente clase: ${nextClass}`;
-
-                return;
-            }
-
-            const todaySchedule = schedule[dayOfWeek - 1];
-            let currentClass = "Aún no empiezan las clases";
-            let currentTeacher = "";
-            let nextClass = "";
+            let currentClass = "¡Sin Clases!";
+            let currentTeacher = "Disfruta tu día";
+            let nextClassInfo = { name: "Ninguna" };
             let foundCurrent = false;
 
-            for (let i = 0; i < todaySchedule.length; i++) {
-                const classStartMinutes = todaySchedule[i].time[0] * 60 + todaySchedule[i].time[1];
-                const classDuration = todaySchedule[i].duration;
-                const classEndMinutes = classStartMinutes + classDuration;
-
-                if (currentTimeInMinutes >= classStartMinutes && currentTimeInMinutes < classEndMinutes) {
-                    currentClass = todaySchedule[i].name;
-                    currentTeacher = todaySchedule[i].teacher;
-                    foundCurrent = true;
-
-                    currentClassEnd = new Date(now);
-                    currentClassEnd.setHours(Math.floor(classEndMinutes / 60), classEndMinutes % 60, 0, 0);
-
-                    if (i + 1 < todaySchedule.length) {
-                        nextClass = todaySchedule[i + 1].name;
-                    } else {
-                        nextClass = "Clases terminadas por hoy.";
-                    }
-                    break;
-                }
-            }
-            
-            if (!foundCurrent) {
+            if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                const todaySchedule = schedule[dayOfWeek - 1];
                 for (let i = 0; i < todaySchedule.length; i++) {
-                    const classStartMinutes = todaySchedule[i].time[0] * 60 + todaySchedule[i].time[1];
-                    if (currentTimeInMinutes < classStartMinutes) {
-                        nextClass = todaySchedule[i].name;
-                        
-                        const nextClassTime = todaySchedule[i].time;
-                        const nextClassStart = new Date(now);
-                        nextClassStart.setHours(nextClassTime[0], nextClassTime[1], 0, 0);
+                    const classItem = todaySchedule[i];
+                    const classStartMinutes = classItem.time[0] * 60 + classItem.time[1];
+                    const classEndMinutes = classStartMinutes + classItem.duration;
 
-                        countdownEl.dataset.nextClassStart = nextClassStart.toISOString();
-                        
-                        const formatTime = (hours, minutes) => {
-                            const am_pm = hours >= 12 ? 'PM' : 'AM';
-                            hours = hours % 12 || 12;
-                            const formattedMinutes = String(minutes).padStart(2, '0');
-                            return `${hours}:${formattedMinutes} ${am_pm}`;
-                        };
-                        
-                        countdownEl.dataset.nextClassTimeDisplay = formatTime(nextClassTime[0], nextClassTime[1]);
+                    if (currentTimeInMinutes >= classStartMinutes && currentTimeInMinutes < classEndMinutes) {
+                        currentClass = classItem.name;
+                        currentTeacher = classItem.teacher;
+                        currentClassEnd = new Date(now);
+                        currentClassEnd.setHours(Math.floor(classEndMinutes / 60), classEndMinutes % 60, 0, 0);
+                        if (i + 1 < todaySchedule.length) nextClassInfo = todaySchedule[i + 1];
+                        else nextClassInfo = { name: "Clases terminadas por hoy." };
+                        foundCurrent = true;
                         break;
                     }
                 }
-                const lastClassEndMinutes = todaySchedule[todaySchedule.length - 1].time[0] * 60 + todaySchedule[todaySchedule.length - 1].duration;
-                if (currentTimeInMinutes >= lastClassEndMinutes) {
-                    currentClass = "Clases terminadas por hoy.";
-                    currentTeacher = "";
-                    
-                    let nextDayIndex = 0;
-                    let foundNextDay = false;
-                    
-                    for (let i = 1; i < 8; i++) {
-                        nextDayIndex = (dayOfWeek + i) % 7;
-                        if (nextDayIndex >= 1 && nextDayIndex <= 5) {
-                            if (schedule[nextDayIndex - 1] && schedule[nextDayIndex - 1].length > 0) {
-                                foundNextDay = true;
-                                const nextDaySchedule = schedule[nextDayIndex - 1];
-                                const nextClassTime = nextDaySchedule[0].time;
-                                nextClass = nextDaySchedule[0].name;
-
-                                const nextClassStart = new Date(now);
-                                nextClassStart.setDate(nextClassStart.getDate() + i);
-                                nextClassStart.setHours(nextClassTime[0], nextClassTime[1], 0, 0);
-                                
-                                countdownEl.dataset.nextClassStart = nextClassStart.toISOString();
-
-                                const formatTime = (hours, minutes) => {
-                                    const am_pm = hours >= 12 ? 'PM' : 'AM';
-                                    hours = hours % 12 || 12;
-                                    const formattedMinutes = String(minutes).padStart(2, '0');
-                                    return `${hours}:${formattedMinutes} ${am_pm}`;
-                                };
-
-                                countdownEl.dataset.nextClassTimeDisplay = formatTime(nextClassTime[0], nextClassTime[1]);
-                                break;
-                            }
-                        }
+                if (!foundCurrent) {
+                    if (currentTimeInMinutes < (todaySchedule[0].time[0] * 60 + todaySchedule[0].time[1])) {
+                        currentClass = "Aún no empiezan las clases";
+                        currentTeacher = "";
+                        nextClassInfo = todaySchedule[0];
+                    } else {
+                        currentClass = "Clases terminadas por hoy.";
+                        currentTeacher = "";
                     }
+                }
+            }
 
-                    if (!foundNextDay) {
-                        nextClass = "No hay clases próximamente";
+            if (!foundCurrent) {
+                for (let i = 1; i <= 7; i++) {
+                    const nextDay = (dayOfWeek + i -1) % 7 + 1;
+                    if (nextDay >= 1 && nextDay <= 5 && schedule[nextDay - 1].length > 0) {
+                        const nextDaySchedule = schedule[nextDay - 1];
+                        nextClassInfo = nextDaySchedule[0];
+                        const nextClassStart = new Date(now);
+                        nextClassStart.setDate(now.getDate() + (nextDay - dayOfWeek + 7) % 7);
+                        nextClassStart.setHours(nextClassInfo.time[0], nextClassInfo.time[1], 0, 0);
+                        countdownEl.dataset.nextClassStart = nextClassStart.toISOString();
+                        countdownEl.dataset.nextClassTimeDisplay = formatTime(nextClassInfo.time[0], nextClassInfo.time[1]);
+                        break;
                     }
                 }
             }
 
             currentClassDisplay.textContent = currentClass;
             teacherDisplay.textContent = currentTeacher;
-            
-            nextClassDisplay.textContent = nextClass ? `Siguiente clase: ${nextClass}` : "Siguiente clase: Ninguna";
+            nextClassDisplay.textContent = `Siguiente clase: ${nextClassInfo.name}`;
         }
 
         const themeToggle = document.getElementById('theme-toggle');
         const htmlElement = document.documentElement;
-
-        let savedTheme = localStorage.getItem('theme');
-        if (!savedTheme) {
-            savedTheme = 'dark';
-            localStorage.setItem('theme', 'dark');
-        }
+        let savedTheme = localStorage.getItem('theme') || 'dark';
         htmlElement.dataset.theme = savedTheme;
         themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌑';
-
         themeToggle.addEventListener('click', () => {
-            let currentTheme = htmlElement.dataset.theme;
-            let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            let newTheme = htmlElement.dataset.theme === 'dark' ? 'light' : 'dark';
             htmlElement.dataset.theme = newTheme;
             localStorage.setItem('theme', newTheme);
             themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌑';
@@ -674,163 +567,86 @@
         const showScheduleBtn = document.getElementById('show-schedule-btn');
         const scheduleTable = document.getElementById('schedule-table');
         const scheduleTableBody = document.getElementById('schedule-table-body');
-        
         function renderScheduleTable() {
             scheduleTableBody.innerHTML = '';
-            
-            const formatTime = (hours, minutes) => {
-                const am_pm = hours >= 12 ? 'PM' : 'AM';
-                hours = hours % 12 || 12;
-                const formattedMinutes = String(minutes).padStart(2, '0');
-                return `${hours}:${formattedMinutes} ${am_pm}`;
-            };
-            
+            const formatTime = (h, m) => `${(h % 12 || 12)}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
             const allTimes = new Set();
-            schedule.forEach(daySchedule => {
-                daySchedule.forEach(classItem => {
-                    allTimes.add(classItem.time[0] * 60 + classItem.time[1]);
-                });
-            });
-            const sortedTimes = Array.from(allTimes).sort((a, b) => a - b);
+            schedule.forEach(day => day.forEach(c => allTimes.add(c.time[0] * 60 + c.time[1])));
+            const sortedTimes = Array.from(allTimes).sort((a,b) => a - b);
             
-            const classesByTimeAndDay = new Map();
-            schedule.forEach((daySchedule, dayIndex) => {
-                daySchedule.forEach(classItem => {
-                    const timeInMinutes = classItem.time[0] * 60 + classItem.time[1];
-                    const key = `${timeInMinutes}-${dayIndex}`;
-                    classesByTimeAndDay.set(key, classItem);
-                });
-            });
-
             sortedTimes.forEach(timeInMinutes => {
                 if (timeInMinutes === 15 * 60) {
                     const recesoRow = document.createElement('tr');
-                    recesoRow.classList.add('receso-row');
-                    const recesoCell = document.createElement('td');
-                    recesoCell.colSpan = 6;
-                    recesoCell.textContent = " 3:00 PM : RECESO DE 20 MIN.";
-                    recesoRow.appendChild(recesoCell);
+                    recesoRow.className = 'receso-row';
+                    recesoRow.innerHTML = `<td colspan="6">3:00 PM : RECESO DE 20 MIN.</td>`;
                     scheduleTableBody.appendChild(recesoRow);
                     return;
                 }
-                
                 const row = document.createElement('tr');
-                const timeCell = document.createElement('td');
-                const hours = Math.floor(timeInMinutes / 60);
-                const minutes = timeInMinutes % 60;
-                timeCell.textContent = formatTime(hours, minutes);
-                row.appendChild(timeCell);
-
-                for (let dayIndex = 0; dayIndex < 5; dayIndex++) {
-                    const classCell = document.createElement('td');
-                    const key = `${timeInMinutes}-${dayIndex}`;
-                    const foundClass = classesByTimeAndDay.get(key);
-                    
-                    if (foundClass) {
-                        classCell.innerHTML = `<strong>${foundClass.name}</strong><br>${foundClass.teacher}`;
-                    } else {
-                        classCell.textContent = '';
-                    }
-                    row.appendChild(classCell);
-                }
+                const hours = Math.floor(timeInMinutes/60), minutes = timeInMinutes%60;
+                row.innerHTML = `<td>${formatTime(hours, minutes)}</td>` + 
+                                [0,1,2,3,4].map(dayIndex => {
+                                    const classItem = schedule[dayIndex].find(c => c.time[0]*60 + c.time[1] === timeInMinutes);
+                                    return `<td>${classItem ? `<strong>${classItem.name}</strong><br>${classItem.teacher}` : ''}</td>`;
+                                }).join('');
                 scheduleTableBody.appendChild(row);
             });
         }
-
         showScheduleBtn.addEventListener('click', () => {
             scheduleTable.classList.toggle('visible');
-            if (scheduleTable.classList.contains('visible')) {
-                showScheduleBtn.textContent = 'Ocultar Horario Completo';
-            } else {
-                showScheduleBtn.textContent = 'Mostrar Horario Completo';
-            }
+            showScheduleBtn.textContent = scheduleTable.classList.contains('visible') ? 'Ocultar Horario' : 'Mostrar Horario';
         });
         
         const modal = document.getElementById('imageModal');
-        const nextClassBtn = document.getElementById('next-class-display');
-        const closeModalBtn = document.getElementById('closeModalBtn');
-
-        nextClassBtn.addEventListener('click', () => {
-            modal.style.display = "block";
-        });
-
-        closeModalBtn.addEventListener('click', () => {
-            modal.style.display = "none";
-        });
+        document.getElementById('next-class-display').addEventListener('click', () => modal.style.display = "block");
+        document.getElementById('closeModalBtn').addEventListener('click', () => modal.style.display = "none");
         
-        // ↓↓↓ TODA LA LÓGICA DE NOTIFICACIONES FUE REEMPLAZADA POR ESTA VERSIÓN MÁS ROBUSTA ↓↓↓
-        // =================== INICIO DE LA LÓGICA DE NOTIFICACIONES UNIFICADA ===================
+        // =================== LÓGICA DE NOTIFICACIONES UNIFICADA Y ROBUSTA ===================
         function sendMessageToSW(message) {
-            if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                 navigator.serviceWorker.controller.postMessage(message);
-            } else if (navigator.serviceWorker) {
-                navigator.serviceWorker.ready.then(registration => {
-                    registration.active.postMessage(message);
-                });
+            } else if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.ready.then(reg => reg.active.postMessage(message));
             }
         }
 
         function initializeNotifications() {
             const notificationsBtn = document.getElementById('notifications-btn');
             const iosInstallPrompt = document.getElementById('ios-install-prompt');
-
-            // --- Detección de Dispositivo (Sin cambios) ---
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
             const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
 
-            // --- Lógica para iOS (Sin cambios) ---
             if (isIOS && !isInStandaloneMode()) {
                 notificationsBtn.style.display = 'none';
                 iosInstallPrompt.style.display = 'block';
                 return;
             }
 
-            // --- Lógica para Android, Escritorio y iOS Instalado (Mejorada) ---
             iosInstallPrompt.style.display = 'none';
-
             if (!('Notification' in window) || !('serviceWorker' in navigator)) {
                 console.warn('Notificaciones o Service Workers no soportados.');
-                notificationsBtn.style.display = 'none';
                 return;
             }
             
-            // Se espera a que el Service Worker esté listo antes de configurar el botón
-            navigator.serviceWorker.ready.then(registration => {
-                console.log('Service Worker está listo y activo.');
-
-                const areNotificationsEnabled = localStorage.getItem('notificationsEnabled') === 'true';
-
-                // Sincroniza el estado visual con el permiso real
-                if (areNotificationsEnabled && Notification.permission === 'granted') {
+            navigator.serviceWorker.ready.then(() => {
+                console.log('Service Worker listo. Configurando botón de notificaciones.');
+                if (localStorage.getItem('notificationsEnabled') === 'true' && Notification.permission === 'granted') {
                     notificationsBtn.textContent = '🔔';
                     sendMessageToSW({ type: 'SET_NOTIFICATIONS', enabled: true });
                 } else {
                     notificationsBtn.textContent = '🔕';
-                    if (Notification.permission !== 'granted') {
-                        localStorage.setItem('notificationsEnabled', 'false');
-                    }
+                    if (Notification.permission !== 'granted') localStorage.setItem('notificationsEnabled', 'false');
                 }
-                
-                // Hace visible el botón solo cuando todo está listo
                 notificationsBtn.style.visibility = 'visible';
-
-            }).catch(error => {
-                console.error('Error al inicializar el Service Worker:', error);
-                notificationsBtn.style.display = 'none'; // Oculta si hay error
-            });
-
+            }).catch(error => console.error('Error al inicializar Service Worker:', error));
 
             notificationsBtn.addEventListener('click', () => {
-                const isCurrentlyEnabled = localStorage.getItem('notificationsEnabled') === 'true' && Notification.permission === 'granted';
-
-                if (isCurrentlyEnabled) {
-                    // Desactivar
+                if (localStorage.getItem('notificationsEnabled') === 'true' && Notification.permission === 'granted') {
                     localStorage.setItem('notificationsEnabled', 'false');
                     notificationsBtn.textContent = '🔕';
                     sendMessageToSW({ type: 'SET_NOTIFICATIONS', enabled: false });
-                    console.log('Notificaciones desactivadas por el usuario.');
+                    console.log('Notificaciones desactivadas.');
                 } else {
-                    // Activar o solicitar permiso
                     Notification.requestPermission().then(permission => {
                         if (permission === 'granted') {
                             localStorage.setItem('notificationsEnabled', 'true');
@@ -838,47 +654,31 @@
                             sendMessageToSW({ type: 'SET_NOTIFICATIONS', enabled: true });
                             console.log('Permiso concedido. Notificaciones activadas.');
                         } else {
-                            localStorage.setItem('notificationsEnabled', 'false');
-                            notificationsBtn.textContent = '🔕';
-                            console.log('Permiso de notificaciones denegado.');
-                            alert('Has denegado el permiso para notificaciones. Si cambias de opinión, puedes activarlo en la configuración de tu navegador.');
+                            console.log('Permiso denegado.');
+                            alert('No has dado permiso. Puedes cambiarlo en la configuración de tu navegador.');
                         }
                     });
                 }
             });
         }
-        // =================== FIN DE LA LÓGICA DE NOTIFICACIONES ===================
         
-        const fullscreenBtn = document.getElementById('fullscreen-btn');
-
-        fullscreenBtn.addEventListener('click', () => {
-            if (document.fullscreenElement) {
+        document.getElementById('fullscreen-btn').addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => alert(`Error: ${err.message}`));
+            } else {
                 document.exitFullscreen();
-            } 
-            else {
-                document.documentElement.requestFullscreen().catch(err => {
-                    alert(`Error al intentar entrar en pantalla completa: ${err.message}`);
-                });
             }
         });
 
-        const testNotificationBtn = document.getElementById('test-notification-btn');
-        testNotificationBtn.addEventListener('click', () => {
+        document.getElementById('test-notification-btn').addEventListener('click', () => {
             if (Notification.permission !== 'granted') {
                 alert('Primero debes permitir las notificaciones usando el ícono 🔔.');
                 return;
             }
-            if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) {
-                alert('El sistema de notificaciones no está listo. Refresca la página e inténtalo de nuevo.');
-                return;
-            }
-
-            console.log('Enviando solicitud de notificación de prueba al Service Worker...');
-            sendMessageToSW({ type: 'TEST_NOTIFICATION', delay: 5 }); // delay en segundos
-            alert('Recibirás una notificación de prueba en 5 segundos. Puedes cambiar de app o bloquear la pantalla para verla.');
+            sendMessageToSW({ type: 'TEST_NOTIFICATION', delay: 5 });
+            alert('Recibirás una notificación en 5 segundos. Puedes cambiar de app o bloquear la pantalla para verla.');
         });
 
-        // Carga inicial y actualización
         fetchTime().then(() => {
             updateSchedule();
             renderScheduleTable();
@@ -893,12 +693,8 @@
         if ('serviceWorker' in navigator) {
           window.addEventListener('load', () => {
             navigator.serviceWorker.register('/sw.js')
-              .then(registration => {
-                console.log('ServiceWorker registrado con éxito:', registration.scope);
-              })
-              .catch(error => {
-                console.log('Fallo en el registro de ServiceWorker:', error);
-              });
+              .then(reg => console.log('ServiceWorker registrado:', reg.scope))
+              .catch(err => console.log('Fallo en registro de ServiceWorker:', err));
           });
         }
     </script>
