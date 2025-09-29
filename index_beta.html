@@ -277,6 +277,18 @@
         [data-theme="dark"] .styled-button {
             color: white;
         }
+
+        /* ↓↓↓ CÓDIGO AÑADIDO AL FINAL DEL CSS ↓↓↓ */
+        #ios-install-prompt {
+            display: none; /* Oculto por defecto */
+            margin-top: 20px;
+            padding: 12px;
+            background-color: #eef7ff;
+            border: 1px solid #007aff;
+            border-radius: 8px;
+            font-size: 1em;
+            color: #333; /* Color de texto explícito para que se vea en ambos temas */
+        }
         
         @media (max-width: 600px) {
             .container {
@@ -309,30 +321,29 @@
     <div id="countdown"></div>
     
     <div class="button-group">
-    <button id="show-schedule-btn" class="styled-button">Mostrar Horario Completo</button>
-    <button id="fullscreen-btn" class="styled-button">Pantalla Completa</button>
+        <button id="show-schedule-btn" class="styled-button">Mostrar Horario Completo</button>
+        <button id="fullscreen-btn" class="styled-button">Pantalla Completa</button>
+    </div>
+
     <div id="ios-install-prompt">
-    Para recibir notificaciones en iOS, añade esta página a tu pantalla de inicio: Toca el icono de <strong>Compartir</strong> y luego <strong>"Agregar a la pantalla de inicio"</strong>.
-</div>
-    <!-- === BOTÓN TEMPORAL PARA PROBAR NOTIFICACIONES === -->
-    <button id="test-notification-btn" class="styled-button" style="background-color: #ffc107; color: #000;">Probar Notificación (10s)</button>
-</div>
-        <div class="table-wrapper">
-            <table id="schedule-table">
-                <thead>
-                    <tr>
-                        <th>Hora</th>
-                        <th>Lunes</th>
-                        <th>Martes</th>
-                        <th>Miércoles</th>
-                        <th>Jueves</th>
-                        <th>Viernes</th>
-                    </tr>
-                </thead>
-                <tbody id="schedule-table-body">
-                </tbody>
-            </table>
-        </div>
+        Para recibir notificaciones, añade esta página a tu pantalla de inicio: Toca el icono de <strong>Compartir</strong> y luego <strong>"Agregar a la pantalla de inicio"</strong>.
+    </div>
+
+    <div class="table-wrapper">
+        <table id="schedule-table">
+            <thead>
+                <tr>
+                    <th>Hora</th>
+                    <th>Lunes</th>
+                    <th>Martes</th>
+                    <th>Miércoles</th>
+                    <th>Jueves</th>
+                    <th>Viernes</th>
+                </tr>
+            </thead>
+            <tbody id="schedule-table-body">
+            </tbody>
+        </table>
     </div>
 
     <div id="imageModal" class="modal">
@@ -347,54 +358,8 @@
     </div>
     
     <script>
-        // ... (Tu JavaScript existente va aquí, no es necesario cambiarlo) ...
-        // Versión: 36
-        // Changelog:
-        // - Version 26: Se añadió un salto de línea en el contador del tiempo restante para una presentación más formal.
-        // - Version 27: Se modificó la visualización del contador de la próxima clase para que use el formato de 12 horas (AM/PM).
-        // - Version 28: Se añadió un botón para mostrar/ocultar un horario interactivo en formato de tabla, reemplazando la redirección a una imagen.
-        // - Version 29: Se reestructuró la tabla de horario para que los días de la semana sean los encabezados de las columnas.
-        // - Version 30: Se corrigió el nombre de la maestra de inglés, se añadió a la maestra de Cultura Digital del martes y se añadió un scroll lateral para que el horario se vea completo en pantallas pequeñas. Se mejoró la visualización del receso.
-        // - Version 31: El botón "Siguiente clase" ahora abre un recuadro (modal) con la imagen de 'horario.jpg' y un botón para cerrarlo, sin salir de la página.
-        // - Version 32: El modal ahora cambia de tema (claro/oscuro) y el botón de aceptar está centrado.
-        // - Version 33: Se eliminó el fondo borroso del modal, haciéndolo semitransparente. La imagen del horario en el modal ahora es clickeable y te redirige a la imagen. Se añadió un nuevo botón "Página Beta" y se mejoró la estética de los botones de "Mostrar Horario" y "Página Beta".
-        // - Version 34: Los botones "Mostrar Horario Completo" y "Página Beta" ahora usan los colores del tema (verde/azul) y su texto se adapta.
-        // - Version 35: El botón "Página Beta" ahora redirige a 'index_beta.html' y se le ajustó el tamaño de la fuente para que coincida con el botón de "Siguiente clase".
-        // - Version 36: Se agregó un sistema de prueba de hora, que permite simular el tiempo a través de un admin.html que guarda los cambios en el localStorage.
+        // Versión: 36 (con notificaciones unificadas)
         
-        // ============ CÓDIGO TEMPORAL PARA PRUEBA DE NOTIFICACIONES ============
-const testNotificationBtn = document.getElementById('test-notification-btn');
-
-testNotificationBtn.addEventListener('click', () => {
-    // Primero, verificamos que el navegador soporte notificaciones
-    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-        alert('Tu navegador no soporta notificaciones.');
-        return;
-    }
-
-    console.log('Iniciando prueba de notificación...');
-    
-    // Pedimos permiso. Si ya lo tenemos, no volverá a preguntar.
-    Notification.requestPermission().then(permission => {
-        if (permission === 'granted') {
-            // Guardamos en localStorage que estamos probando (como pediste)
-            localStorage.setItem('notificationTestInProgress', 'true');
-            
-            console.log('Permiso concedido. Enviando orden de prueba al Service Worker.');
-
-            // Le decimos al Service Worker que envíe una notificación en 10 segundos
-            sendMessageToSW({ type: 'SCHEDULE_TEST_NOTIFICATION' });
-            
-            // Damos instrucciones al usuario
-            alert('¡Permiso concedido! Tienes 10 segundos para salir de la app, ir a la pantalla de inicio o bloquear el teléfono. La notificación aparecerá en breve.');
-            
-        } else {
-            localStorage.removeItem('notificationTestInProgress');
-            alert('No has dado permiso para las notificaciones, por lo que no se puede realizar la prueba.');
-        }
-    });
-});
-
         const schedule = [
             // Lunes (1)
             [
@@ -448,19 +413,16 @@ testNotificationBtn.addEventListener('click', () => {
         let serverTime = null;
         let startTime = Date.now();
         let currentClassEnd = null;
-        let isSimulated = false; // Nueva variable para saber si la hora es simulada
+        let isSimulated = false;
 
         async function fetchTime() {
-            // Revisa si hay una hora simulada guardada en el almacenamiento local
             const simulatedTime = localStorage.getItem('simulatedTime');
             if (simulatedTime) {
                 const { day, hour, minute } = JSON.parse(simulatedTime);
                 const now = new Date();
                 
-                // Crea un objeto Date con el día y la hora simulada
                 serverTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay() + day, hour, minute, 0);
                 
-                // Si el día simulado es anterior al día actual, avanza una semana
                 if (serverTime < now) {
                     serverTime.setDate(serverTime.getDate() + 7);
                 }
@@ -495,7 +457,6 @@ testNotificationBtn.addEventListener('click', () => {
             const am_pm = hours >= 12 ? 'PM' : 'AM';
             hours = hours % 12 || 12;
             
-            // Muestra "Hora Simulada" si corresponde
             const clockText = isSimulated ? `Hora Simulada: ${hours}:${minutes}:${seconds} ${am_pm}` : `Hora: ${hours}:${minutes}:${seconds} ${am_pm}`;
             document.getElementById('clock').textContent = clockText;
 
@@ -525,7 +486,6 @@ testNotificationBtn.addEventListener('click', () => {
                         if (days > 0) countdownText += `${days}d `;
                         countdownText += `${hoursLeft}h ${minutesLeft}m ${secondsLeft}s`;
                         
-                        // Nuevo formato con salto de línea
                         if (nextClassTimeDisplay) {
                             countdownEl.innerHTML = `Próxima clase a las ${nextClassTimeDisplay} <br> ${countdownText}`;
                         } else {
@@ -565,7 +525,7 @@ testNotificationBtn.addEventListener('click', () => {
                 currentClassDisplay.textContent = "¡Sin Clases!";
                 teacherDisplay.textContent = "Disfruta el fin de semana";
                 
-                const nextDayIndex = 1; // Lunes
+                const nextDayIndex = 1;
                 const nextDaySchedule = schedule[nextDayIndex - 1];
                 const nextClassTime = nextDaySchedule[0].time;
                 const nextClass = nextDaySchedule[0].name;
@@ -576,7 +536,6 @@ testNotificationBtn.addEventListener('click', () => {
                 
                 countdownEl.dataset.nextClassStart = nextClassStart.toISOString();
                 
-                // Función auxiliar para convertir a 12 horas
                 const formatTime = (hours, minutes) => {
                     const am_pm = hours >= 12 ? 'PM' : 'AM';
                     hours = hours % 12 || 12;
@@ -630,7 +589,6 @@ testNotificationBtn.addEventListener('click', () => {
 
                         countdownEl.dataset.nextClassStart = nextClassStart.toISOString();
                         
-                        // Función auxiliar para convertir a 12 horas
                         const formatTime = (hours, minutes) => {
                             const am_pm = hours >= 12 ? 'PM' : 'AM';
                             hours = hours % 12 || 12;
@@ -665,7 +623,6 @@ testNotificationBtn.addEventListener('click', () => {
                                 
                                 countdownEl.dataset.nextClassStart = nextClassStart.toISOString();
 
-                                // Función auxiliar para convertir a 12 horas
                                 const formatTime = (hours, minutes) => {
                                     const am_pm = hours >= 12 ? 'PM' : 'AM';
                                     hours = hours % 12 || 12;
@@ -688,11 +645,9 @@ testNotificationBtn.addEventListener('click', () => {
             currentClassDisplay.textContent = currentClass;
             teacherDisplay.textContent = currentTeacher;
             
-            // Esta línea se mantiene para la parte superior de la página
             nextClassDisplay.textContent = nextClass ? `Siguiente clase: ${nextClass}` : "Siguiente clase: Ninguna";
         }
 
-        // Lógica del tema oscuro/claro
         const themeToggle = document.getElementById('theme-toggle');
         const htmlElement = document.documentElement;
 
@@ -712,12 +667,10 @@ testNotificationBtn.addEventListener('click', () => {
             themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌑';
         });
 
-        // Lógica de la tabla de horario
         const showScheduleBtn = document.getElementById('show-schedule-btn');
         const scheduleTable = document.getElementById('schedule-table');
         const scheduleTableBody = document.getElementById('schedule-table-body');
         
-        // Función para renderizar la tabla
         function renderScheduleTable() {
             scheduleTableBody.innerHTML = '';
             
@@ -728,7 +681,6 @@ testNotificationBtn.addEventListener('click', () => {
                 return `${hours}:${formattedMinutes} ${am_pm}`;
             };
             
-            // Obtener todos los tiempos únicos de inicio de clase
             const allTimes = new Set();
             schedule.forEach(daySchedule => {
                 daySchedule.forEach(classItem => {
@@ -737,7 +689,6 @@ testNotificationBtn.addEventListener('click', () => {
             });
             const sortedTimes = Array.from(allTimes).sort((a, b) => a - b);
             
-            // Crear un mapa de clases por tiempo y día para una búsqueda más rápida
             const classesByTimeAndDay = new Map();
             schedule.forEach((daySchedule, dayIndex) => {
                 daySchedule.forEach(classItem => {
@@ -748,7 +699,7 @@ testNotificationBtn.addEventListener('click', () => {
             });
 
             sortedTimes.forEach(timeInMinutes => {
-                if (timeInMinutes === 15 * 60) { // Si el tiempo es 15:00 (Receso)
+                if (timeInMinutes === 15 * 60) {
                     const recesoRow = document.createElement('tr');
                     recesoRow.classList.add('receso-row');
                     const recesoCell = document.createElement('td');
@@ -766,7 +717,7 @@ testNotificationBtn.addEventListener('click', () => {
                 timeCell.textContent = formatTime(hours, minutes);
                 row.appendChild(timeCell);
 
-                for (let dayIndex = 0; dayIndex < 5; dayIndex++) { // 5 días de Lunes a Viernes
+                for (let dayIndex = 0; dayIndex < 5; dayIndex++) {
                     const classCell = document.createElement('td');
                     const key = `${timeInMinutes}-${dayIndex}`;
                     const foundClass = classesByTimeAndDay.get(key);
@@ -782,7 +733,6 @@ testNotificationBtn.addEventListener('click', () => {
             });
         }
 
-        // Evento para mostrar/ocultar la tabla
         showScheduleBtn.addEventListener('click', () => {
             scheduleTable.classList.toggle('visible');
             if (scheduleTable.classList.contains('visible')) {
@@ -792,7 +742,6 @@ testNotificationBtn.addEventListener('click', () => {
             }
         });
         
-        // Lógica del modal (el recuadro)
         const modal = document.getElementById('imageModal');
         const nextClassBtn = document.getElementById('next-class-display');
         const closeModalBtn = document.getElementById('closeModalBtn');
@@ -805,80 +754,102 @@ testNotificationBtn.addEventListener('click', () => {
             modal.style.display = "none";
         });
         
+        // ↓↓↓ CÓDIGO DE NOTIFICACIONES REEMPLAZADO CON LA LÓGICA UNIFICADA ↓↓↓
+        // =================== INICIO DE LA LÓGICA DE NOTIFICACIONES UNIFICADA ===================
+        function sendMessageToSW(message) {
+            if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage(message);
+            } else if (navigator.serviceWorker) {
+                // Si el SW está registrado pero no activo, espera a que esté listo.
+                navigator.serviceWorker.ready.then(registration => {
+                    registration.active.postMessage(message);
+                });
+            }
+        }
+
+        function initializeNotifications() {
+            const notificationsBtn = document.getElementById('notifications-btn');
+            const iosInstallPrompt = document.getElementById('ios-install-prompt');
+
+            // --- Detección de Dispositivo ---
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+
+            // --- Lógica para iOS ---
+            if (isIOS && !isInStandaloneMode()) {
+                // Si es iOS y no está instalado, muestra el aviso y oculta el botón de notificaciones.
+                notificationsBtn.style.display = 'none';
+                iosInstallPrompt.style.display = 'block';
+                return; // Detiene la inicialización normal de notificaciones
+            }
+
+            // --- Lógica para Android, Escritorio y iOS Instalado ---
+            iosInstallPrompt.style.display = 'none'; // Oculta el prompt de iOS si no aplica
+
+            if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+                notificationsBtn.style.display = 'none'; // Oculta el botón si no es compatible
+                return;
+            }
+
+            const areNotificationsEnabled = localStorage.getItem('notificationsEnabled') === 'true';
+            if (areNotificationsEnabled && Notification.permission === 'granted') {
+                notificationsBtn.textContent = '🔔';
+                sendMessageToSW({ type: 'SET_NOTIFICATIONS', enabled: true });
+            } else {
+                notificationsBtn.textContent = '🔕';
+                localStorage.setItem('notificationsEnabled', 'false');
+                // No es necesario enviar mensaje para desactivar al inicio, el SW lo asume por defecto.
+            }
+
+            notificationsBtn.addEventListener('click', () => {
+                const isCurrentlyEnabled = localStorage.getItem('notificationsEnabled') === 'true';
+
+                if (isCurrentlyEnabled) {
+                    // Desactivar
+                    localStorage.setItem('notificationsEnabled', 'false');
+                    notificationsBtn.textContent = '🔕';
+                    sendMessageToSW({ type: 'SET_NOTIFICATIONS', enabled: false });
+                    console.log('Notificaciones desactivadas.');
+                } else {
+                    // Activar
+                    Notification.requestPermission().then(permission => {
+                        if (permission === 'granted') {
+                            localStorage.setItem('notificationsEnabled', 'true');
+                            notificationsBtn.textContent = '🔔';
+                            sendMessageToSW({ type: 'SET_NOTIFICATIONS', enabled: true });
+                            console.log('Notificaciones activadas y programadas.');
+                        } else {
+                            alert('No has dado permiso para recibir notificaciones.');
+                            console.log('Permiso de notificaciones denegado.');
+                        }
+                    });
+                }
+            });
+        }
+        // =================== FIN DE LA LÓGICA DE NOTIFICACIONES ===================
+        
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+
+        fullscreenBtn.addEventListener('click', () => {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } 
+            else {
+                document.documentElement.requestFullscreen().catch(err => {
+                    alert(`Error al intentar entrar en pantalla completa: ${err.message}`);
+                });
+            }
+        });
+
         // Carga inicial y actualización
         fetchTime().then(() => {
             updateSchedule();
             renderScheduleTable();
-            // Si la hora es simulada, actualiza cada 1 segundo. Si no, cada 10.
+            initializeNotifications(); // <-- LLAMADA A LA NUEVA FUNCIÓN DE NOTIFICACIONES
             const updateInterval = isSimulated ? 1000 : 10000;
             setInterval(updateSchedule, updateInterval);
             setInterval(updateClock, 1000);
         });
-     // ============ CÓDIGO PARA LAS NOTIFICACIONES (VERSIÓN ICONO) ============
-const notificationsBtn = document.getElementById('notifications-btn');
-
-function initializeNotifications() {
-    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-        notificationsBtn.style.display = 'none'; // Ocultamos el botón si no es compatible
-        return;
-    }
-
-    const areNotificationsEnabled = localStorage.getItem('notificationsEnabled') === 'true';
-    if (areNotificationsEnabled && Notification.permission === 'granted') {
-        notificationsBtn.textContent = '🔔'; // Icono de notificaciones activadas
-        sendMessageToSW({ type: 'SET_NOTIFICATIONS', enabled: true });
-    } else {
-        notificationsBtn.textContent = '🔕'; // Icono de notificaciones desactivadas
-        localStorage.setItem('notificationsEnabled', 'false');
-    }
-}
-
-notificationsBtn.addEventListener('click', () => {
-    const areNotificationsEnabled = localStorage.getItem('notificationsEnabled') === 'true';
-
-    if (areNotificationsEnabled) {
-        // Desactivar
-        localStorage.setItem('notificationsEnabled', 'false');
-        notificationsBtn.textContent = '🔕';
-        sendMessageToSW({ type: 'SET_NOTIFICATIONS', enabled: false });
-        console.log('Notificaciones desactivadas.');
-    } else {
-        // Activar
-        Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-                localStorage.setItem('notificationsEnabled', 'true');
-                notificationsBtn.textContent = '🔔';
-                sendMessageToSW({ type: 'SET_NOTIFICATIONS', enabled: true });
-                console.log('Notificaciones activadas y programadas.');
-            } else {
-                alert('No has dado permiso para recibir notificaciones.');
-            }
-        });
-    }
-});
-
-function sendMessageToSW(message) {
-    if (navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage(message);
-    }
-}
-
-initializeNotifications();
-        // ============ CÓDIGO PARA EL BOTÓN DE PANTALLA COMPLETA! ============
-const fullscreenBtn = document.getElementById('fullscreen-btn');
-
-fullscreenBtn.addEventListener('click', () => {
-    // Si ya estamos en pantalla completa, salimos.
-    if (document.fullscreenElement) {
-        document.exitFullscreen();
-    } 
-    // Si no, la pedimos.
-    else {
-        document.documentElement.requestFullscreen().catch(err => {
-            alert(`Error al intentar entrar en pantalla completa: ${err.message}`);
-        });
-    }
-});
     </script>
     
     <script>
