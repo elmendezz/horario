@@ -6,7 +6,7 @@
   "orientation": "any",
   "background_color": "#121212",
   "theme_color": "#6200ea",
-  "description": "Horario escolar para el grupo 1CV.",
+  "description": "Horario escolar para el grupo 1CV en la versión 45 out of beta.",
   "icons": [
     {
       "src": "images/icons/icon-192x192.png",
