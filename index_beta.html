@@ -13,9 +13,9 @@
     <link rel="apple-touch-icon" href="images/icons/apple-touch-icon.png">
 
 
-    <title>Horario 1CV - Salón C2/Cómputo 2 - Versión Beta 43</title>
+    <title>Horario 1CV - Salón C2/Cómputo 2</title>
     <style>
-        /* Versión: 36 */
+        /* Versión: 37 */
         :root {
             --bg-color: #f0f0f0;
             --text-color: #333;
@@ -278,7 +278,6 @@
             color: white;
         }
 
-        /* ↓↓↓ CÓDIGO AÑADIDO AL FINAL DEL CSS ↓↓↓ */
         #ios-install-prompt {
             display: none; /* Oculto por defecto */
             margin-top: 20px;
@@ -323,6 +322,7 @@
     <div class="button-group">
         <button id="show-schedule-btn" class="styled-button">Mostrar Horario Completo</button>
         <button id="fullscreen-btn" class="styled-button">Pantalla Completa</button>
+        <button id="test-notification-btn" class="styled-button" style="background-color: #ffc107; color: #000;">Probar Notificación (5s)</button>
     </div>
 
     <div id="ios-install-prompt">
@@ -358,7 +358,7 @@
     </div>
     
     <script>
-        // Versión: 36 (con notificaciones unificadas)
+        // Versión: 37 (con botón de prueba de notificaciones)
         
         const schedule = [
             // Lunes (1)
@@ -754,7 +754,6 @@
             modal.style.display = "none";
         });
         
-        // ↓↓↓ CÓDIGO DE NOTIFICACIONES REEMPLAZADO CON LA LÓGICA UNIFICADA ↓↓↓
         // =================== INICIO DE LA LÓGICA DE NOTIFICACIONES UNIFICADA ===================
         function sendMessageToSW(message) {
             if (navigator.serviceWorker && navigator.serviceWorker.controller) {
@@ -841,11 +840,28 @@
             }
         });
 
+        // ↓↓↓ CÓDIGO AÑADIDO PARA EL BOTÓN DE PRUEBA ↓↓↓
+        const testNotificationBtn = document.getElementById('test-notification-btn');
+        testNotificationBtn.addEventListener('click', () => {
+            if (Notification.permission !== 'granted') {
+                alert('Primero debes permitir las notificaciones usando el ícono 🔔.');
+                return;
+            }
+            if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) {
+                alert('El controlador del Service Worker no está activo. Refresca la página e inténtalo de nuevo.');
+                return;
+            }
+
+            console.log('Enviando solicitud de notificación de prueba al Service Worker...');
+            sendMessageToSW({ type: 'TEST_NOTIFICATION', delay: 5 }); // delay en segundos
+            alert('Recibirás una notificación de prueba en 5 segundos. Puedes cambiar de app o bloquear la pantalla para verla.');
+        });
+
         // Carga inicial y actualización
         fetchTime().then(() => {
             updateSchedule();
             renderScheduleTable();
-            initializeNotifications(); // <-- LLAMADA A LA NUEVA FUNCIÓN DE NOTIFICACIONES
+            initializeNotifications();
             const updateInterval = isSimulated ? 1000 : 10000;
             setInterval(updateSchedule, updateInterval);
             setInterval(updateClock, 1000);
