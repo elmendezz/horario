@@ -1,7 +1,7 @@
 {
   "name": "Horario 1CV Por elmendezz",
   "short_name": "Horario - Beta 48",
-  "start_url": ".",
+  "start_url": "/",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#121212",

@@ -1,6 +1,6 @@
 // sw.js (Versión con Widgets)
 
-const CACHE_NAME = 'horario-1cv-cache-v7';
+const CACHE_NAME = 'horario-1cv-cache-v8';
 const urlsToCache = [
     '/', 
     'index.html', 
