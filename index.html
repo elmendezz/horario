@@ -13,6 +13,20 @@
     <link rel="apple-touch-icon" href="images/icons/apple-touch-icon.png">
 
 
+    <body>
+    <script src="schedule-logic.js"></script>
+    
+    <script src="app.js"></script> <script>
+        // Service Worker registration can stay here
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+              .then(reg => console.log('ServiceWorker registrado:', reg.scope))
+              .catch(err => console.log('Fallo en registro de ServiceWorker:', err));
+          });
+        }
+    </script>
+</body>
     <title>Horario 1CV - Salón C2/Cómputo 2</title>
     <style>
         /* Versión: 39 */
@@ -321,11 +335,10 @@
     <div id="countdown"></div>
     
     <div class="button-group">
-    <button id="show-schedule-btn" class="styled-button">Mostrar Horario Completo</button>
-    <button id="fullscreen-btn" class="styled-button">Pantalla Completa</button>
-    <button id="test-notification-btn" class="styled-button" style="background-color: #ffc107; color: #000;">Probar Notificación (5s)</button>
-    <a href="about-us.html" class="styled-button" style="background-color: #FFD700; color: #000;">About Us</a>
-</div>
+        <button id="show-schedule-btn" class="styled-button">Mostrar Horario Completo</button>
+        <button id="fullscreen-btn" class="styled-button">Pantalla Completa</button>
+        <button id="test-notification-btn" class="styled-button" style="background-color: #ffc107; color: #000;">Probar Notificación (5s)</button>
+    </div>
 
     <div id="ios-install-prompt">
         Para recibir notificaciones, añade esta página a tu pantalla de inicio: Toca el icono de <strong>Compartir</strong> y luego <strong>"Agregar a la pantalla de inicio"</strong>.
@@ -359,6 +372,8 @@
         </div>
     </div>
     
+
+
     <script>
         // Versión: 39 (Lógica de notificaciones robustecida y unificada)
         
