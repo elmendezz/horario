@@ -1,0 +1,291 @@
+/* Versión: 39 */
+:root {
+    --bg-color: #f0f0f0;
+    --text-color: #333;
+    --container-bg: #fff;
+    --container-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    --next-class-bg: #4CAF50;
+    --next-class-hover-bg: #45a049;
+    --table-header-bg: #4CAF50;
+    --table-row-bg: #f9f9f9;
+}
+
+[data-theme="dark"] {
+    --bg-color: #121212;
+    --text-color: #e0e0e0;
+    --container-bg: #1e1e1e;
+    --container-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    --next-class-bg: #6200ea;
+    --next-class-hover-bg: #3700b3;
+    --table-header-bg: #3700b3;
+    --table-row-bg: #2a2a2a;
+}
+
+#aviso {
+	font-family: Arial, sans-serif;
+    text-align: center;
+    color: var(--text-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-size: 0.8em;
+    }
+
+
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    text-align: center;
+    padding: 1em;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2em 1.5em;
+    background-color: var(--container-bg);
+    border-radius: 15px;
+    box-shadow: var(--container-shadow);
+    position: relative;
+    max-width: 90%;
+    margin-bottom: 1em;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#notifications-btn {
+    position: absolute;
+    top: 1em;
+    left: 1em;
+    font-size: 1.5em;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: var(--text-color);
+    transition: color 0.3s ease;
+    visibility: hidden; /* Oculto por defecto hasta que JS lo active */
+}
+
+#current-class-display {
+    font-size: 2.5em;
+    font-weight: bold;
+    margin-bottom: 0.1em;
+    line-height: 1.2;
+    word-wrap: break-word;
+}
+#teacher-display {
+    font-size: 1.1em;
+    color: var(--text-color);
+    margin-bottom: 0.8em;
+}
+#next-class-display {
+    font-size: 0.8em;
+    padding: 8px 14px;
+    border-radius: 12px;
+    background-color: var(--next-class-bg);
+    color: white;
+    cursor: pointer;
+    border: none;
+    margin-bottom: 0px;
+    z-index: 1;
+    position: relative;
+    transform: translateY(15px);
+    transition: background-color 0.2s ease;
+}
+#next-class-display:hover {
+    background-color: var(--next-class-hover-bg);
+}
+#clock {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: var(--text-color);
+    margin-top: 1em;
+}
+#countdown {
+    font-size: 1.2em;
+    color: var(--text-color);
+    margin-top: 0.5em;
+}
+#theme-toggle {
+    position: absolute;
+    top: 1em;
+    right: 1em;
+    font-size: 1.5em;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: var(--text-color);
+    transition: color 0.3s ease;
+}
+
+#schedule-container {
+    margin-top: 2em;
+    max-width: 90%;
+    width: 100%;
+}
+
+#schedule-table {
+    width: 100%;
+    min-width: 700px;
+    border-collapse: collapse;
+    margin-top: 1em;
+    display: none;
+}
+#schedule-table.visible {
+    display: table;
+}
+
+#schedule-table th, #schedule-table td {
+    padding: 12px 8px;
+    text-align: center;
+    border: 1px solid #ccc;
+}
+
+#schedule-table td:first-child {
+    text-align: left;
+}
+
+#schedule-table th {
+    background-color: var(--table-header-bg);
+    color: white;
+}
+
+#schedule-table tr:nth-child(even) {
+    background-color: var(--table-row-bg);
+}
+
+#schedule-table .receso-row {
+    background-color: #6c757d;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+}
+#schedule-table .receso-row td {
+    border: 1px solid #5a6268;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    width: 100%;
+    max-width: 100%;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+}
+.modal-content {
+    position: relative;
+    background-color: var(--container-bg);
+    color: var(--text-color);
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid var(--text-color);
+    width: 90%;
+    max-width: 800px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+.modal-content img {
+    width: 100%;
+    height: auto;
+    border: none;
+    border-radius:12px;
+    display: block;
+    cursor: pointer;
+}
+.modal-footer {
+    margin-top: 15px;
+    text-align: center;
+}
+.modal-footer button {
+    background-color: var(--next-class-bg);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+.modal-footer button:hover {
+    background-color: var(--next-class-hover-bg);
+}
+
+.button-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 2em;
+    gap: 10px;
+}
+
+.styled-button {
+    padding: 12px 25px;
+    border-radius: 50px;
+    border: none;
+    font-size: 0.8em;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: white;
+    background-color: var(--next-class-bg);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease;
+}
+
+.styled-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    background-color: var(--next-class-hover-bg);
+}
+
+.styled-button:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .styled-button {
+    color: white;
+}
+
+#ios-install-prompt {
+    display: none;
+    margin-top: 20px;
+    padding: 12px;
+    background-color: #eef7ff;
+    border: 1px solid #007aff;
+    border-radius: 8px;
+    font-size: 1em;
+    color: #333;
+}
+
+@media (max-width: 600px) {
+    .container {
+        width: 90%;
+        padding: 1.5em 1em;
+    }
+    #current-class-display {
+        font-size: 1.8em;
+    }
+    #teacher-display {
+        font-size: 1em;
+    }
+    #schedule-table th, #schedule-table td {
+        font-size: 0.8em;
+        padding: 8px 4px;
+    }
+}
