@@ -1,6 +1,6 @@
 {
   "name": "Horario 1CV Por elmendezz",
-  "short_name": "Horario 1CV - Versión Beta",
+  "short_name": "Horario - Beta 48",
   "start_url": ".",
   "display": "standalone",
   "orientation": "any",
@@ -36,7 +36,7 @@
       "sizes": "192x192",
       "src": "maskable_icon_x192.png",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "maskable"
     },
     {
       "sizes": "384x384",
@@ -49,12 +49,16 @@
       "src": "maskable_icon_x512.png",
       "type": "image/png",
       "purpose": "maskable"
-    },
+    }
+  ],
+  "widgets": [
     {
-      "sizes": "1024x1024",
-      "src": "maskable_icon.png",
-      "type": "image/png",
-      "purpose": "maskable"
+      "name": "Horario de Clase",
+      "description": "Muestra la clase actual y la siguiente.",
+      "tag": "schedule-widget",
+      "template": "schedule_template",
+      "ms_ac_template": "widget_template.json",
+      "data": "widget_data.json"
     }
   ]
 }

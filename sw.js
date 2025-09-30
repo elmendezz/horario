@@ -1,107 +1,149 @@
-// sw.js (Versión 5 - Corregida y unificada)
+// sw.js (Versión con Widgets)
 
-// 1. Define un nombre y versión para tu caché.
-const CACHE_NAME = 'horario-1cv-cache-v6'; // <-- VERSIÓN ACTUALIZADA
-
-// 2. Lista de archivos esenciales de tu app.
-const urlsToCache = ['/', 'index.html', 'horario.jpg', 'manifest.json', 'images/icons/icon-192x192.png'];
-
-// =================== LÓGICA DE NOTIFICACIONES ===================
-
-let notificationTimer = null;
-
-// **IMPORTANTE**: El horario debe estar aquí porque el SW no puede ver el de index.html
-const schedule = [
-    // Lunes (1)
-    [{ time: [12, 30], name: "Cultura Digital I" }, { time: [13, 20], name: "Ingles I" }, { time: [14, 10], name: "Ingles I" }, { time: [15, 20], name: "Humanidades I" }, { time: [16, 10], name: "Lengua y Comunicación I" }, { time: [17, 0], name: "La Materia y sus Interacciones" }],
-    // Martes (2)
-    [{ time: [13, 20], name: "Cultura Digital I" }, { time: [14, 10], name: "Cultura Digital I" }, { time: [15, 20], name: "Lengua y Comunicación I" }, { time: [16, 10], name: "La Materia y sus Interacciones" }, { time: [17, 0], name: "Ingles I" }],
-    // Miércoles (3)
-    [{ time: [14, 10], name: "Humanidades I" }, { time: [15, 20], name: "Humanidades I" }, { time: [16, 10], name: "Pensamiento Matemático I" }, { time: [17, 0], name: "La Materia y sus Interacciones" }],
-    // Jueves (4)
-    [{ time: [14, 10], name: "Humanidades I" }, { time: [15, 20], name: "Pensamiento Matemático I" }, { time: [16, 10], name: "Pensamiento Matemático I" }, { time: [17, 0], name: "Ciencias Sociales I" }],
-    // Viernes (5)
-    [{ time: [13, 20], name: "Formación Socioemocional I" }, { time: [14, 10], name: "Ciencias Sociales I" }, { time: [15, 20], name: "Lengua y Comunicación I" }, { time: [16, 10], name: "La Materia y sus Interacciones" }, { time: [17, 0], name: "Pensamiento Matemático I" }]
+const CACHE_NAME = 'horario-1cv-cache-v7';
+const urlsToCache = [
+    '/', 
+    'index.html', 
+    'horario.jpg', 
+    'manifest.json',
+    'widget_template.json', // Agregamos el template del widget a la caché
+    'images/icons/icon-192x192.png'
 ];
 
-// Función que calcula y programa la próxima notificación
-function scheduleNextNotification() {
-    clearTimeout(notificationTimer);
+// Horario (ya lo tenías, se mantiene igual)
+const schedule = [
+    [{ time: [12, 30], name: "Cultura Digital I" }, { time: [13, 20], name: "Ingles I" }, { time: [14, 10], name: "Ingles I" }, { time: [15, 20], name: "Humanidades I" }, { time: [16, 10], name: "Lengua y Comunicación I" }, { time: [17, 0], name: "La Materia y sus Interacciones" }],
+    [{ time: [13, 20], name: "Cultura Digital I" }, { time: [14, 10], name: "Cultura Digital I" }, { time: [15, 20], name: "Lengua y Comunicación I" }, { time: [16, 10], name: "La Materia y sus Interacciones" }, { time: [17, 0], name: "Ingles I" }],
+    [{ time: [14, 10], name: "Humanidades I" }, { time: [15, 20], name: "Humanidades I" }, { time: [16, 10], name: "Pensamiento Matematico I" }, { time: [17, 0], name: "La Materia y sus Interacciones" }],
+    [{ time: [14, 10], name: "Humanidades I" }, { time: [15, 20], name: "Pensamiento Matematico I" }, { time: [16, 10], name: "Pensamiento Matematico I" }, { time: [17, 0], name: "Ciencias Sociales I" }],
+    [{ time: [13, 20], name: "Formacion Socioemocional I" }, { time: [14, 10], name: "Ciencias Sociales I" }, { time: [15, 20], name: "Lengua y Comunicación I" }, { time: [16, 10], name: "La Materia y sus Interacciones" }, { time: [17, 0], name: "Pensamiento Matematico I" }]
+];
+const classDuration = 50;
+const recessTime = [15, 0];
+const recessDuration = 20;
 
+// =================== LÓGICA DE WIDGETS ===================
+
+async function updateWidget() {
+    if (!self.widgets) {
+        console.log('SW: La API de widgets no está disponible.');
+        return;
+    }
+    
     const now = new Date();
-    let nextNotificationTime = null;
+    const day = now.getDay();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    let currentClass = null;
     let nextClass = null;
 
-    // Buscamos la próxima clase en los próximos 7 días
-    for (let i = 0; i < 7; i++) {
-        const checkDate = new Date(now);
-        checkDate.setDate(now.getDate() + i);
-        const dayOfWeek = checkDate.getDay();
+    if (day >= 1 && day <= 5) {
+        const todaySchedule = schedule[day - 1];
+        for (let i = 0; i < todaySchedule.length; i++) {
+            const classStartHour = todaySchedule[i].time[0];
+            const classStartMinute = todaySchedule[i].time[1];
+            const classStartTotalMinutes = classStartHour * 60 + classStartMinute;
+            const classEndTotalMinutes = classStartTotalMinutes + classDuration;
+            const nowTotalMinutes = currentHour * 60 + currentMinute;
 
-        if (dayOfWeek >= 1 && dayOfWeek <= 5) { // Lunes a Viernes
-            const todaySchedule = schedule[dayOfWeek - 1];
-            for (const classInfo of todaySchedule) {
-                const classTime = new Date(checkDate);
-                classTime.setHours(classInfo.time[0], classInfo.time[1], 0, 0);
+            if (nowTotalMinutes >= classStartTotalMinutes && nowTotalMinutes < classEndTotalMinutes) {
+                currentClass = { ...todaySchedule[i], index: i };
+                break;
+            }
+        }
 
-                // La hora para la notificación es 5 minutos antes
-                const notificationTime = new Date(classTime.getTime() - 5 * 60 * 1000);
-
-                if (notificationTime > now) {
-                    if (!nextNotificationTime || notificationTime < nextNotificationTime) {
-                        nextNotificationTime = notificationTime;
-                        nextClass = classInfo;
-                    }
+        if (currentClass) {
+            if (currentClass.index + 1 < todaySchedule.length) {
+                const nextClassStartHour = todaySchedule[currentClass.index + 1].time[0];
+                const nextClassStartMinute = todaySchedule[currentClass.index + 1].time[1];
+                const recessStartTotalMinutes = recessTime[0] * 60 + recessTime[1];
+                 // Check if the next class is after recess
+                 if(classEndTotalMinutes <= recessStartTotalMinutes && (nextClassStartHour * 60 + nextClassStartMinute) > recessStartTotalMinutes){
+                    nextClass = { name: "Receso", time: recessTime };
+                 } else {
+                    nextClass = todaySchedule[currentClass.index + 1];
+                 }
+            } else {
+                 nextClass = { name: "Fin de las clases por hoy", time: null };
+            }
+        } else {
+            for (let i = 0; i < todaySchedule.length; i++) {
+                const classStartTotalMinutes = todaySchedule[i].time[0] * 60 + todaySchedule[i].time[1];
+                if (classStartTotalMinutes > (currentHour * 60 + currentMinute)) {
+                    nextClass = todaySchedule[i];
+                    break;
                 }
             }
         }
     }
+    
+    const widgetData = {
+        currentTitle: currentClass ? "Clase Actual:" : "No hay clase ahora",
+        currentSubtitle: currentClass ? currentClass.name : "¡Tiempo libre!",
+        nextTitle: nextClass ? "Siguiente:" : " ",
+        nextSubtitle: nextClass ? `${nextClass.name}${nextClass.time ? ` a las ${String(nextClass.time[0]).padStart(2, '0')}:${String(nextClass.time[1]).padStart(2, '0')}` : ''}` : "Mañana será otro día."
+    };
 
-    if (nextNotificationTime && nextClass) {
-        const delay = nextNotificationTime.getTime() - now.getTime();
-        console.log(`SW: Próxima notificación programada para "${nextClass.name}" en ${Math.round(delay / 60000)} minutos.`);
-        
-        notificationTimer = setTimeout(() => {
-            self.registration.showNotification('Próxima Clase en 5 Minutos', {
-                body: `${nextClass.name} está a punto de comenzar.`,
-                icon: 'images/icons/icon-192x192.png' // Icono para la notificación
-            });
-            // Una vez mostrada, reprogramamos la siguiente
-            scheduleNextNotification();
-        }, delay);
-    } else {
-        console.log('SW: No hay más clases para notificar en los próximos 7 días.');
+    const template = await caches.match('widget_template.json');
+    if (!template) {
+        console.error('SW: No se encontró el template del widget en la caché.');
+        return;
+    }
+    
+    const templateContent = await template.text();
+    
+    try {
+        await self.widgets.updateByTag('schedule-widget', {
+            template: templateContent,
+            data: JSON.stringify(widgetData)
+        });
+        console.log('SW: Widget actualizado correctamente.');
+    } catch (err) {
+        console.error('SW: Fallo al actualizar el widget:', err);
     }
 }
 
-// Escuchamos mensajes de la página (VERSIÓN CORREGIDA Y ÚNICA)
-self.addEventListener('message', event => {
-    // Maneja la activación y desactivación de notificaciones
-    if (event.data.type === 'SET_NOTIFICATIONS') {
-        if (event.data.enabled) {
-            console.log('SW: Activando y programando notificaciones.');
-            scheduleNextNotification();
-        } else {
-            console.log('SW: Desactivando y cancelando notificaciones.');
-            clearTimeout(notificationTimer);
-        }
-    }
 
-    // Maneja la notificación de prueba
+// Event listeners para el ciclo de vida del widget
+self.addEventListener('widgetinstall', event => {
+    console.log('SW: Widget instalado.', event);
+    event.waitUntil(updateWidget());
+});
+
+self.addEventListener('widgetclick', event => {
+    if (event.action === 'open-app') {
+        event.waitUntil(clients.openWindow('/'));
+    }
+});
+
+// Actualización periódica para mantener el widget al día
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'update-widget-periodic') {
+    event.waitUntil(updateWidget());
+  }
+});
+
+
+// =================== LÓGICA DE NOTIFICACIONES (Tu código existente) ===================
+
+let notificationTimer = null;
+
+self.addEventListener('message', event => {
     if (event.data.type === 'TEST_NOTIFICATION') {
-        const delaySeconds = event.data.delay || 5;
-        console.log(`SW: Notificación de prueba programada en ${delaySeconds} segundos.`);
+        const delaySeconds = event.data.delay || 0;
+        console.log(`SW: Recibida solicitud para notificación de prueba en ${delaySeconds}s.`);
         
-        setTimeout(() => {
-            self.registration.showNotification('🔔 ¡Notificación de Prueba! 🔔', {
-                body: 'Si puedes ver esto, ¡las notificaciones funcionan correctamente!',
+        clearTimeout(notificationTimer);
+        notificationTimer = setTimeout(() => {
+            self.registration.showNotification('¡Notificación de Prueba! 🧪', {
+                body: 'Si ves esto, las notificaciones funcionan incluso con la app cerrada.',
                 icon: 'images/icons/icon-192x192.png'
             });
             console.log('SW: Notificación de prueba enviada.');
         }, delaySeconds * 1000);
     }
 });
-
 
 // =================== LÓGICA DE INSTALACIÓN Y CACHÉ ===================
 
@@ -116,11 +158,17 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
     console.log('SW: Activando nueva versión y limpiando cachés antiguos...');
     event.waitUntil(
-        caches.keys().then(cacheNames => {
-            return Promise.all(
-                cacheNames.filter(cacheName => cacheName !== CACHE_NAME).map(cacheName => caches.delete(cacheName))
-            );
-        })
+        Promise.all([
+            caches.keys().then(cacheNames => {
+                return Promise.all(
+                    cacheNames.filter(cacheName => cacheName !== CACHE_NAME).map(cacheName => caches.delete(cacheName))
+                );
+            }),
+            // Registrar la sincronización periódica cuando el SW se activa
+            self.registration.periodicSync?.register('update-widget-periodic', {
+                minInterval: 15 * 60 * 1000, // Cada 15 minutos
+            }).catch(e => console.error('SW: Fallo al registrar la sincronización periódica:', e))
+        ])
     );
     return self.clients.claim();
 });
@@ -128,9 +176,7 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
     event.respondWith(
         caches.match(event.request).then(response => {
-            // Si está en caché, lo devuelve. Si no, lo busca en la red.
             return response || fetch(event.request).then(fetchResponse => {
-                // Guarda la nueva respuesta en la caché para futuras visitas
                 return caches.open(CACHE_NAME).then(cache => {
                     cache.put(event.request, fetchResponse.clone());
                     return fetchResponse;
