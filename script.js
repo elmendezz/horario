@@ -359,6 +359,7 @@ function main() {
     const messageText = document.getElementById('message-text');
     const chatStatusMessage = document.getElementById('chat-status-message');
     const messageSubmitBtn = messageForm.querySelector('button[type="submit"]');
+    let chatPollingInterval = null;
 
     chatBtn.addEventListener('click', () => {
         const username = localStorage.getItem('username');
@@ -370,12 +371,16 @@ function main() {
         chatModal.style.display = 'block';
         fetchMessages();
         checkUserStatus(username);
+        // Iniciar la actualización automática cada 5 segundos
+        if (chatPollingInterval) clearInterval(chatPollingInterval);
+        chatPollingInterval = setInterval(fetchMessages, 5000);
     });
 
     // Cerrar modal si se hace clic fuera del contenido
     chatModal.addEventListener('click', (event) => {
         if (event.target === chatModal) {
             chatModal.style.display = 'none';
+            clearInterval(chatPollingInterval); // Detener la actualización automática
         }
     });
 
