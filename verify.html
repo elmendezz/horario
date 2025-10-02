@@ -98,16 +98,26 @@
             }
         }
 
-        async function updateUserStatus(username, status) {
+        async function updateUserStatus(username, status, cardElement) {
+            // Deshabilitar botones para prevenir clics múltiples
+            cardElement.querySelectorAll('button').forEach(btn => btn.disabled = true);
+            cardElement.style.opacity = '0.5';
+
             try {
                 const response = await fetch('/api/messages', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'update_status', username, status })
                 });
-                if (!response.ok) throw new Error('Falló la actualización de estado');
-                fetchUsers(); // Recargar la lista
+                if (!response.ok) throw new Error('Falló la actualización de estado en el servidor');
+                
+                // Actualización optimista: remover la tarjeta de la UI sin recargar toda la lista
+                cardElement.remove();
+
             } catch (error) {
+                // Si falla, revertir los cambios en la UI
+                cardElement.querySelectorAll('button').forEach(btn => btn.disabled = false);
+                cardElement.style.opacity = '1';
                 alert('Error al actualizar el estado del usuario.');
                 console.error('Error updating status:', error);
             }

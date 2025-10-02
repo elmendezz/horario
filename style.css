@@ -74,6 +74,18 @@ body {
     visibility: hidden; /* Oculto por defecto hasta que JS lo active */
 }
 
+#chat-btn {
+    position: absolute;
+    top: 1em;
+    left: 4em; /* Posicionado al lado del botón de notificaciones */
+    font-size: 1.5em;
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--text-color);
+    transition: color 0.3s ease;
+}
+
+
 #current-class-display {
     font-size: 2.5em;
     font-weight: bold;
