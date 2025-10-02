@@ -509,7 +509,7 @@ body {
 
 .next-class-countdown .next-class-time-label {
     font-size: 1.1em;
-    margin-bottom: 1em;
+    margin-top: 1em; /* Cambiado de margin-bottom para la nueva posición */
     font-weight: normal;
 }
 
