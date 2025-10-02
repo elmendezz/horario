@@ -74,6 +74,24 @@ export default async function handler(req, res) {
         return res.status(201).json({ success: true, message: "Feedback recibido y issue creado." });
     }
 
+    // --- LÓGICA DE ANUNCIOS (POST para agregar) ---
+    if (req.method === "POST" && req.body.type === 'announcement') {
+        const { title, content, announcementType } = req.body;
+        if (!title || !content) return res.status(400).json({ error: "Faltan datos en el anuncio." });
+
+        const { content: announcements, sha: announcementsSha } = await getFile(announcementsFile);
+        
+        const newAnnouncement = {
+            id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`, // ID único
+            type: announcementType || 'info',
+            title,
+            content
+        };
+        announcements.push(newAnnouncement);
+        await updateFile(announcementsFile, announcements, announcementsSha, `Nuevo anuncio: ${title}`);
+        return res.status(201).json({ success: true, message: "Anuncio publicado." });
+    }
+
     // --- LÓGICA DE ANUNCIOS (GET) ---
     if (req.method === "GET" && req.query.announcements === 'true') {
         const { content: announcements } = await getFile(announcementsFile);

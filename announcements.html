@@ -36,6 +36,45 @@
             font-size: 2em;
             padding: 2em;
         }
+        .admin-controls {
+            margin-top: 2em;
+            padding: 1.5em;
+            background-color: var(--container-bg);
+            border-radius: 8px;
+            box-shadow: var(--container-shadow);
+            border: 1px solid var(--accent-color);
+            display: none; /* Oculto por defecto */
+            flex-direction: column;
+            gap: 1em;
+        }
+        .admin-controls h2 {
+            color: var(--accent-color);
+            margin-top: 0;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 0.5em;
+        }
+        .admin-controls label {
+            display: block;
+            margin-bottom: 0.5em;
+            font-weight: bold;
+        }
+        .admin-controls input[type="text"],
+        .admin-controls textarea,
+        .admin-controls select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 1em;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            box-sizing: border-box;
+        }
+        .admin-controls button {
+            width: auto; /* Para que no ocupe todo el ancho */
+            align-self: flex-start; /* Alinea a la izquierda */
+        }
+
     </style>
 </head>
 <body>
@@ -46,6 +85,30 @@
         
         <div id="announcement-list">
             <div class="loading-spinner">🔄 Cargando anuncios...</div>
+        </div>
+
+        <div id="admin-announcement-controls" class="admin-controls">
+            <h2>Administrar Anuncios</h2>
+            <button id="mark-all-read-btn" class="styled-button" style="background-color: #28a745;">✅ Marcar todo como leído</button>
+            
+            <hr style="border-color: var(--text-color); margin: 1.5em 0;">
+
+            <h2>Agregar Nuevo Anuncio</h2>
+            <form id="add-announcement-form">
+                <label for="announcement-title">Título:</label>
+                <input type="text" id="announcement-title" required>
+
+                <label for="announcement-content">Contenido:</label>
+                <textarea id="announcement-content" rows="4" required></textarea>
+
+                <label for="announcement-type">Tipo:</label>
+                <select id="announcement-type">
+                    <option value="info">Información (Azul)</option>
+                    <option value="warning">Advertencia (Amarillo)</option>
+                    <option value="success">Éxito (Verde)</option>
+                </select>
+                <button type="submit" class="styled-button" style="background-color: #007bff;">➕ Publicar Anuncio</button>
+            </form>
         </div>
 
         <div style="text-align: center; margin-top: 2em;">
@@ -85,10 +148,69 @@
             });
         }
 
+        // Function to mark all announcements as read
+        function markAllAnnouncementsAsRead() {
+            localStorage.removeItem('dismissedAnnouncements');
+            alert('Todos los anuncios han sido marcados como leídos. La insignia del menú principal se actualizará al volver.');
+            // Redirigir a la página principal para que la insignia se actualice inmediatamente
+            window.location.href = 'index.html';
+        }
+
+        // Function to add a new announcement
+        async function addNewAnnouncement(event) {
+            event.preventDefault();
+            const title = document.getElementById('announcement-title').value.trim();
+            const content = document.getElementById('announcement-content').value.trim();
+            const type = document.getElementById('announcement-type').value;
+
+            if (!title || !content) {
+                alert('Por favor, completa todos los campos.');
+                return;
+            }
+
+            const submitButton = event.submitter;
+            submitButton.disabled = true;
+            submitButton.textContent = 'Publicando...';
+
+            try {
+                const response = await fetch('/api/messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'announcement', // Tipo para el manejador de la API
+                        title,
+                        content,
+                        announcementType: type // Usar una clave diferente para evitar conflicto con 'type' de la API
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.details || 'Error al publicar el anuncio.');
+                }
+
+                alert('Anuncio publicado con éxito.');
+                document.getElementById('add-announcement-form').reset();
+                fetchAnnouncements(); // Actualizar la lista de anuncios
+            } catch (error) {
+                alert(`Fallo al publicar el anuncio: ${error.message}`);
+                console.error('Error adding announcement:', error);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = '➕ Publicar Anuncio';
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const pin = prompt('Ingresa el PIN de administrador para ver los anuncios:');
             if (pin === '26435') {
+                // Mostrar los controles de administración si el PIN es correcto
+                document.getElementById('admin-announcement-controls').style.display = 'flex';
                 fetchAnnouncements();
+
+                // Adjuntar event listeners para los nuevos controles
+                document.getElementById('mark-all-read-btn').addEventListener('click', markAllAnnouncementsAsRead);
+                document.getElementById('add-announcement-form').addEventListener('submit', addNewAnnouncement);
             } else {
                 alert('PIN incorrecto. No tienes acceso a esta página.');
                 window.location.href = 'index.html';
