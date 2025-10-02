@@ -26,6 +26,11 @@
         .message-card p {
             margin: 0;
         }
+        .message-card .author {
+            font-size: 0.8em;
+            color: #888;
+            margin-top: 0.5em;
+        }
         .message-card .time {
             font-size: 0.8em;
             color: #888;
@@ -98,6 +103,11 @@
         const messageText = document.getElementById('message-text');
 
         async function fetchMessages() {
+            // Mostrar spinner de carga
+            if (!messagesList.querySelector('.message-card')) {
+                messagesList.innerHTML = '<div class="loading-spinner">🔄 Cargando mensajes...</div>';
+            }
+
             try {
                 const response = await fetch('/api/messages');
                 const messages = await response.json();
@@ -109,6 +119,7 @@
         }
 
         function renderMessages(messages) {
+            const originalIndices = new Map();
             messagesList.innerHTML = '';
             if (messages.length === 0) {
                 messagesList.innerHTML = '<p style="text-align: center;">No hay mensajes todavía. ¡Sé el primero!</p>';
@@ -116,19 +127,24 @@
             }
             messages.forEach((msg, index) => {
                 const card = document.createElement('div');
+                const originalIndex = messages.length - 1 - index;
                 card.className = 'message-card';
                 
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'delete-btn';
                 deleteBtn.textContent = '🗑️';
-                deleteBtn.onclick = () => deleteMessage(messages.length - 1 - index); // Usar el índice original
+                deleteBtn.onclick = () => deleteMessage(originalIndex, card);
 
                 const text = document.createElement('p');
-                text.textContent = msg.text;
+                text.textContent = msg.text; 
+
+                const author = document.createElement('div');
+                author.className = 'author';
+                author.textContent = `De: ${msg.author}`;
 
                 const time = document.createElement('div');
                 time.className = 'time';
-                time.textContent = msg.time;
+                time.textContent = `Enviado: ${msg.time}`;
 
                 card.appendChild(deleteBtn);
                 card.appendChild(text);
@@ -142,38 +158,72 @@
             const text = messageText.value.trim();
             if (!text) return;
 
+            const author = localStorage.getItem('username');
+            if (!author) {
+                alert('No se pudo identificar tu usuario. Por favor, recarga la página principal.');
+                return;
+            }
+
+            // Limpiar el input y deshabilitar el formulario para evitar envíos duplicados
+            const originalButtonText = e.submitter.textContent;
+            messageText.value = '';
+            e.submitter.disabled = true;
+            e.submitter.textContent = 'Enviando...';
+
             try {
                 const response = await fetch('/api/messages', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text })
+                    body: JSON.stringify({ text, author })
                 });
-                if (!response.ok) throw new Error('Failed to post message');
-                messageText.value = '';
-                fetchMessages(); // Recargar mensajes
+                if (!response.ok) throw new Error('La respuesta del servidor no fue exitosa');
+                // La API fue exitosa, recargamos la lista completa para tener los datos más frescos
+                await fetchMessages();
             } catch (error) {
                 alert('Error al enviar el mensaje.');
                 console.error('Error posting message:', error);
+            } finally {
+                // Reactivar el formulario
+                e.submitter.disabled = false;
+                e.submitter.textContent = originalButtonText;
             }
         });
 
-        async function deleteMessage(index) {
-            if (!confirm('¿Estás seguro de que quieres borrar este mensaje?')) return;
+        // Esta función ya fue modificada en el paso anterior, pero la incluyo para completitud
+        async function deleteMessage(index, cardElement) {            
+            const pin = prompt('Para borrar, ingresa el PIN de administrador:');
+            if (pin !== '26435') {
+                if (pin !== null) { // Si el usuario no presionó "Cancelar"
+                    alert('PIN incorrecto.');
+                }
+                return;
+            }
+
+            cardElement.style.opacity = '0.5'; // Actualización optimista: atenuar el mensaje
             try {
                 await fetch('/api/messages', {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ index })
                 });
-                fetchMessages();
+                cardElement.remove(); // Actualización optimista: eliminar el elemento de la UI
             } catch (error) {
                 alert('Error al borrar el mensaje.');
                 console.error('Error deleting message:', error);
+                cardElement.style.opacity = '1'; // Revertir si hay un error
             }
         }
 
         // Carga inicial
-        fetchMessages();
+        document.addEventListener('DOMContentLoaded', () => {
+            const username = localStorage.getItem('username');
+            if (!username) {
+                alert('Debes establecer un nombre en la página principal para ver o enviar mensajes.');
+                window.location.href = 'index.html';
+            } else {
+                fetchMessages();
+            }
+        });
     </script>
 </body>
 </html>

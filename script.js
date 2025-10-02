@@ -351,6 +351,41 @@ document.getElementById('test-notification-btn').addEventListener('click', () =>
  * Se asegura de que el DOM esté cargado antes de asignar eventos y empezar las actualizaciones.
  */
 function main() {
+    // --- Lógica del Modal de Nombre ---
+    const nameModal = document.getElementById('name-modal');
+    const nameForm = document.getElementById('name-form');
+    const usernameInput = document.getElementById('username-input');
+    const savedUsername = localStorage.getItem('username');
+
+    if (!savedUsername && nameModal) {
+        nameModal.style.display = 'block';
+    }
+
+    if (nameForm) {
+        nameForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = usernameInput.value.trim();
+            if (username) {
+                try {
+                    // Enviar solicitud de aprobación al backend
+                    const response = await fetch('/api/messages', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'request_approval', username })
+                    });
+                    if (!response.ok) throw new Error('La solicitud de aprobación falló.');
+                    
+                    localStorage.setItem('username', username);
+                    alert(`¡Gracias, ${username}! Tu solicitud para enviar mensajes ha sido enviada. Un administrador debe aprobarte.`);
+                    nameModal.style.display = 'none';
+                } catch (error) {
+                    alert('Hubo un error al procesar tu solicitud. Inténtalo de nuevo.');
+                    console.error('Error en solicitud de aprobación:', error);
+                }
+            }
+        });
+    }
+
     const showDevToolsBtn = document.getElementById('show-dev-tools-btn');
     if (showDevToolsBtn) {
         showDevToolsBtn.addEventListener('click', () => {

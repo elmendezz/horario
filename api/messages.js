@@ -1,8 +1,8 @@
 export default async function handler(req, res) {
   const repo = "elmendezz/horario-messages"; // Tu repositorio de mensajes
-  const file = "mensajes.json";
+  const messagesFile = "mensajes.json";
+  const usersFile = "users.json";
   const branch = "main";
-  const apiUrl = `https://api.github.com/repos/${repo}/contents/${file}`;
 
   const headers = {
     Authorization: `token ${process.env.GITHUB_TOKEN}`,
@@ -10,40 +10,87 @@ export default async function handler(req, res) {
   };
 
   try {
-    // --- OBTENER ARCHIVO Y SHA (para POST y DELETE) ---
-    let sha = null;
-    let messages = [];
-    try {
-      const fileRes = await fetch(apiUrl, { headers });
-      if (fileRes.ok) {
-        const fileData = await fileRes.json();
-        sha = fileData.sha;
-        messages = JSON.parse(Buffer.from(fileData.content, "base64").toString("utf-8"));
-      } else if (fileRes.status !== 404) {
-        // Si no es 404, es un error real
-        throw new Error(`GitHub API fetch failed: ${fileRes.statusText}`);
+    // Función auxiliar para obtener un archivo de GitHub
+    async function getFile(filename) {
+        const url = `https://api.github.com/repos/${repo}/contents/${filename}`;
+        try {
+            const response = await fetch(url, { headers });
+            if (response.ok) {
+                const data = await response.json();
+                const content = JSON.parse(Buffer.from(data.content, "base64").toString("utf-8"));
+                return { content, sha: data.sha };
+            }
+            if (response.status === 404) {
+                return { content: filename === usersFile ? {} : [], sha: null }; // Devuelve objeto vacío para users, array para messages
+            }
+            throw new Error(`GitHub API fetch failed: ${response.statusText}`);
+        } catch (e) {
+            console.warn(`Could not fetch ${filename}, assuming it's new.`, e.message);
+            return { content: filename === usersFile ? {} : [], sha: null };
+        }
+    }
+
+    // Función auxiliar para actualizar un archivo en GitHub
+    async function updateFile(filename, content, sha, commitMessage) {
+        const url = `https://api.github.com/repos/${repo}/contents/${filename}`;
+        const body = {
+            message: commitMessage,
+            content: Buffer.from(JSON.stringify(content, null, 2)).toString("base64"),
+            branch,
+            ...(sha && { sha }) // Añadir sha si existe
+        };
+        const response = await fetch(url, {
+            method: "PUT",
+            headers: { ...headers, "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+        });
+        if (!response.ok) {
+            const errorBody = await response.json();
+            console.error(`GitHub API PUT Error for ${filename}:`, errorBody);
+            throw new Error(`GitHub API PUT failed: ${response.statusText}`);
+        }
+    }
+
+    // --- LÓGICA DE USUARIOS (GET y PUT) ---
+    if (req.query.users === 'true' || (req.method === 'PUT' && req.body.action)) {
+      const { content: users, sha: usersSha } = await getFile(usersFile);
+
+      if (req.method === 'GET') {
+        return res.status(200).json(users);
       }
-      // Si es 404, sha es null y messages es [], lo cual es correcto para crear un archivo nuevo.
-    } catch (e) {
-      // Si el fetch falla por otra razón (ej. red), también asumimos que el archivo no existe.
-      console.warn("Could not fetch existing file, assuming it's new.", e.message);
+
+      if (req.method === 'PUT') {
+        const { action, username, status } = req.body;
+        if (action === 'request_approval' && !users[username]) {
+            users[username] = 'pending';
+            await updateFile(usersFile, users, usersSha, `Solicitud de aprobación para ${username}`);
+        } else if (action === 'update_status' && (status === 'approved' || status === 'denied')) {
+            if (status === 'denied') delete users[username];
+            else users[username] = status;
+            await updateFile(usersFile, users, usersSha, `Estado de ${username} actualizado a ${status}`);
+        }
+        return res.status(200).json({ success: true });
+      }
     }
 
     // --- LEER MENSAJES (GET) ---
     if (req.method === "GET") {
-      // Ahora que hemos obtenido los mensajes de forma autenticada, simplemente los devolvemos.
+      const { content: messages } = await getFile(messagesFile);
       return res.status(200).json(messages);
     }
 
-    let commitMessage = "";
+    // --- OBTENER ARCHIVOS PARA ESCRIBIR/BORRAR MENSAJES ---
+    const { content: messages, sha: messagesSha } = await getFile(messagesFile);
+    const { content: users } = await getFile(usersFile);
 
     // --- ESCRIBIR MENSAJE (POST) ---
     if (req.method === "POST") {
-      const { text } = req.body;
-      if (!text) return res.status(400).json({ error: "El texto del mensaje no puede estar vacío." });
+      const { text, author } = req.body;
+      if (!text || !author) return res.status(400).json({ error: "Faltan datos en el mensaje." });
+      if (users[author] !== 'approved') return res.status(403).json({ error: "No tienes permiso para enviar mensajes." });
       
-      messages.push({ text, time: new Date().toLocaleString('es-MX', { timeZone: 'America/Tijuana' }) });
-      commitMessage = "Nuevo mensaje desde la app";
+      messages.push({ text, author, time: new Date().toLocaleString('es-MX', { timeZone: 'America/Tijuana' }) });
+      await updateFile(messagesFile, messages, messagesSha, `Nuevo mensaje de ${author}`);
     }
     // --- BORRAR MENSAJE (DELETE) ---
     else if (req.method === "DELETE") {
@@ -52,34 +99,11 @@ export default async function handler(req, res) {
       if (index < 0 || index >= messages.length) return res.status(400).json({ error: "Índice fuera de rango." });
       
       messages.splice(index, 1);
-      commitMessage = "Mensaje borrado desde la app";
+      await updateFile(messagesFile, messages, messagesSha, "Mensaje borrado desde la app");
     }
     // --- MÉTODO NO PERMITIDO ---
     else {
       return res.status(405).json({ error: "Método no permitido." });
-    }
-
-    // --- SUBIR CAMBIOS A GITHUB ---
-    const content = Buffer.from(JSON.stringify(messages, null, 2)).toString("base64");
-    const body = {
-      message: commitMessage,
-      content,
-      branch
-    };
-    if (sha) {
-      body.sha = sha; // Solo incluir SHA si estamos actualizando un archivo existente
-    }
-
-    const updateRes = await fetch(apiUrl, {
-      method: "PUT",
-      headers: { ...headers, "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-
-    if (!updateRes.ok) {
-      const errorBody = await updateRes.json();
-      console.error("GitHub API PUT Error:", errorBody);
-      throw new Error(`GitHub API PUT failed: ${updateRes.statusText}`);
     }
 
     return res.status(200).json({ success: true });

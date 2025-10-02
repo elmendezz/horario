@@ -39,6 +39,7 @@
         <button id="test-notification-btn" class="styled-button" style="background-color: #ffc107; color: #000;">Probar Notificación (5s)</button>
         <a href="test.html" class="styled-button" style="background-color: #fd7e14;">Panel de Pruebas</a>
         <a href="messages.html" class="styled-button" style="background-color: #007bff;">Mensajes Beta</a>
+        <a href="verify.html" class="styled-button" style="background-color: #28a745;">Verificar Usuarios</a>
     </div>
 
     <div id="ios-install-prompt">
@@ -78,6 +79,20 @@
         </div>
     </div>
     
+    <!-- Modal para solicitar el nombre de usuario -->
+    <div id="name-modal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <h2>¡Bienvenido/a!</h2>
+            <p>Para poder enviar mensajes, por favor dinos tu nombre. Este nombre será visible para otros.</p>
+            <form id="name-form" style="margin-top: 1em;">
+                <input type="text" id="username-input" placeholder="Tu nombre o apodo" required style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;">
+                <div class="modal-footer">
+                    <button type="submit" id="save-name-btn">Guardar Nombre</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="script.js"></script>
     
     <script>
