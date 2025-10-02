@@ -65,20 +65,26 @@ export function updateClock() {
     if (currentClassEnd) {
         const diff = currentClassEnd - now;
         if (diff > 0) {
-            // Lógica para el color dinámico del glow
-            const classStart = new Date(currentClassEnd.getTime() - (currentActiveClassInfo.duration || classDuration) * 60000);
-            const totalDuration = currentClassEnd - classStart;
-            const elapsed = now - classStart;
-            const progress = Math.min(elapsed / totalDuration, 1); // Progreso de 0 a 1
+            let finalGlowColor;
+            const fiveMinutesInMs = 5 * 60 * 1000;
 
-            // Interpolar entre el color de acento y el amarillo (#ffc107)
-            const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim();
-            const endColor = '#ffc107'; // Amarillo de advertencia
-            const interpolatedColor = interpolateColor(accentColor, endColor, progress);
+            if (diff <= fiveMinutesInMs) {
+                // Últimos 5 minutos: color rojo de advertencia
+                finalGlowColor = '#dc3545';
+            } else {
+                // Lógica de interpolación normal
+                const classStart = new Date(currentClassEnd.getTime() - (currentActiveClassInfo.duration || classDuration) * 60000);
+                const totalDuration = currentClassEnd - classStart;
+                const elapsed = now - classStart;
+                const progress = Math.min(elapsed / totalDuration, 1);
+                const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim();
+                const endColor = '#ffc107'; // Amarillo
+                finalGlowColor = interpolateColor(accentColor, endColor, progress);
+            }
             
-            const currentClassDisplay = document.getElementById('current-class-display');
-            if (currentClassDisplay) {
-                currentClassDisplay.style.setProperty('--dynamic-glow-color', interpolatedColor);
+            const container = document.querySelector('.container');
+            if (container) {
+                container.style.setProperty('--dynamic-glow-color', finalGlowColor);
             }
 
             const mins = Math.floor(diff / 60000);
@@ -138,8 +144,8 @@ function interpolateColor(color1, color2, factor) {
  * Restablece el color del resplandor al color de acento por defecto.
  */
 function resetGlowColor() {
-    const currentClassDisplay = document.getElementById('current-class-display');
-    if (currentClassDisplay) currentClassDisplay.style.setProperty('--dynamic-glow-color', 'var(--accent-color)');
+    const container = document.querySelector('.container');
+    if (container) container.style.setProperty('--dynamic-glow-color', 'var(--accent-color)');
 }
 
 /**
@@ -181,7 +187,11 @@ export function updateSchedule() {
     }
 
     if (nextClass) {
-        nextClassDisplay.textContent = `Siguiente clase: ${nextClass.name}`;
+        let nextClassText = `Siguiente: ${nextClass.name}`;
+        if (nextClass.time) {
+            nextClassText += ` a las ${formatTime(nextClass.time[0], nextClass.time[1])}`;
+        }
+        nextClassDisplay.textContent = nextClassText;
         if (nextClass.time) {
             const nextClassStart = new Date(now);
             if (nextClass.isNextDay) {
@@ -200,7 +210,7 @@ export function updateSchedule() {
             countdownEl.dataset.nextClassTimeDisplay = "";
         }
     } else {
-        nextClassDisplay.textContent = "Siguiente clase: Ninguna";
+        nextClassDisplay.textContent = "Siguiente: Ninguna";
     }
 
     highlightCurrentClassInTable();
