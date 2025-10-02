@@ -28,7 +28,7 @@ export async function fetchTime() {
         isSimulated = true;
     } else {
         try {
-            const response = await fetch('http://worldtimeapi.org/api/timezone/America/Tijuana');
+            const response = await fetch('https://worldtimeapi.org/api/timezone/America/Tijuana');
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
             serverTime = new Date(data.datetime);
