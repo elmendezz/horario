@@ -57,12 +57,29 @@ export function updateClock() {
     const seconds = String(now.getSeconds()).padStart(2, '0');
     const am_pm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12 || 12; // Formato 12 horas
-    document.getElementById('clock').textContent = isSimulated ? `Hora Simulada: ${hours}:${minutes}:${seconds} ${am_pm}` : `Hora: ${hours}:${minutes}:${seconds} ${am_pm}`;
+    const clockEl = document.getElementById('clock');
+    if (clockEl) clockEl.textContent = isSimulated ? `Hora Simulada: ${hours}:${minutes}:${seconds} ${am_pm}` : `Hora: ${hours}:${minutes}:${seconds} ${am_pm}`;
 
     const countdownEl = document.getElementById('countdown');
     if (currentClassEnd) {
         const diff = currentClassEnd - now;
         if (diff > 0) {
+            // Lógica para el color dinámico del glow
+            const classStart = new Date(currentClassEnd.getTime() - (currentActiveClassInfo.duration || classDuration) * 60000);
+            const totalDuration = currentClassEnd - classStart;
+            const elapsed = now - classStart;
+            const progress = Math.min(elapsed / totalDuration, 1); // Progreso de 0 a 1
+
+            // Interpolar entre el color de acento y el amarillo (#ffc107)
+            const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim();
+            const endColor = '#ffc107'; // Amarillo de advertencia
+            const interpolatedColor = interpolateColor(accentColor, endColor, progress);
+            
+            const currentClassDisplay = document.getElementById('current-class-display');
+            if (currentClassDisplay) {
+                currentClassDisplay.style.setProperty('--dynamic-glow-color', interpolatedColor);
+            }
+
             const mins = Math.floor(diff / 60000);
             const secs = Math.floor((diff % 60000) / 1000);
             countdownEl.textContent = `Faltan: ${mins}m ${secs}s para terminar`;
@@ -92,6 +109,31 @@ export function updateClock() {
 }
 
 /**
+ * Interpola entre dos colores hexadecimales.
+ * @param {string} color1 - Color inicial en formato hex (ej. '#6200ea').
+ * @param {string} color2 - Color final en formato hex (ej. '#ffc107').
+ * @param {number} factor - Factor de interpolación de 0 a 1.
+ * @returns {string} El color interpolado en formato hex.
+ */
+function interpolateColor(color1, color2, factor) {
+    const result = color1.slice(1).match(/.{2}/g).map((hex, i) => {
+        const val1 = parseInt(hex, 16);
+        const val2 = parseInt(color2.slice(1).match(/.{2}/g)[i], 16);
+        const val = Math.round(val1 + factor * (val2 - val1));
+        return val.toString(16).padStart(2, '0');
+    }).join('');
+    return `#${result}`;
+}
+
+/**
+ * Restablece el color del resplandor al color de acento por defecto.
+ */
+function resetGlowColor() {
+    const currentClassDisplay = document.getElementById('current-class-display');
+    if (currentClassDisplay) currentClassDisplay.style.setProperty('--dynamic-glow-color', 'var(--accent-color)');
+}
+
+/**
  * Actualiza la información de la clase actual y la siguiente en la UI.
  */
 export function updateSchedule() {
@@ -105,6 +147,7 @@ export function updateSchedule() {
     currentClassEnd = null;
     currentActiveClassInfo = null; // Reiniciar en cada actualización
     countdownEl.dataset.nextClassStart = "";
+    resetGlowColor(); // Restablecer el color del glow en cada actualización
     const formatTime = (h, m) => `${(h % 12 || 12)}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
 
     const { currentClass, nextClass } = getCurrentAndNextClass(now);
@@ -115,7 +158,7 @@ export function updateSchedule() {
         const classStartMinutes = currentClass.time[0] * 60 + currentClass.time[1];
         const classEndMinutes = classStartMinutes + (currentClass.duration || classDuration);
         currentClassEnd = new Date(now);
-        currentClassEnd.setHours(Math.floor(classEndMinutes / 60), classEndMinutes % 60, 0, 0);
+        currentClassEnd.setHours(Math.floor(classEndMinutes / 60), classEndMinutes % 60, 59, 999); // Finaliza al terminar el minuto
         currentActiveClassInfo = { ...currentClass, dayIndex: now.getDay() - 1 };
     } else {
         currentClassDisplay.textContent = "¡Sin Clases!";
@@ -249,6 +292,8 @@ function initializeFullscreen() {
 function initializeUser() {
     const changeUsernameBtn = document.getElementById('change-username-btn');
     const userGreetingEl = document.getElementById('user-greeting');
+    const changeUsernameMenuBtn = document.getElementById('change-username-menu-btn');
+    const userGreetingMenuEl = document.getElementById('user-greeting-menu');
 
     const setUsername = () => {
         const currentUsername = localStorage.getItem('username') || 'invitado';
@@ -268,9 +313,13 @@ function initializeUser() {
         if (username && userGreetingEl) {
             userGreetingEl.textContent = `¡Hola, ${username}!`;
         }
+        if (username && userGreetingMenuEl) {
+            userGreetingMenuEl.textContent = `¡Hola, ${username}!`;
+        }
     };
 
-    changeUsernameBtn.addEventListener('click', setUsername);
+    changeUsernameBtn?.addEventListener('click', setUsername);
+    changeUsernameMenuBtn?.addEventListener('click', setUsername);
 
     // Mostrar saludo al cargar la página si ya hay un nombre
     const savedUsername = localStorage.getItem('username');
@@ -335,6 +384,24 @@ function initializeMenu() {
 }
 
 /**
+ * Inicializa los controles de caché.
+ */
+function initializeCacheControls() {
+    const clearCacheBtn = document.getElementById('clear-cache-btn');
+    clearCacheBtn?.addEventListener('click', async () => {
+        if ('caches' in window) {
+            const userConfirmed = confirm('¿Estás seguro de que quieres limpiar toda la caché? La aplicación se recargará.');
+            if (userConfirmed) {
+                const keys = await caches.keys();
+                await Promise.all(keys.map(key => caches.delete(key)));
+                alert('Caché eliminada. La aplicación se recargará ahora.');
+                window.location.reload();
+            }
+        }
+    });
+}
+
+/**
  * Carga y muestra los anuncios del administrador.
  */
 async function initializeAnnouncements() {
@@ -389,6 +456,7 @@ export function initializeUI() {
     initializeAnnouncements();
     initializeModal();
     initializeFullscreen();
+    initializeCacheControls();
     initializeUser();
     initializeScheduleToggle();
     initializeDevToolsToggle();

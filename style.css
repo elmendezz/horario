@@ -99,12 +99,20 @@ body {
     transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
+:root {
+    /* Variable para el color dinámico del resplandor */
+    --dynamic-glow-color: var(--accent-color);
+}
+
 #current-class-display {
     font-size: 2.5em;
     font-weight: bold;
     margin-bottom: 0.1em;
     line-height: 1.2;
     word-wrap: break-word;
+    text-shadow: 0 0 12px var(--dynamic-glow-color); /* Usar la variable para el resplandor */
+    animation: pulsate-glow 2.5s infinite ease-in-out; /* Animación de parpadeo */
+    transition: text-shadow 0.5s linear; /* Transición suave del color del resplandor */
 }
 #teacher-display {
     font-size: 1.1em;
@@ -383,6 +391,14 @@ body {
     align-self: flex-end;
 }
 
+.menu-greeting {
+    padding: 1em;
+    font-size: 1.1em;
+    font-weight: bold;
+    text-align: center;
+    border-bottom: 1px solid var(--text-color);
+}
+
 .menu-section {
     margin-top: 1em;
     border-top: 1px solid var(--text-color);
@@ -401,6 +417,10 @@ body {
     cursor: pointer;
     border-radius: 8px;
     text-decoration: none;
+    /* Ajustes para texto largo */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .menu-button:hover {
@@ -423,4 +443,17 @@ body {
 .menu-overlay.open {
     opacity: 1;
     pointer-events: auto; /* Se puede hacer clic para cerrar el menú */
+}
+
+/* --- Animación de Resplandor --- */
+@keyframes pulsate-glow {
+    0% {
+        text-shadow: 0 0 12px var(--dynamic-glow-color);
+    }
+    50% {
+        text-shadow: 0 0 22px var(--dynamic-glow-color);
+    }
+    100% {
+        text-shadow: 0 0 12px var(--dynamic-glow-color);
+    }
 }
