@@ -159,14 +159,14 @@
     
     <script type="module">
         // Script específico para la página de pruebas
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => { // <-- Se añade 'async' aquí
             // --- Lógica de la UI de Pruebas ---
 
             // Mantener tema
             const currentTheme = localStorage.getItem('theme') || 'dark';
             document.documentElement.dataset.theme = currentTheme;
 
-            const { sendMessageToSW } = await import('./notification-logic.js');
+            const { sendMessageToSW } = await import('./notification-logic.js'); // Esto ahora es válido
 
             // --- Status de Notificaciones ---
             const updateNotificationStatus = () => {
@@ -187,7 +187,7 @@
             document.getElementById('toggle-notifications-btn').addEventListener('click', () => {
                 const enabled = localStorage.getItem('notificationsEnabled') !== 'true';
                 localStorage.setItem('notificationsEnabled', enabled);
-                if (window.sendMessageToSW) sendMessageToSW({ type: 'SET_NOTIFICATIONS', payload: { enabled } });
+                sendMessageToSW({ type: 'SET_NOTIFICATIONS', payload: { enabled } }); // <-- Llamada directa a la función importada
                 alert(`Notificaciones de clase ${enabled ? 'ACTIVADAS' : 'DESACTIVADAS'}.`);
                 // Actualiza el botón principal si existe
                 const mainBtn = document.getElementById('notifications-btn');
