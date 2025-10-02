@@ -218,13 +218,6 @@ function renderScheduleTable() {
     const sortedTimes = Array.from(allTimes).sort((a,b) => a - b);
     
     sortedTimes.forEach(timeInMinutes => {
-        if (timeInMinutes === 15 * 60) {
-            const recesoRow = document.createElement('tr');
-            recesoRow.className = 'receso-row';
-            recesoRow.innerHTML = `<td colspan="6">3:00 PM : RECESO DE 20 MIN.</td>`;
-            scheduleTableBody.appendChild(recesoRow);
-            return;
-        }
         const row = document.createElement('tr');
         row.dataset.time = timeInMinutes; // <-- ¡AQUÍ ESTABA EL ERROR! Añadimos el dato de la hora a la fila.
         const hours = Math.floor(timeInMinutes/60), minutes = timeInMinutes%60;
@@ -233,6 +226,11 @@ function renderScheduleTable() {
                             const classItem = schedule[dayIndex].find(c => c.time[0]*60 + c.time[1] === timeInMinutes);
                             return `<td>${classItem ? `<strong>${classItem.name}</strong><br>${classItem.teacher}` : ''}</td>`;
                         }).join('');
+        
+        // Si la fila es de receso, le añadimos una clase especial para darle estilo
+        if (timeInMinutes === 15 * 60) {
+            row.classList.add('receso-row');
+        }
         scheduleTableBody.appendChild(row);
     });
 }
