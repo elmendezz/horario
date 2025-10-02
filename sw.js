@@ -1,23 +1,36 @@
 // sw.js (Versión con Widgets)
 
-const CACHE_NAME = 'horario-1cv-cache-v89';
+const CACHE_NAME = 'horario-1cv-cache-v90'; // Incrementamos la versión del caché
 const urlsToCache = [
     '/', 
     'index.html', 
     'horario.jpg', 
     'manifest.json',
     'widget_template.json', // Agregamos el template del widget a la caché
-    'images/icons/icon-192x192.png'
+    'images/icons/icon-192x192.png',
+    'schedule-data.js', // ¡Añadimos el horario centralizado a la caché!
+    'schedule-utils.js',
+    'notification-logic.js',
+    'ui-logic.js',
+    'script.js',
+    'style.css'
 ];
 
-// Horario (ya lo tenías, se mantiene igual)
-const schedule = [
-    [{ time: [12, 30], name: "Cultura Digital I", duration: 50 }, { time: [13, 20], name: "Ingles I", duration: 50 }, { time: [14, 10], name: "Ingles I", duration: 50 }, { time: [15, 0], name: "Receso", duration: 20 }, { time: [15, 20], name: "Humanidades I", duration: 50 }, { time: [16, 10], name: "Lengua y Comunicación I", duration: 50 }, { time: [17, 0], name: "La Materia y sus Interacciones", duration: 50 }],
-    [{ time: [13, 20], name: "Cultura Digital I", duration: 50 }, { time: [14, 10], name: "Cultura Digital I", duration: 50 }, { time: [15, 0], name: "Receso", duration: 20 }, { time: [15, 20], name: "Lengua y Comunicación I", duration: 50 }, { time: [16, 10], name: "La Materia y sus Interacciones", duration: 50 }, { time: [17, 0], name: "Ingles I", duration: 50 }],
-    [{ time: [14, 10], name: "Humanidades I", duration: 50 }, { time: [15, 0], name: "Receso", duration: 20 }, { time: [15, 20], name: "Humanidades I", duration: 50 }, { time: [16, 10], name: "Pensamiento Matemático I", duration: 50 }, { time: [17, 0], name: "La Materia y sus Interacciones", duration: 50 }],
-    [{ time: [14, 10], name: "Humanidades I", duration: 50 }, { time: [15, 0], name: "Receso", duration: 20 }, { time: [15, 20], name: "Pensamiento Matemático I", duration: 50 }, { time: [16, 10], name: "Pensamiento Matemático I", duration: 50 }, { time: [17, 0], name: "Ciencias Sociales I", duration: 50 }],
-    [{ time: [13, 20], name: "Formación Socioemocional I", duration: 50 }, { time: [14, 10], name: "Ciencias Sociales I", duration: 50 }, { time: [15, 0], name: "Receso", duration: 20 }, { time: [15, 20], name: "Lengua y Comunicación I", duration: 50 }, { time: [16, 10], name: "La Materia y sus Interacciones", duration: 50 }, { time: [17, 0], name: "Pensamiento Matemático I", duration: 50 }]
-];
+// Variable global para almacenar el horario una vez cargado.
+let scheduleData = null;
+
+/**
+ * Carga el horario desde el módulo centralizado.
+ * Usa una variable global para cachear el resultado y no importarlo múltiples veces.
+ */
+async function getSchedule() {
+    if (!scheduleData) {
+        console.log('SW: Cargando datos del horario por primera vez...');
+        // Usamos import() dinámico, que funciona en Service Workers modernos.
+        scheduleData = await import('./schedule-data.js');
+    }
+    return scheduleData;
+}
 
 // =================== LÓGICA DE WIDGETS ===================
 
@@ -26,6 +39,9 @@ async function updateWidget() {
         console.log('SW: La API de widgets no está disponible.');
         return;
     }
+
+    // Obtenemos el horario y la duración de la clase de forma asíncrona.
+    const { schedule, classDuration } = await getSchedule();
     
     const now = new Date();
     const day = now.getDay();
@@ -145,6 +161,8 @@ async function scheduleNextNotificationFallback() {
         return;
     }
 
+    const { schedule } = await getSchedule();
+
     const now = new Date();
     let nextNotificationDetails = null;
 
@@ -231,6 +249,8 @@ async function scheduleClassNotificationsWithTriggers() {
         console.log('SW (Triggers): Notificaciones desactivadas, no se programará nada.');
         return; 
     }
+
+    const { schedule } = await getSchedule();
 
     const now = new Date();
     let scheduledCount = 0;

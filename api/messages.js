@@ -1,7 +1,9 @@
 export default async function handler(req, res) {
   const repo = "elmendezz/horario-messages"; // Tu repositorio de mensajes
   const messagesFile = "mensajes.json";
+  const issuesRepo = "elmendezz/horario-messages"; // Repositorio para crear los issues
   const usersFile = "users.json";
+  const announcementsFile = "anuncios.json";
   const branch = "main";
 
   const headers = {
@@ -21,7 +23,7 @@ export default async function handler(req, res) {
                 return { content, sha: data.sha };
             }
             if (response.status === 404) {
-                return { content: filename === usersFile ? {} : [], sha: null }; // Devuelve objeto vacío para users, array para messages
+                return { content: filename === usersFile ? {} : [], sha: null }; // Devuelve objeto para users, array para otros
             }
             throw new Error(`GitHub API fetch failed: ${response.statusText}`);
         } catch (e) {
@@ -49,6 +51,32 @@ export default async function handler(req, res) {
             console.error(`GitHub API PUT Error for ${filename}:`, errorBody);
             throw new Error(`GitHub API PUT failed: ${response.statusText}`);
         }
+    }
+
+    // --- LÓGICA DE FEEDBACK (Crear Issue en GitHub) ---
+    if (req.method === "POST" && req.body.type === 'feedback') {
+        const { feedbackType, text, author } = req.body;
+        if (!feedbackType || !text) return res.status(400).json({ error: "Faltan datos en el feedback." });
+
+        const title = feedbackType === 'bug' ? `🐞 Bug Report: ${text.substring(0, 50)}...` : `💡 Suggestion: ${text.substring(0, 50)}...`;
+        const body = `**Reportado por:** ${author}\n\n---\n\n${text}`;
+        const labels = [feedbackType]; // 'bug' o 'enhancement'
+
+        const url = `https://api.github.com/repos/${issuesRepo}/issues`;
+        const issueResponse = await fetch(url, {
+            method: "POST",
+            headers: { ...headers, "Content-Type": "application/json" },
+            body: JSON.stringify({ title, body, labels })
+        });
+
+        if (!issueResponse.ok) throw new Error('Fallo al crear el issue en GitHub.');
+        return res.status(201).json({ success: true, message: "Feedback recibido y issue creado." });
+    }
+
+    // --- LÓGICA DE ANUNCIOS (GET) ---
+    if (req.method === "GET" && req.query.announcements === 'true') {
+        const { content: announcements } = await getFile(announcementsFile);
+        return res.status(200).json(announcements);
     }
 
     // --- LÓGICA DE USUARIOS (GET y PUT) ---

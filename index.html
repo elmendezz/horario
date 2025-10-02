@@ -17,20 +17,23 @@
 <body>
     <button id="theme-toggle" aria-label="Cambiar tema">🌑</button>
     <button id="notifications-btn" aria-label="Activar notificaciones">🔕</button>
+    <div id="announcements-container"></div>
     <div id="aviso"> ⓘ Esta Web App Está En Desarrollo...</div>
     <button id="next-class-display">Siguiente clase: Cargando...</button>
     <div class="container">
         <div id="current-class-display">Cargando horario...</div>
         <div id="teacher-display"></div>
+        <div id="user-greeting" style="font-size: 0.9em; margin-top: 1em;"></div>
     </div>
     <div id="clock"></div>
     <div id="countdown"></div>
     
     <div class="button-group">
         <button id="show-schedule-btn" class="styled-button">Mostrar Horario Completo</button>
-        
         <button id="fullscreen-btn" class="styled-button">Pantalla Completa</button>
+        <button id="change-username-btn" class="styled-button" style="background-color: #17a2b8;">Cambiar Nombre</button>
         <a href="about-us.html" class="styled-button" style="background-color: #FFD700; color: #000;">About Us</a>
+        <a href="feedback.html" class="styled-button" style="background-color: #fd7e14;">Reportar/Sugerir</a>
     </div>
 
     <!-- Contenedor para herramientas de desarrollo, oculto por defecto -->
@@ -77,7 +80,11 @@
         </div>
     </div>
     
-    <script src="script.js"></script>
+    <script type="module" src="schedule-data.js"></script>
+    <script type="module" src="schedule-utils.js"></script>
+    <script type="module" src="notification-logic.js"></script>
+    <script type="module" src="ui-logic.js"></script>
+    <script type="module" src="script.js"></script>
     
     <script>
         if ('serviceWorker' in navigator) {

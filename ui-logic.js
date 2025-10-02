@@ -1,0 +1,364 @@
+// c:\Users\Admin\Documents\GitHub\horario\ui-logic.js
+
+import { schedule, classDuration } from './schedule-data.js';
+import { getCurrentAndNextClass } from './schedule-utils.js';
+import { sendMessageToSW, initializeTestNotificationButton } from './notification-logic.js';
+
+// Variables de estado globales para la UI
+let serverTime = null;
+let startTime = Date.now();
+let currentClassEnd = null;
+let isSimulated = false;
+let currentActiveClassInfo = null; // Almacenará la clase activa para resaltarla
+
+/**
+ * Obtiene la hora actual del servidor o usa una hora simulada.
+ */
+export async function fetchTime() {
+    const simulatedTime = localStorage.getItem('simulatedTime');
+    if (simulatedTime) {
+        const { day, hour, minute } = JSON.parse(simulatedTime);
+        const now = new Date();
+        // Ajustar la fecha para que la simulación siempre sea en el futuro si el día ya pasó esta semana
+        serverTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay() + day, hour, minute, 0);
+        if (serverTime < now) {
+            serverTime.setDate(serverTime.getDate() + 7); // Si el día simulado ya pasó esta semana, simularlo para la próxima
+        }
+        isSimulated = true;
+    } else {
+        try {
+            const response = await fetch('http://worldtimeapi.org/api/timezone/America/Tijuana');
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
+            serverTime = new Date(data.datetime);
+        } catch (error) {
+            console.error('Error fetching time, using local time:', error);
+            serverTime = new Date(); // Fallback a la hora local si falla la API
+        } finally {
+            isSimulated = false;
+        }
+    }
+}
+
+/**
+ * Actualiza el reloj en la interfaz de usuario y el contador regresivo.
+ */
+export function updateClock() {
+    if (!serverTime) return;
+    const now = new Date(serverTime.getTime() + (Date.now() - startTime));
+    let hours = now.getHours();
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const am_pm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12; // Formato 12 horas
+    document.getElementById('clock').textContent = isSimulated ? `Hora Simulada: ${hours}:${minutes}:${seconds} ${am_pm}` : `Hora: ${hours}:${minutes}:${seconds} ${am_pm}`;
+
+    const countdownEl = document.getElementById('countdown');
+    if (currentClassEnd) {
+        const diff = currentClassEnd - now;
+        if (diff > 0) {
+            const mins = Math.floor(diff / 60000);
+            const secs = Math.floor((diff % 60000) / 1000);
+            countdownEl.textContent = `Faltan: ${mins}m ${secs}s para terminar`;
+        } else {
+            countdownEl.textContent = "Clase finalizada";
+        }
+    } else {
+        const nextClassStartTime = countdownEl.dataset.nextClassStart ? new Date(countdownEl.dataset.nextClassStart) : null;
+        if (nextClassStartTime) {
+            const diff = nextClassStartTime - now;
+            if (diff > 0) {
+                const days = Math.floor(diff / 86400000);
+                const hoursLeft = Math.floor((diff % 86400000) / 3600000);
+                const minsLeft = Math.floor((diff % 3600000) / 60000);
+                const secsLeft = Math.floor((diff % 60000) / 1000);
+                let countdownText = "Próxima clase en: ";
+                if (days > 0) countdownText += `${days}d `;
+                countdownText += `${hoursLeft}h ${minsLeft}m ${secsLeft}s`;
+                countdownEl.innerHTML = countdownEl.dataset.nextClassTimeDisplay ? `Próxima clase a las ${countdownEl.dataset.nextClassTimeDisplay}<br>${countdownText}` : countdownText;
+            } else {
+                countdownEl.textContent = "";
+            }
+        } else {
+            countdownEl.textContent = "";
+        }
+    }
+}
+
+/**
+ * Actualiza la información de la clase actual y la siguiente en la UI.
+ */
+export function updateSchedule() {
+    if (!serverTime) return;
+    const now = new Date(serverTime.getTime() + (Date.now() - startTime));
+    const currentClassDisplay = document.getElementById('current-class-display');
+    const teacherDisplay = document.getElementById('teacher-display');
+    const nextClassDisplay = document.getElementById('next-class-display');
+    const countdownEl = document.getElementById('countdown');
+    
+    currentClassEnd = null;
+    currentActiveClassInfo = null; // Reiniciar en cada actualización
+    countdownEl.dataset.nextClassStart = "";
+    const formatTime = (h, m) => `${(h % 12 || 12)}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
+
+    const { currentClass, nextClass } = getCurrentAndNextClass(now);
+
+    if (currentClass) {
+        currentClassDisplay.textContent = currentClass.name;
+        teacherDisplay.textContent = currentClass.teacher;
+        const classStartMinutes = currentClass.time[0] * 60 + currentClass.time[1];
+        const classEndMinutes = classStartMinutes + (currentClass.duration || classDuration);
+        currentClassEnd = new Date(now);
+        currentClassEnd.setHours(Math.floor(classEndMinutes / 60), classEndMinutes % 60, 0, 0);
+        currentActiveClassInfo = { ...currentClass, dayIndex: now.getDay() - 1 };
+    } else {
+        currentClassDisplay.textContent = "¡Sin Clases!";
+        teacherDisplay.textContent = "Disfruta tu día";
+    }
+
+    if (nextClass) {
+        nextClassDisplay.textContent = `Siguiente clase: ${nextClass.name}`;
+        if (nextClass.time) {
+            const nextClassStart = new Date(now);
+            if (nextClass.isNextDay) {
+                // Calculate days until next class day
+                const currentDayOfWeek = now.getDay(); // 0=Sun, 1=Mon...
+                const nextClassDayOfWeek = schedule.findIndex(daySchedule => daySchedule.includes(nextClass)) + 1; // 1=Mon, 2=Tue...
+                let daysToAdd = nextClassDayOfWeek - currentDayOfWeek;
+                if (daysToAdd <= 0) daysToAdd += 7; // If next class day is earlier in the week, go to next week
+                nextClassStart.setDate(now.getDate() + daysToAdd);
+            }
+            nextClassStart.setHours(nextClass.time[0], nextClass.time[1], 0, 0);
+            countdownEl.dataset.nextClassStart = nextClassStart.toISOString();
+            countdownEl.dataset.nextClassTimeDisplay = formatTime(nextClass.time[0], nextClass.time[1]);
+        } else {
+            countdownEl.dataset.nextClassStart = "";
+            countdownEl.dataset.nextClassTimeDisplay = "";
+        }
+    } else {
+        nextClassDisplay.textContent = "Siguiente clase: Ninguna";
+    }
+
+    highlightCurrentClassInTable();
+}
+
+/**
+ * Renderiza la tabla completa del horario.
+ */
+export function renderScheduleTable() {
+    const scheduleTableBody = document.getElementById('schedule-table-body');
+    scheduleTableBody.innerHTML = '';
+    const formatTime = (h, m) => `${(h % 12 || 12)}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
+    const allTimes = new Set();
+    schedule.forEach(day => day.forEach(c => allTimes.add(c.time[0] * 60 + c.time[1])));
+    const sortedTimes = Array.from(allTimes).sort((a,b) => a - b);
+    
+    sortedTimes.forEach(timeInMinutes => {
+        const row = document.createElement('tr');
+        row.dataset.time = timeInMinutes;
+        const hours = Math.floor(timeInMinutes/60), minutes = timeInMinutes%60;
+        row.innerHTML = `<td>${formatTime(hours, minutes)}</td>` + 
+                        [0,1,2,3,4].map(dayIndex => {
+                            const classItem = schedule[dayIndex].find(c => c.time[0]*60 + c.time[1] === timeInMinutes);
+                            return `<td>${classItem ? `<strong>${classItem.name}</strong><br>${classItem.teacher}` : ''}</td>`;
+                        }).join('');
+        
+        if (timeInMinutes === 15 * 60) { // 3:00 PM
+            row.classList.add('receso-row');
+        }
+        scheduleTableBody.appendChild(row);
+    });
+}
+
+/**
+ * Resalta la clase actual en la tabla del horario.
+ */
+function highlightCurrentClassInTable() {
+    document.querySelectorAll('#schedule-table td.current-class-highlight').forEach(cell => {
+        cell.classList.remove('current-class-highlight');
+    });
+
+    const scheduleTable = document.getElementById('schedule-table');
+    if (!currentActiveClassInfo || !scheduleTable.classList.contains('visible')) {
+        return;
+    }
+
+    const timeToFind = currentActiveClassInfo.time[0] * 60 + currentActiveClassInfo.time[1];
+    const dayIndexToFind = currentActiveClassInfo.dayIndex;
+
+    const rows = scheduleTable.getElementsByTagName('tr');
+    for (const row of Array.from(rows)) {
+        const timeInMinutes = parseInt(row.dataset.time, 10);
+        if (timeInMinutes === timeToFind) {
+            if (row.cells[dayIndexToFind + 1]) { // +1 porque la primera columna es la hora
+                row.cells[dayIndexToFind + 1].classList.add('current-class-highlight');
+            }
+            break;
+        }
+    }
+}
+
+/**
+ * Inicializa el toggle de tema (claro/oscuro).
+ */
+function initializeThemeToggle() {
+    const themeToggle = document.getElementById('theme-toggle');
+    const htmlElement = document.documentElement;
+    let savedTheme = localStorage.getItem('theme') || 'dark';
+    htmlElement.dataset.theme = savedTheme;
+    themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌑';
+    themeToggle.addEventListener('click', () => {
+        let newTheme = htmlElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        htmlElement.dataset.theme = newTheme;
+        localStorage.setItem('theme', newTheme);
+        themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌑';
+    });
+}
+
+/**
+ * Inicializa la funcionalidad del modal de imagen.
+ */
+function initializeModal() {
+    const modal = document.getElementById('imageModal');
+    document.getElementById('next-class-display').addEventListener('click', () => modal.style.display = "block");
+    document.getElementById('closeModalBtn').addEventListener('click', () => modal.style.display = "none");
+}
+
+/**
+ * Inicializa la funcionalidad de pantalla completa.
+ */
+function initializeFullscreen() {
+    document.getElementById('fullscreen-btn').addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => alert(`Error: ${err.message}`));
+        } else {
+            document.exitFullscreen();
+        }
+    });
+}
+
+/**
+ * Inicializa la gestión del nombre de usuario.
+ */
+function initializeUser() {
+    const changeUsernameBtn = document.getElementById('change-username-btn');
+    const userGreetingEl = document.getElementById('user-greeting');
+
+    const setUsername = () => {
+        const currentUsername = localStorage.getItem('username') || 'invitado';
+        const newUsername = prompt('Por favor, ingresa tu nombre o apodo:', currentUsername);
+
+        if (newUsername && newUsername.trim() !== '') {
+            const sanitizedUsername = newUsername.trim();
+            localStorage.setItem('username', sanitizedUsername);
+            displayGreeting(sanitizedUsername);
+            alert(`¡Nombre guardado como: ${sanitizedUsername}!`);
+        } else if (newUsername !== null) { // Si no presionó "Cancelar"
+            alert('El nombre no puede estar vacío.');
+        }
+    };
+
+    const displayGreeting = (username) => {
+        if (username && userGreetingEl) {
+            userGreetingEl.textContent = `¡Hola, ${username}!`;
+        }
+    };
+
+    changeUsernameBtn.addEventListener('click', setUsername);
+
+    // Mostrar saludo al cargar la página si ya hay un nombre
+    const savedUsername = localStorage.getItem('username');
+    displayGreeting(savedUsername);
+}
+
+/**
+ * Inicializa el botón para mostrar/ocultar el horario completo.
+ */
+function initializeScheduleToggle() {
+    const showScheduleBtn = document.getElementById('show-schedule-btn');
+    const scheduleTable = document.getElementById('schedule-table');
+    showScheduleBtn.addEventListener('click', () => {
+        scheduleTable.classList.toggle('visible');
+        showScheduleBtn.textContent = scheduleTable.classList.contains('visible') ? 'Ocultar Horario' : 'Mostrar Horario';
+        highlightCurrentClassInTable(); // Volver a resaltar al mostrar la tabla
+    });
+}
+
+/**
+ * Inicializa el botón para mostrar las herramientas de desarrollo.
+ */
+function initializeDevToolsToggle() {
+    document.getElementById('show-dev-tools-btn').addEventListener('click', () => {
+        const password = prompt('Ingresa la contraseña para ver las herramientas de desarrollo:');
+        if (password === '1CV') {
+            document.getElementById('developer-tools').style.display = 'flex';
+            document.getElementById('show-dev-tools-btn').style.display = 'none'; // Ocultar el botón después de usarlo
+            alert('Acceso concedido. Herramientas de desarrollo visibles.');
+        } else if (password !== null) { // Si el usuario no presionó "Cancelar"
+            alert('Contraseña incorrecta.');
+        }
+    });
+}
+
+/**
+ * Carga y muestra los anuncios del administrador.
+ */
+async function initializeAnnouncements() {
+    const container = document.getElementById('announcements-container');
+    if (!container) return;
+
+    try {
+        const response = await fetch('/api/messages?announcements=true');
+        if (!response.ok) throw new Error('Failed to fetch announcements');
+        const announcements = await response.json();
+
+        const dismissedAnnouncements = JSON.parse(localStorage.getItem('dismissedAnnouncements')) || [];
+
+        announcements.forEach(ann => {
+            if (dismissedAnnouncements.includes(ann.id)) {
+                return; // No mostrar si ya fue descartado
+            }
+
+            const card = document.createElement('div');
+            card.className = `announcement-card ${ann.type || 'info'}`;
+            card.dataset.id = ann.id;
+
+            card.innerHTML = `
+                <button class="announcement-dismiss-btn" aria-label="Descartar anuncio">&times;</button>
+                <h3>${ann.title}</h3>
+                <p>${ann.content}</p>
+            `;
+
+            card.querySelector('.announcement-dismiss-btn').addEventListener('click', () => {
+                dismissedAnnouncements.push(ann.id);
+                localStorage.setItem('dismissedAnnouncements', JSON.stringify(dismissedAnnouncements));
+                card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.95)';
+                setTimeout(() => card.remove(), 300);
+            });
+
+            container.appendChild(card);
+        });
+    } catch (error) {
+        console.error("Error fetching announcements:", error);
+        // No es necesario mostrar un error en la UI, simplemente no se mostrarán anuncios.
+    }
+}
+
+/**
+ * Función principal para inicializar toda la lógica de la UI.
+ */
+export function initializeUI() {
+    initializeThemeToggle();
+    initializeAnnouncements();
+    initializeModal();
+    initializeFullscreen();
+    initializeUser();
+    initializeScheduleToggle();
+    initializeDevToolsToggle();
+    initializeTestNotificationButton(); // Del módulo de notificaciones
+    renderScheduleTable(); // Renderizar la tabla inicialmente
+}
+
+export { isSimulated }; // Exportar para que script.js pueda usarlo en setInterval
