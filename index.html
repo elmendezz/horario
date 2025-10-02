@@ -17,16 +17,15 @@
 <body>
     <button id="theme-toggle" aria-label="Cambiar tema">🌑</button>
     <button id="notifications-btn" aria-label="Activar notificaciones">🔕</button>
-    <button id="chat-btn" aria-label="Abrir mensajes">💬</button>
+    <div id="aviso"> ⓘ Esta Web App Está En Desarrollo...</div>
+    <button id="next-class-display">Siguiente clase: Cargando...</button>
     <div class="container">
         <div id="current-class-display">Cargando horario...</div>
         <div id="teacher-display"></div>
     </div>
-    <button id="next-class-display">Siguiente clase: Cargando...</button>
     <div id="clock"></div>
     <div id="countdown"></div>
-    <div id="aviso"> ⓘ Esta Web App Está En Desarrollo...</div>
-
+    
     <div class="button-group">
         <button id="show-schedule-btn" class="styled-button">Mostrar Horario Completo</button>
         <button id="fullscreen-btn" class="styled-button">Pantalla Completa</button>
@@ -37,9 +36,6 @@
     <div id="developer-tools" class="button-group" style="display: none; margin-top: 1em;">
         <a href="time.html" class="styled-button" style="background-color: #17a2b8;">Simular Hora</a>
         <button id="test-notification-btn" class="styled-button" style="background-color: #ffc107; color: #000;">Probar Notificación (5s)</button>
-        <a href="test.html" class="styled-button" style="background-color: #fd7e14;">Panel de Pruebas</a>
-        <a href="messages.html" class="styled-button" style="background-color: #007bff;">Mensajes Beta</a>
-        <a href="verify.html" class="styled-button" style="background-color: #28a745;">Verificar Usuarios</a>
     </div>
 
     <div id="ios-install-prompt">
@@ -79,41 +75,6 @@
         </div>
     </div>
     
-    <!-- Modal para solicitar el nombre de usuario -->
-    <div id="name-modal" class="modal">
-        <div class="modal-content" style="max-width: 400px;">
-            <h2>¡Bienvenido/a!</h2>
-            <p>Para poder enviar mensajes, por favor dinos tu nombre. Este nombre será visible para otros.</p>
-            <form id="name-form" style="margin-top: 1em;">
-                <input type="text" id="username-input" placeholder="Tu nombre o apodo" required style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;">
-                <div class="modal-footer">
-                    <button type="submit" id="save-name-btn">Guardar Nombre</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal para el Chat -->
-    <div id="chat-modal" class="modal">
-        <div class="modal-content" style="max-width: 800px; height: 80vh; display: flex; flex-direction: column;">
-            <div class="messages-container" style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden;">
-                <h1 style="color: var(--accent-color); text-align: center; margin-top: 0;">Mensajes Beta 📣</h1>
-                
-                <div id="messages-list" style="flex-grow: 1; overflow-y: auto; padding-right: 10px;">
-                    <div class="loading-spinner">🔄 Cargando mensajes...</div>
-                </div>
-
-                <div class="message-form" style="margin-top: 1em;">
-                    <form id="new-message-form">
-                        <textarea id="message-text" placeholder="Escribe tu mensaje aquí..." required></textarea>
-                        <button type="submit" class="styled-button">Enviar Mensaje</button>
-                        <p id="chat-status-message" style="font-size: 0.8em; text-align: center; margin-top: 10px; color: #ffc107;"></p>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script src="script.js"></script>
     
     <script>

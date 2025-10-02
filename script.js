@@ -346,210 +346,23 @@ document.getElementById('test-notification-btn').addEventListener('click', () =>
     alert('Recibirás una notificación en 5 segundos. Puedes cambiar de app o bloquear la pantalla para verla.');
 });
 
-/**
- * Función principal que inicializa la aplicación.
- * Se asegura de que el DOM esté cargado antes de asignar eventos y empezar las actualizaciones.
- */
-function main() {
-    // --- Lógica del Chat Integrado ---
-    const chatModal = document.getElementById('chat-modal');
-    const chatBtn = document.getElementById('chat-btn');
-    const messagesList = document.getElementById('messages-list');
-    const messageForm = document.getElementById('new-message-form');
-    const messageText = document.getElementById('message-text');
-    const chatStatusMessage = document.getElementById('chat-status-message');
-    const messageSubmitBtn = messageForm.querySelector('button[type="submit"]');
-    let chatPollingInterval = null;
-
-    chatBtn.addEventListener('click', () => {
-        const username = localStorage.getItem('username');
-        if (!username) {
-            alert('Primero debes registrar un nombre para usar el chat.');
-            document.getElementById('name-modal').style.display = 'block';
-            return;
-        }
-        chatModal.style.display = 'block';
-        fetchMessages();
-        checkUserStatus(username);
-        // Iniciar la actualización automática cada 5 segundos
-        if (chatPollingInterval) clearInterval(chatPollingInterval);
-        chatPollingInterval = setInterval(fetchMessages, 5000);
-    });
-
-    // Cerrar modal si se hace clic fuera del contenido
-    chatModal.addEventListener('click', (event) => {
-        if (event.target === chatModal) {
-            chatModal.style.display = 'none';
-            clearInterval(chatPollingInterval); // Detener la actualización automática
-        }
-    });
-
-    async function checkUserStatus(username) {
-        try {
-            const response = await fetch(`/api/messages?user=${username}`);
-            const data = await response.json();
-            if (data.status === 'approved') {
-                messageSubmitBtn.disabled = false;
-                chatStatusMessage.textContent = '';
-            } else if (data.status === 'pending') {
-                messageSubmitBtn.disabled = true;
-                chatStatusMessage.textContent = 'Tu cuenta está pendiente de aprobación por un administrador.';
-            } else {
-                messageSubmitBtn.disabled = true;
-                chatStatusMessage.textContent = 'Tu cuenta no ha sido aprobada para enviar mensajes.';
-            }
-        } catch (error) {
-            messageSubmitBtn.disabled = true;
-            chatStatusMessage.textContent = 'No se pudo verificar tu estado. Intenta más tarde.';
-        }
+document.getElementById('show-dev-tools-btn').addEventListener('click', () => {
+    const password = prompt('Ingresa la contraseña para ver las herramientas de desarrollo:');
+    if (password === '1CV') {
+        document.getElementById('developer-tools').style.display = 'flex';
+        document.getElementById('show-dev-tools-btn').style.display = 'none'; // Ocultar el botón después de usarlo
+        alert('Acceso concedido. Herramientas de desarrollo visibles.');
+    } else if (password !== null) { // Si el usuario no presionó "Cancelar"
+        alert('Contraseña incorrecta.');
     }
+});
 
-    async function fetchMessages() {
-        if (!messagesList.querySelector('.message-card')) {
-            messagesList.innerHTML = '<div class="loading-spinner">🔄 Cargando mensajes...</div>';
-        }
-        try {
-            const response = await fetch('/api/messages');
-            const messages = await response.json();
-            renderMessages(messages.reverse());
-        } catch (error) {
-            messagesList.innerHTML = `<p style="color: #dc3545; text-align: center;">Error al cargar los mensajes.</p>`;
-        }
-    }
 
-    function renderMessages(messages) {
-        messagesList.innerHTML = '';
-        if (messages.length === 0) {
-            messagesList.innerHTML = '<p style="text-align: center;">No hay mensajes. ¡Sé el primero!</p>';
-            return;
-        }
-        messages.forEach((msg, index) => {
-            const card = document.createElement('div');
-            card.className = 'message-card';
-            const originalIndex = messages.length - 1 - index;
-            card.innerHTML = `
-                <button class="delete-btn" data-index="${originalIndex}">🗑️</button>
-                <p>${msg.text}</p>
-                <div class="author">De: ${msg.author}</div>
-                <div class="time">Enviado: ${msg.time}</div>
-            `;
-            messagesList.appendChild(card);
-        });
-    }
-
-    messagesList.addEventListener('click', (e) => {
-        if (e.target.classList.contains('delete-btn')) {
-            const index = parseInt(e.target.dataset.index, 10);
-            deleteMessage(index, e.target.closest('.message-card'));
-        }
-    });
-
-    messageForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const text = messageText.value.trim();
-        if (!text) return;
-        const author = localStorage.getItem('username');
-        messageSubmitBtn.disabled = true;
-        messageSubmitBtn.textContent = 'Enviando...';
-        try {
-            const response = await fetch('/api/messages', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text, author })
-            });
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'La respuesta del servidor no fue exitosa');
-            }
-            messageText.value = '';
-            await fetchMessages();
-        } catch (error) {
-            alert(`Error al enviar: ${error.message}`);
-        } finally {
-            messageSubmitBtn.disabled = false;
-            messageSubmitBtn.textContent = 'Enviar Mensaje';
-            checkUserStatus(author);
-        }
-    });
-
-    async function deleteMessage(index, cardElement) {
-        const pin = prompt('Para borrar, ingresa el PIN de administrador:');
-        if (pin !== '26435') {
-            if (pin !== null) alert('PIN incorrecto.');
-            return;
-        }
-        cardElement.style.opacity = '0.5';
-        try {
-            await fetch('/api/messages', {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ index })
-            });
-            cardElement.remove();
-        } catch (error) {
-            alert('Error al borrar el mensaje.');
-            cardElement.style.opacity = '1';
-        }
-    }
-
-    // --- Lógica del Modal de Nombre ---
-    const nameModal = document.getElementById('name-modal');
-    const nameForm = document.getElementById('name-form');
-    const usernameInput = document.getElementById('username-input');
-    const savedUsername = localStorage.getItem('username');
-
-    if (!savedUsername && nameModal) {
-        nameModal.style.display = 'block';
-    }
-
-    if (nameForm) {
-        nameForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const username = usernameInput.value.trim();
-            if (username) {
-                try {
-                    // Enviar solicitud de aprobación al backend
-                    const response = await fetch('/api/messages', {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'request_approval', username })
-                    });
-                    if (!response.ok) throw new Error('La solicitud de aprobación falló.');
-                    
-                    localStorage.setItem('username', username);
-                    alert(`¡Gracias, ${username}! Tu solicitud para enviar mensajes ha sido enviada. Un administrador debe aprobarte.`);
-                    nameModal.style.display = 'none';
-                } catch (error) {
-                    alert('Hubo un error al procesar tu solicitud. Inténtalo de nuevo.');
-                    console.error('Error en solicitud de aprobación:', error);
-                }
-            }
-        });
-    }
-
-    const showDevToolsBtn = document.getElementById('show-dev-tools-btn');
-    if (showDevToolsBtn) {
-        showDevToolsBtn.addEventListener('click', () => {
-            const password = prompt('Ingresa la contraseña para ver las herramientas de desarrollo:');
-            if (password === '1CV') {
-                document.getElementById('developer-tools').style.display = 'flex';
-                showDevToolsBtn.style.display = 'none';
-                alert('Acceso concedido. Herramientas de desarrollo visibles.');
-            } else if (password !== null) {
-                alert('Contraseña incorrecta.');
-            }
-        });
-    }
-
-    fetchTime().then(() => {
-        updateSchedule();
-        renderScheduleTable();
-        initializeNotifications();
-        const updateInterval = isSimulated ? 1000 : 10000;
-        setInterval(updateSchedule, updateInterval);
-        setInterval(updateClock, 1000);
-    });
-}
-
-// Ejecutar la función principal cuando el contenido del DOM esté listo.
-document.addEventListener('DOMContentLoaded', main);
+fetchTime().then(() => {
+    updateSchedule();
+    renderScheduleTable();
+    initializeNotifications();
+    const updateInterval = isSimulated ? 1000 : 10000;
+    setInterval(updateSchedule, updateInterval);
+    setInterval(updateClock, 1000);
+});
