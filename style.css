@@ -109,6 +109,11 @@ body {
     animation: pulsate-glow 2.5s infinite ease-in-out;
 }
 
+/* Aplicar animación dorada cuando no hay clase */
+.container.no-class-glow {
+    animation: pulsate-gold-glow 4s infinite ease-in-out;
+}
+
 #current-class-display {
     font-size: 2.5em;
     font-weight: bold;
@@ -454,13 +459,25 @@ body {
 /* --- Animación de Resplandor --- */
 @keyframes pulsate-glow {
     0% {
-        box-shadow: var(--container-shadow), 0 0 15px var(--dynamic-glow-color);
+        box-shadow: var(--container-shadow), 0 0 15px 0 var(--dynamic-glow-color);
     }
     50% {
-        box-shadow: var(--container-shadow), 0 0 30px var(--dynamic-glow-color);
+        box-shadow: var(--container-shadow), 0 0 30px 5px var(--dynamic-glow-color);
     }
     100% {
-        box-shadow: var(--container-shadow), 0 0 15px var(--dynamic-glow-color);
+        box-shadow: var(--container-shadow), 0 0 15px 0 var(--dynamic-glow-color);
+    }
+}
+
+@keyframes pulsate-gold-glow {
+    0% {
+        box-shadow: var(--container-shadow), 0 0 12px 0 #ffc107;
+    }
+    50% {
+        box-shadow: var(--container-shadow), 0 0 22px 3px #ffc107;
+    }
+    100% {
+        box-shadow: var(--container-shadow), 0 0 12px 0 #ffc107;
     }
 }
 
@@ -490,6 +507,12 @@ body {
     margin-bottom: 0.75em;
 }
 
+.next-class-countdown .next-class-time-label {
+    font-size: 1.1em;
+    margin-bottom: 1em;
+    font-weight: normal;
+}
+
 .next-class-countdown .countdown-timer {
     display: flex;
     gap: 1em;
@@ -515,4 +538,24 @@ body {
 .next-class-countdown .time-segment .time-label {
     font-size: 0.8em;
     text-transform: uppercase;
+}
+
+/* Ajustes para móviles en el contador grande */
+@media (max-width: 480px) {
+    .next-class-countdown .countdown-label {
+        font-size: 1.2em;
+    }
+    .next-class-countdown .next-class-time-label {
+        font-size: 1em;
+    }
+    .next-class-countdown .countdown-timer {
+        gap: 0.5em;
+    }
+    .next-class-countdown .time-segment {
+        padding: 0.4em 0.6em;
+        min-width: 50px;
+    }
+    .next-class-countdown .time-segment span:first-child {
+        font-size: 2em;
+    }
 }

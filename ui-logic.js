@@ -119,6 +119,7 @@ export function updateClock() {
             }
         } else {
             countdownEl.textContent = "";
+            document.getElementById('next-class-time-label').textContent = '';
         }
     }
 }
@@ -165,6 +166,7 @@ export function updateSchedule() {
     countdownEl.dataset.nextClassStart = "";
     resetGlowColor(); // Restablecer el color del glow en cada actualización
     container?.classList.remove('is-in-session'); // Quitar la animación por defecto
+    container?.classList.remove('no-class-glow'); // Quitar la animación dorada por defecto
     const formatTime = (h, m) => `${(h % 12 || 12)}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
     const nextClassCountdownContainer = document.getElementById('next-class-countdown-container');
 
@@ -182,17 +184,16 @@ export function updateSchedule() {
         currentClassEnd.setHours(Math.floor(classEndMinutes / 60), classEndMinutes % 60, 59, 999); // Finaliza al terminar el minuto
         currentActiveClassInfo = { ...currentClass, dayIndex: now.getDay() - 1 };
     } else {
+        container?.classList.add('no-class-glow'); // Añadir animación dorada
         currentClassDisplay.textContent = "¡Sin Clases!";
         teacherDisplay.textContent = "Disfruta tu día";
     }
 
     if (nextClass) {
-        let nextClassText = `Siguiente: ${nextClass.name}`;
+        nextClassDisplay.textContent = `Siguiente: ${nextClass.name}`;
         if (nextClass.time) {
-            nextClassText += ` a las ${formatTime(nextClass.time[0], nextClass.time[1])}`;
-        }
-        nextClassDisplay.textContent = nextClassText;
-        if (nextClass.time) {
+            const formattedTime = formatTime(nextClass.time[0], nextClass.time[1]);
+            document.getElementById('next-class-time-label').textContent = `a las ${formattedTime}`;
             const nextClassStart = new Date(now);
             if (nextClass.isNextDay) {
                 // Calculate days until next class day
@@ -204,10 +205,11 @@ export function updateSchedule() {
             }
             nextClassStart.setHours(nextClass.time[0], nextClass.time[1], 0, 0);
             countdownEl.dataset.nextClassStart = nextClassStart.toISOString();
-            countdownEl.dataset.nextClassTimeDisplay = formatTime(nextClass.time[0], nextClass.time[1]);
+            countdownEl.dataset.nextClassTimeDisplay = formattedTime;
         } else {
             countdownEl.dataset.nextClassStart = "";
             countdownEl.dataset.nextClassTimeDisplay = "";
+            document.getElementById('next-class-time-label').textContent = '';
         }
     } else {
         nextClassDisplay.textContent = "Siguiente: Ninguna";
@@ -276,16 +278,40 @@ function highlightCurrentClassInTable() {
  * Inicializa el toggle de tema (claro/oscuro).
  */
 function initializeThemeToggle() {
-    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggle = document.getElementById('theme-toggle-menu');
     const htmlElement = document.documentElement;
-    let savedTheme = localStorage.getItem('theme') || 'dark';
-    htmlElement.dataset.theme = savedTheme;
-    themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌑';
-    themeToggle.addEventListener('click', () => {
-        let newTheme = htmlElement.dataset.theme === 'dark' ? 'light' : 'dark';
-        htmlElement.dataset.theme = newTheme;
+
+    const applyTheme = (theme) => {
+        htmlElement.dataset.theme = theme;
+        if (themeToggle) {
+            themeToggle.innerHTML = theme === 'dark' ? '☀️ Cambiar a Claro' : '🌑 Cambiar a Oscuro';
+        }
+    };
+
+    const osThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+    // 1. Priorizar la elección manual del usuario guardada en localStorage.
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+        applyTheme(savedTheme);
+    } else {
+        // 2. Si no hay elección manual, usar la preferencia del sistema operativo.
+        applyTheme(osThemeQuery.matches ? 'dark' : 'light');
+    }
+
+    // 3. Escuchar cambios en la preferencia del sistema operativo.
+    osThemeQuery.addEventListener('change', (e) => {
+        // Solo aplicar el cambio si el usuario no ha elegido un tema manualmente.
+        if (!localStorage.getItem('theme')) {
+            applyTheme(e.matches ? 'dark' : 'light');
+        }
+    });
+
+    // 4. Manejar el clic manual en el botón del menú.
+    themeToggle?.addEventListener('click', () => {
+        const newTheme = htmlElement.dataset.theme === 'dark' ? 'light' : 'dark';
         localStorage.setItem('theme', newTheme);
-        themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌑';
+        applyTheme(newTheme);
     });
 }
 

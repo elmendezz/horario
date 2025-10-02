@@ -23,6 +23,7 @@
         <div class="menu-section">
             <h3>Opciones</h3>
             <button id="change-username-menu-btn" class="menu-button">✏️ Cambiar Nombre</button>
+            <button id="theme-toggle-menu" class="menu-button">☀️ Cambiar a Claro</button>
             <button id="notifications-btn" class="menu-button" aria-label="Activar notificaciones">🔕 Notificaciones</button>
             <button id="clear-cache-btn" class="menu-button" style="color: #dc3545;">🗑️ Limpiar Caché y Recargar</button>
         </div>
@@ -35,7 +36,6 @@
     </div>
     <div id="menu-overlay" class="menu-overlay"></div>
 
-    <button id="theme-toggle" aria-label="Cambiar tema">🌑</button>
     <div id="announcements-container"></div>
     <div id="aviso"> ⓘ Esta Web App Está En Desarrollo...</div>
     <button id="next-class-display">Siguiente clase: Cargando...</button>
@@ -47,6 +47,7 @@
     <!-- Contenedor para la cuenta regresiva grande -->
     <div id="next-class-countdown-container" class="next-class-countdown">
         <div class="countdown-label">Próxima clase en:</div>
+        <div id="next-class-time-label" class="next-class-time-label"></div>
         <div class="countdown-timer">
             <div class="time-segment" id="days-segment">
                 <span id="countdown-days">0</span>
