@@ -144,18 +144,18 @@ body {
     margin-bottom: 0.8em;
 }
 #next-class-display {
-    font-size: 0.8em;
-    padding: 8px 14px;
-    border-radius: 12px;
-    background-color: var(--next-class-bg);
-    color: white;
-    cursor: pointer;
-    border: none;
-    margin-bottom: 0px;
-    z-index: 1;
-    position: relative;
-    transform: translateY(15px);
-    transition: background-color 0.2s ease;
+            font-size: 0.8em;
+            padding: 8px 14px;
+            border-radius: 12px;
+            background-color: var(--next-class-bg);
+            color: white;
+            cursor: pointer;
+            border: none;
+            margin-bottom: 0px;
+            z-index: 1;
+            position: relative;
+            transform: translateY(15px);
+            transition: background-color 0.2s ease;
 }
 #next-class-display:hover {
     background-color: var(--next-class-hover-bg);
