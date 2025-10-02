@@ -126,13 +126,35 @@ self.addEventListener('periodicsync', (event) => {
 
 let notificationsEnabled = false;
 
+const NOTIFICATION_LEAD_TIME_MINUTES = 2; // Notificar 2 minutos antes
+
 /**
- * Busca la próxima clase y devuelve su información.
- * @returns {object|null} Información de la próxima clase o null.
+ * Programa notificaciones únicas para las próximas clases usando Notification Triggers.
+ * Esta es la forma moderna y fiable de programar notificaciones para un momento específico.
  */
-function getNextClassInfo() {
+async function scheduleClassNotifications() {
+    // Primero, cancelar todas las notificaciones programadas anteriormente para evitar duplicados.
+    const existingNotifications = await self.registration.getNotifications({
+        includeTriggered: true
+    });
+    for (const notification of existingNotifications) {
+        if (notification.tag && notification.tag.startsWith('class-')) {
+            notification.close();
+        }
+    }
+    console.log('SW: Notificaciones de clase anteriores canceladas.');
+
+    if (!notificationsEnabled || !self.Notification.showTrigger) {
+        if (!notificationsEnabled) console.log('SW: Notificaciones desactivadas, no se programará nada.');
+        if (!self.Notification.showTrigger) console.warn('SW: Notification Triggers no es compatible en este navegador.');
+        return;
+    }
+
     const now = new Date();
-    for (let i = 0; i < 7; i++) {
+    let scheduledCount = 0;
+
+    // Programar para los próximos 2 días para ser seguros
+    for (let i = 0; i < 2; i++) {
         const checkDate = new Date(now);
         checkDate.setDate(now.getDate() + i);
         const dayOfWeek = checkDate.getDay();
@@ -140,51 +162,35 @@ function getNextClassInfo() {
         if (dayOfWeek >= 1 && dayOfWeek <= 5) { // Lunes a Viernes
             const todaySchedule = schedule[dayOfWeek - 1];
             for (const classItem of todaySchedule) {
+                if (classItem.name === "Receso") continue; // No notificar recesos
+
                 const classStartTime = new Date(checkDate);
                 classStartTime.setHours(classItem.time[0], classItem.time[1], 0, 0);
 
-                if (classStartTime > now) {
-                    // Encontramos la próxima clase, devolvemos su info
-                    return { ...classItem, startTime: classStartTime };
+                const notificationTime = new Date(classStartTime.getTime() - (NOTIFICATION_LEAD_TIME_MINUTES * 60 * 1000));
+
+                // Solo programar si la notificación es en el futuro
+                if (notificationTime > now) {
+                    try {
+                        await self.registration.showNotification(classItem.name, {
+                            body: `Tu clase comienza en ${NOTIFICATION_LEAD_TIME_MINUTES} minutos.`,
+                            icon: 'images/icons/icon-192x192.png',
+                            tag: `class-${classStartTime.getTime()}`, // Etiqueta única para cada notificación
+                            showTrigger: new TimestampTrigger(notificationTime.getTime()),
+                        });
+                        scheduledCount++;
+                    } catch (e) {
+                        console.error('SW: Error al programar notificación:', e);
+                    }
                 }
             }
         }
     }
-    return null; // No se encontraron próximas clases
-}
 
-/**
- * Muestra o actualiza una notificación persistente con el estado de la próxima clase.
- * Esta es una forma más fiable que usar setTimeout a largo plazo.
- */
-async function updatePersistentNotification() {
-    if (!notificationsEnabled) {
-        // Si están desactivadas, cerramos cualquier notificación existente.
-        const notifs = await self.registration.getNotifications({ tag: 'class-status' });
-        notifs.forEach(notif => notif.close());
-        console.log('SW: Notificaciones desactivadas, notificación de estado cerrada.');
-        return;
-    }
-
-    const nextClassInfo = getNextClassInfo();
-
-    if (nextClassInfo) {
-        const options = {
-            body: `Próxima clase: ${nextClassInfo.name} a las ${nextClassInfo.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-            icon: 'images/icons/icon-192x192.png',
-            tag: 'class-status', // Etiqueta para poder actualizarla o cerrarla
-            silent: true, // No vibra ni hace sonido en cada actualización
-            requireInteraction: false, // No requiere que el usuario la descarte
-        };
-        await self.registration.showNotification('Estado del Horario', options);
-        console.log('SW: Notificación de estado actualizada.');
+    if (scheduledCount > 0) {
+        console.log(`SW: ${scheduledCount} notificaciones de clase programadas.`);
     } else {
-        await self.registration.showNotification('Estado del Horario', {
-            body: 'No hay más clases programadas por ahora.',
-            icon: 'images/icons/icon-192x192.png',
-            tag: 'class-status',
-            silent: true,
-        });
+        console.log('SW: No hay próximas clases para programar notificaciones.');
     }
 }
 
@@ -194,7 +200,7 @@ self.addEventListener('message', event => {
     if (type === 'SET_NOTIFICATIONS') {
         notificationsEnabled = payload.enabled;
         console.log(`SW: Notificaciones de clase ${notificationsEnabled ? 'ACTIVADAS' : 'DESACTIVADAS'}.`);
-        event.waitUntil(updatePersistentNotification()); // Actualizar la notificación de estado
+        event.waitUntil(scheduleClassNotifications()); // (Re)programar notificaciones al cambiar el estado
     }
 
     if (type === 'TEST_NOTIFICATION') {
@@ -254,7 +260,7 @@ self.addEventListener('activate', event => {
             self.registration.periodicSync?.register('update-widget-periodic', {
                 minInterval: 15 * 60 * 1000, // Cada 15 minutos
             }).catch(e => console.error('SW: Fallo al registrar la sincronización periódica:', e)),
-            updatePersistentNotification() // Programar notificaciones al activar
+            scheduleClassNotifications() // Programar notificaciones al activar
         ])
     );
     return self.clients.claim();
