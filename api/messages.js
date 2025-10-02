@@ -10,20 +10,6 @@ export default async function handler(req, res) {
   };
 
   try {
-    // --- LEER MENSAJES (GET) ---
-    if (req.method === "GET") {
-      const response = await fetch(`https://raw.githubusercontent.com/${repo}/${branch}/${file}`);
-      if (!response.ok) {
-        // Si el archivo no existe, devuelve un array vacío
-        if (response.status === 404) {
-          return res.status(200).json([]);
-        }
-        throw new Error(`GitHub raw fetch failed: ${response.statusText}`);
-      }
-      const messages = await response.json();
-      return res.status(200).json(messages);
-    }
-
     // --- OBTENER ARCHIVO Y SHA (para POST y DELETE) ---
     let sha = null;
     let messages = [];
@@ -41,6 +27,12 @@ export default async function handler(req, res) {
     } catch (e) {
       // Si el fetch falla por otra razón (ej. red), también asumimos que el archivo no existe.
       console.warn("Could not fetch existing file, assuming it's new.", e.message);
+    }
+
+    // --- LEER MENSAJES (GET) ---
+    if (req.method === "GET") {
+      // Ahora que hemos obtenido los mensajes de forma autenticada, simplemente los devolvemos.
+      return res.status(200).json(messages);
     }
 
     let commitMessage = "";
