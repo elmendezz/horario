@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Pruebas - Horario 1CV</title>
+    <title>Panel de Pruebas Exhaustivas - Horario 1CV</title>
     <link rel="stylesheet" href="style.css">
     <style>
         body {
-            justify-content: flex-start;
+            justify-content: flex-start; /* Alinea el contenido arriba */
             padding: 2em;
         }
         .test-grid {
@@ -15,7 +15,8 @@
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 2em;
             width: 100%;
-            max-width: 1200px;
+            max-width: 1400px; /* Aumentado para más tarjetas */
+            margin: 0 auto;
         }
         .test-card {
             background-color: var(--container-bg);
@@ -30,6 +31,7 @@
             padding-bottom: 0.5em;
         }
         .button-group-test {
+            width: 100%;
             display: flex;
             flex-direction: column;
             gap: 1em;
@@ -46,15 +48,6 @@
         .status-light.green { background-color: #28a745; }
         .status-light.red { background-color: #dc3545; }
         .status-light.orange { background-color: #fd7e14; }
-        
-        #main-display {
-            grid-column: 1 / -1; /* Ocupa todo el ancho */
-            text-align: center;
-        }
-        #main-display #current-class-display { font-size: 2em; }
-        #main-display #teacher-display { font-size: 1.2em; }
-        #main-display #clock { font-size: 1.5em; }
-        #main-display #countdown { font-size: 1.2em; }
 
         .form-group {
             margin-bottom: 1em;
@@ -74,18 +67,10 @@
 </head>
 <body>
 
-    <h1 style="color: var(--accent-color); text-align: center; width: 100%;">Panel de Pruebas exhaustivas</h1>
+    <h1 style="color: var(--accent-color); text-align: center; width: 100%;">Panel de Pruebas Exhaustivas</h1>
     <p style="text-align: center; width: 100%; margin-bottom: 2em;">Usa esta página para probar todas las funcionalidades de la PWA.</p>
 
     <div class="test-grid">
-        <!-- Display Principal -->
-        <div id="main-display" class="test-card">
-            <div id="current-class-display">Cargando...</div>
-            <div id="teacher-display"></div>
-            <div id="clock"></div>
-            <div id="countdown"></div>
-        </div>
-
         <!-- Controles Generales -->
         <div class="test-card">
             <h2>Controles Generales</h2>
@@ -148,11 +133,31 @@
                 <button id="unregister-sw-btn" class="styled-button" style="background-color: #dc3545;">Desregistrar Service Worker</button>
             </div>
         </div>
+
+        <!-- Gestión de Usuario y Feedback -->
+        <div class="test-card">
+            <h2>Usuario y Feedback</h2>
+            <p>Usuario actual: <strong id="current-user-status">Cargando...</strong></p>
+            <div class="button-group-test">
+                <button id="change-username-btn" class="styled-button" style="background-color: #17a2b8;">Cambiar Nombre de Usuario</button>
+                <a href="feedback.html" class="styled-button" style="background-color: #fd7e14;">Ir a página de Feedback</a>
+            </div>
+        </div>
+
+        <!-- Anuncios -->
+        <div class="test-card">
+            <h2>Anuncios</h2>
+            <p>Controla la visibilidad de los anuncios.</p>
+            <div class="button-group-test">
+                <button id="clear-dismissed-announcements-btn" class="styled-button" style="background-color: #ffc107; color: #000;">Mostrar Anuncios de Nuevo</button>
+            </div>
+        </div>
     </div>
 
-    <!-- Incluimos el script principal que contiene toda la lógica -->
-    <script src="script.js"></script>
-    <script>
+    <!-- Módulos necesarios para la lógica de la página de pruebas -->
+    <script type="module" src="notification-logic.js"></script>
+    
+    <script type="module">
         // Script específico para la página de pruebas
         document.addEventListener('DOMContentLoaded', () => {
             // --- Lógica de la UI de Pruebas ---
@@ -160,6 +165,8 @@
             // Mantener tema
             const currentTheme = localStorage.getItem('theme') || 'dark';
             document.documentElement.dataset.theme = currentTheme;
+
+            const { sendMessageToSW } = await import('./notification-logic.js');
 
             // --- Status de Notificaciones ---
             const updateNotificationStatus = () => {
@@ -180,7 +187,7 @@
             document.getElementById('toggle-notifications-btn').addEventListener('click', () => {
                 const enabled = localStorage.getItem('notificationsEnabled') !== 'true';
                 localStorage.setItem('notificationsEnabled', enabled);
-                sendMessageToSW({ type: 'SET_NOTIFICATIONS', payload: { enabled } });
+                if (window.sendMessageToSW) sendMessageToSW({ type: 'SET_NOTIFICATIONS', payload: { enabled } });
                 alert(`Notificaciones de clase ${enabled ? 'ACTIVADAS' : 'DESACTIVADAS'}.`);
                 // Actualiza el botón principal si existe
                 const mainBtn = document.getElementById('notifications-btn');
@@ -246,17 +253,45 @@
                 }
             });
 
+            // --- Gestión de Usuario ---
+            const updateUserStatus = () => {
+                const userStatusEl = document.getElementById('current-user-status');
+                const username = localStorage.getItem('username') || 'No establecido';
+                userStatusEl.textContent = username;
+            };
+
+            document.getElementById('change-username-btn').addEventListener('click', () => {
+                const currentUsername = localStorage.getItem('username') || 'invitado';
+                const newUsername = prompt('Por favor, ingresa tu nombre o apodo:', currentUsername);
+
+                if (newUsername && newUsername.trim() !== '') {
+                    const sanitizedUsername = newUsername.trim();
+                    localStorage.setItem('username', sanitizedUsername);
+                    alert(`¡Nombre guardado como: ${sanitizedUsername}!`);
+                    updateUserStatus();
+                } else if (newUsername !== null) {
+                    alert('El nombre no puede estar vacío.');
+                }
+            });
+
+            // --- Anuncios ---
+            document.getElementById('clear-dismissed-announcements-btn').addEventListener('click', () => {
+                localStorage.removeItem('dismissedAnnouncements');
+                alert('Se han limpiado los anuncios descartados. Recarga la página principal para verlos de nuevo.');
+            });
+
             // Inicializar estados al cargar
             updateNotificationStatus();
+            updateUserStatus();
         });
 
         // Registro del Service Worker
         if ('serviceWorker' in navigator) {
-          window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js')
-              .then(reg => console.log('Test Page: ServiceWorker registrado:', reg.scope))
-              .catch(err => console.log('Test Page: Fallo en registro de ServiceWorker:', err));
-          });
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Test Page: ServiceWorker registrado:', reg.scope))
+                    .catch(err => console.log('Test Page: Fallo en registro de ServiceWorker:', err));
+            });
         }
     </script>
 </body>

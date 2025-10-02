@@ -1,6 +1,7 @@
 export default async function handler(req, res) {
   const repo = "elmendezz/horario-messages"; // Tu repositorio de mensajes
   const messagesFile = "mensajes.json";
+  const mainAppRepo = "elmendezz/horario"; // Repositorio principal de la app
   const issuesRepo = "elmendezz/horario-messages"; // Repositorio para crear los issues
   const usersFile = "users.json";
   const announcementsFile = "anuncios.json";
@@ -77,6 +78,17 @@ export default async function handler(req, res) {
     if (req.method === "GET" && req.query.announcements === 'true') {
         const { content: announcements } = await getFile(announcementsFile);
         return res.status(200).json(announcements);
+    }
+
+    // --- LÓGICA DE COMMITS (GET) ---
+    if (req.method === "GET" && req.query.commits === 'true') {
+        const url = `https://api.github.com/repos/${mainAppRepo}/commits?per_page=30`;
+        const commitsResponse = await fetch(url, { headers });
+        if (!commitsResponse.ok) {
+            throw new Error(`Fallo al obtener los commits de GitHub: ${commitsResponse.statusText}`);
+        }
+        const commits = await commitsResponse.json();
+        return res.status(200).json(commits);
     }
 
     // --- LÓGICA DE USUARIOS (GET y PUT) ---
