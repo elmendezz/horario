@@ -166,7 +166,7 @@ self.addEventListener('activate', event => {
             }),
             // Registrar la sincronización periódica cuando el SW se activa
             self.registration.periodicSync?.register('update-widget-periodic', {
-                minInterval: 15 * 60 * 1000, // Cada 15 minutos
+                minInterval: 1* 60 * 1000, // Cada 15 minutos
             }).catch(e => console.error('SW: Fallo al registrar la sincronización periódica:', e))
         ])
     );
