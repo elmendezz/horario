@@ -1,6 +1,6 @@
 // sw.js (Versión con Widgets)
 
-const CACHE_NAME = 'horario-1cv-cache-v89;
+const CACHE_NAME = 'horario-1cv-cache-v89';
 const urlsToCache = [
     '/', 
     'index.html', 
@@ -12,15 +12,12 @@ const urlsToCache = [
 
 // Horario (ya lo tenías, se mantiene igual)
 const schedule = [
-    [{ time: [12, 30], name: "Cultura Digital I" }, { time: [13, 20], name: "Ingles I" }, { time: [14, 10], name: "Ingles I" }, { time: [15, 20], name: "Humanidades I" }, { time: [16, 10], name: "Lengua y Comunicación I" }, { time: [17, 0], name: "La Materia y sus Interacciones" }],
-    [{ time: [13, 20], name: "Cultura Digital I" }, { time: [14, 10], name: "Cultura Digital I" }, { time: [15, 20], name: "Lengua y Comunicación I" }, { time: [16, 10], name: "La Materia y sus Interacciones" }, { time: [17, 0], name: "Ingles I" }],
-    [{ time: [14, 10], name: "Humanidades I" }, { time: [15, 20], name: "Humanidades I" }, { time: [16, 10], name: "Pensamiento Matematico I" }, { time: [17, 0], name: "La Materia y sus Interacciones" }],
-    [{ time: [14, 10], name: "Humanidades I" }, { time: [15, 20], name: "Pensamiento Matematico I" }, { time: [16, 10], name: "Pensamiento Matematico I" }, { time: [17, 0], name: "Ciencias Sociales I" }],
-    [{ time: [13, 20], name: "Formacion Socioemocional I" }, { time: [14, 10], name: "Ciencias Sociales I" }, { time: [15, 20], name: "Lengua y Comunicación I" }, { time: [16, 10], name: "La Materia y sus Interacciones" }, { time: [17, 0], name: "Pensamiento Matematico I" }]
+    [{ time: [12, 30], name: "Cultura Digital I", duration: 50 }, { time: [13, 20], name: "Ingles I", duration: 50 }, { time: [14, 10], name: "Ingles I", duration: 50 }, { time: [15, 0], name: "Receso", duration: 20 }, { time: [15, 20], name: "Humanidades I", duration: 50 }, { time: [16, 10], name: "Lengua y Comunicación I", duration: 50 }, { time: [17, 0], name: "La Materia y sus Interacciones", duration: 50 }],
+    [{ time: [13, 20], name: "Cultura Digital I", duration: 50 }, { time: [14, 10], name: "Cultura Digital I", duration: 50 }, { time: [15, 0], name: "Receso", duration: 20 }, { time: [15, 20], name: "Lengua y Comunicación I", duration: 50 }, { time: [16, 10], name: "La Materia y sus Interacciones", duration: 50 }, { time: [17, 0], name: "Ingles I", duration: 50 }],
+    [{ time: [14, 10], name: "Humanidades I", duration: 50 }, { time: [15, 0], name: "Receso", duration: 20 }, { time: [15, 20], name: "Humanidades I", duration: 50 }, { time: [16, 10], name: "Pensamiento Matemático I", duration: 50 }, { time: [17, 0], name: "La Materia y sus Interacciones", duration: 50 }],
+    [{ time: [14, 10], name: "Humanidades I", duration: 50 }, { time: [15, 0], name: "Receso", duration: 20 }, { time: [15, 20], name: "Pensamiento Matemático I", duration: 50 }, { time: [16, 10], name: "Pensamiento Matemático I", duration: 50 }, { time: [17, 0], name: "Ciencias Sociales I", duration: 50 }],
+    [{ time: [13, 20], name: "Formación Socioemocional I", duration: 50 }, { time: [14, 10], name: "Ciencias Sociales I", duration: 50 }, { time: [15, 0], name: "Receso", duration: 20 }, { time: [15, 20], name: "Lengua y Comunicación I", duration: 50 }, { time: [16, 10], name: "La Materia y sus Interacciones", duration: 50 }, { time: [17, 0], name: "Pensamiento Matemático I", duration: 50 }]
 ];
-const classDuration = 50;
-const recessTime = [15, 0];
-const recessDuration = 20;
 
 // =================== LÓGICA DE WIDGETS ===================
 
@@ -125,20 +122,87 @@ self.addEventListener('periodicsync', (event) => {
 });
 
 
-// =================== LÓGICA DE NOTIFICACIONES (Tu código existente) ===================
+// =================== LÓGICA DE NOTIFICACIONES DE CLASES ===================
 
 let notificationTimer = null;
+let notificationsEnabled = false;
+const NOTIFICATION_LEAD_TIME = 2 * 60 * 1000; // Notificar 2 minutos antes
+
+function scheduleNextNotification() {
+    clearTimeout(notificationTimer);
+    if (!notificationsEnabled) {
+        console.log('SW: Notificaciones de clase desactivadas. No se programará ninguna.');
+        return;
+    }
+
+    const now = new Date();
+    let nextClassInfo = null;
+
+    // Buscar la próxima clase en los siguientes 7 días
+    for (let i = 0; i < 7; i++) {
+        const checkDate = new Date(now);
+        checkDate.setDate(now.getDate() + i);
+        const dayOfWeek = checkDate.getDay();
+
+        if (dayOfWeek >= 1 && dayOfWeek <= 5) { // Lunes a Viernes
+            const todaySchedule = schedule[dayOfWeek - 1];
+            for (const classItem of todaySchedule) {
+                const classStartTime = new Date(checkDate);
+                classStartTime.setHours(classItem.time[0], classItem.time[1], 0, 0);
+
+                if (classStartTime > now) {
+                    nextClassInfo = { ...classItem, startTime: classStartTime };
+                    // Encontramos la próxima clase, salimos de los bucles
+                    i = 7; 
+                    break;
+                }
+            }
+        }
+    }
+
+    if (nextClassInfo) {
+        const notificationTime = new Date(nextClassInfo.startTime.getTime() - NOTIFICATION_LEAD_TIME);
+        const timeUntilNotification = notificationTime.getTime() - now.getTime();
+
+        if (timeUntilNotification > 0) {
+            console.log(`SW: Próxima notificación programada para "${nextClassInfo.name}" a las ${notificationTime.toLocaleTimeString()}`);
+            notificationTimer = setTimeout(() => {
+                self.registration.showNotification(nextClassInfo.name, {
+                    body: `Tu clase comienza en 2 minutos.`,
+                    icon: 'images/icons/icon-192x192.png',
+                    tag: 'class-notification' // Usamos una etiqueta para que no se acumulen
+                });
+                // Volver a programar la siguiente después de esta
+                setTimeout(scheduleNextNotification, 60 * 1000); // Esperar 1 min para evitar re-notificar la misma clase
+            }, timeUntilNotification);
+        } else {
+             // Si ya pasó el tiempo de notificación, buscar la siguiente en 1 minuto
+             setTimeout(scheduleNextNotification, 60 * 1000);
+        }
+    } else {
+        console.log('SW: No se encontraron próximas clases para notificar.');
+    }
+}
 
 self.addEventListener('message', event => {
-    if (event.data.type === 'TEST_NOTIFICATION') {
+    const { type, payload } = event.data;
+
+    if (type === 'SET_NOTIFICATIONS') {
+        notificationsEnabled = payload.enabled;
+        console.log(`SW: Notificaciones de clase ${notificationsEnabled ? 'ACTIVADAS' : 'DESACTIVADAS'}.`);
+        scheduleNextNotification(); // (Re)programar notificaciones al cambiar el estado
+    }
+
+    if (type === 'TEST_NOTIFICATION') {
         const delaySeconds = event.data.delay || 0;
         console.log(`SW: Recibida solicitud para notificación de prueba en ${delaySeconds}s.`);
         
-        clearTimeout(notificationTimer);
-        notificationTimer = setTimeout(() => {
+        // Usar un temporizador diferente para la prueba para no interferir
+        setTimeout(() => {
             self.registration.showNotification('¡Notificación de Prueba! 🧪', {
                 body: 'Si ves esto, las notificaciones funcionan incluso con la app cerrada.',
-                icon: 'images/icons/icon-192x192.png'
+                icon: 'images/icons/icon-192x192.png',
+                tag: 'test-notification'
             });
             console.log('SW: Notificación de prueba enviada.');
         }, delaySeconds * 1000);
@@ -167,7 +231,8 @@ self.addEventListener('activate', event => {
             // Registrar la sincronización periódica cuando el SW se activa
             self.registration.periodicSync?.register('update-widget-periodic', {
                 minInterval: 1* 60 * 1000, // Cada 15 minutos
-            }).catch(e => console.error('SW: Fallo al registrar la sincronización periódica:', e))
+            }).catch(e => console.error('SW: Fallo al registrar la sincronización periódica:', e)),
+            scheduleNextNotification() // Programar notificaciones al activar
         ])
     );
     return self.clients.claim();

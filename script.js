@@ -299,7 +299,7 @@ function initializeNotifications() {
         console.log('Service Worker listo. Configurando botón de notificaciones.');
         if (localStorage.getItem('notificationsEnabled') === 'true' && Notification.permission === 'granted') {
             notificationsBtn.textContent = '🔔';
-            sendMessageToSW({ type: 'SET_NOTIFICATIONS', enabled: true });
+            sendMessageToSW({ type: 'SET_NOTIFICATIONS', payload: { enabled: true } });
         } else {
             notificationsBtn.textContent = '🔕';
             if (Notification.permission !== 'granted') localStorage.setItem('notificationsEnabled', 'false');
@@ -311,14 +311,14 @@ function initializeNotifications() {
         if (localStorage.getItem('notificationsEnabled') === 'true' && Notification.permission === 'granted') {
             localStorage.setItem('notificationsEnabled', 'false');
             notificationsBtn.textContent = '🔕';
-            sendMessageToSW({ type: 'SET_NOTIFICATIONS', enabled: false });
+            sendMessageToSW({ type: 'SET_NOTIFICATIONS', payload: { enabled: false } });
             console.log('Notificaciones desactivadas.');
         } else {
             Notification.requestPermission().then(permission => {
                 if (permission === 'granted') {
                     localStorage.setItem('notificationsEnabled', 'true');
                     notificationsBtn.textContent = '🔔';
-                    sendMessageToSW({ type: 'SET_NOTIFICATIONS', enabled: true });
+                    sendMessageToSW({ type: 'SET_NOTIFICATIONS', payload: { enabled: true } });
                     console.log('Permiso concedido. Notificaciones activadas.');
                 } else {
                     console.log('Permiso denegado.');
@@ -345,6 +345,18 @@ document.getElementById('test-notification-btn').addEventListener('click', () =>
     sendMessageToSW({ type: 'TEST_NOTIFICATION', delay: 5 });
     alert('Recibirás una notificación en 5 segundos. Puedes cambiar de app o bloquear la pantalla para verla.');
 });
+
+document.getElementById('show-dev-tools-btn').addEventListener('click', () => {
+    const password = prompt('Ingresa la contraseña para ver las herramientas de desarrollo:');
+    if (password === '1CV') {
+        document.getElementById('developer-tools').style.display = 'flex';
+        document.getElementById('show-dev-tools-btn').style.display = 'none'; // Ocultar el botón después de usarlo
+        alert('Acceso concedido. Herramientas de desarrollo visibles.');
+    } else if (password !== null) { // Si el usuario no presionó "Cancelar"
+        alert('Contraseña incorrecta.');
+    }
+});
+
 
 fetchTime().then(() => {
     updateSchedule();

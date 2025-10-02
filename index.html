@@ -29,9 +29,13 @@
     <div class="button-group">
         <button id="show-schedule-btn" class="styled-button">Mostrar Horario Completo</button>
         <button id="fullscreen-btn" class="styled-button">Pantalla Completa</button>
+        <a href="about-us.html" class="styled-button" style="background-color: #FFD700; color: #000;">About Us</a>
+    </div>
+
+    <!-- Contenedor para herramientas de desarrollo, oculto por defecto -->
+    <div id="developer-tools" class="button-group" style="display: none; margin-top: 1em;">
         <a href="time.html" class="styled-button" style="background-color: #17a2b8;">Simular Hora</a>
         <button id="test-notification-btn" class="styled-button" style="background-color: #ffc107; color: #000;">Probar Notificación (5s)</button>
-        <a href="about-us.html" class="styled-button" style="background-color: #FFD700; color: #000;">About Us</a>
     </div>
 
     <div id="ios-install-prompt">
@@ -53,6 +57,11 @@
             <tbody id="schedule-table-body">
             </tbody>
         </table>
+    </div>
+
+    <!-- Botón para mostrar las herramientas de desarrollo -->
+    <div style="margin-top: 2em; text-align: center;">
+        <button id="show-dev-tools-btn" class="styled-button" style="background-color: #6c757d; font-size: 0.7em; padding: 8px 15px;">Mostrar Botones de Desarrollo</button>
     </div>
 
     <div id="imageModal" class="modal">
