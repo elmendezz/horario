@@ -2,8 +2,20 @@
 
 import { fetchTime, initializeUI, updateSchedule, updateClock, isSimulated } from './ui-logic.js';
 import { initializeNotifications } from './notification-logic.js';
+import { reportError } from './error-logic.js';
 
 // Versión: 40 (Modularizado)
+
+// --- Manejo de Errores Global ---
+// Captura errores de JavaScript no controlados en cualquier parte de la aplicación.
+window.addEventListener('error', (event) => {
+    reportError(event.error, 'Error Global');
+});
+
+// Captura promesas rechazadas que no fueron manejadas con un .catch().
+window.addEventListener('unhandledrejection', (event) => {
+    reportError(event.reason, 'Promesa no controlada');
+});
 
 document.addEventListener('DOMContentLoaded', () => {
     // Inicializar la lógica de tiempo y luego la UI y notificaciones
@@ -20,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setInterval(updateSchedule, updateInterval);
         setInterval(updateClock, 1000); // El reloj se actualiza cada segundo
     }).catch(error => {
-        console.error("Error al inicializar la aplicación:", error);
+        reportError(error, 'Inicialización Principal'); // Usamos nuestro nuevo reportero
         document.getElementById('current-class-display').textContent = "Error al cargar el horario.";
         document.getElementById('teacher-display').textContent = "Por favor, recarga la página.";
     });

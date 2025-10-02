@@ -155,142 +155,21 @@
     </div>
 
     <!-- Módulos necesarios para la lógica de la página de pruebas -->
-    <script type="module" src="notification-logic.js"></script>
+    <script type="module" src="test-ui-logic.js"></script>
     
     <script type="module">
-        // Script específico para la página de pruebas
-        document.addEventListener('DOMContentLoaded', async () => { // <-- Se añade 'async' aquí
-            // --- Lógica de la UI de Pruebas ---
-
-            // Mantener tema
-            const currentTheme = localStorage.getItem('theme') || 'dark';
-            document.documentElement.dataset.theme = currentTheme;
-
-            const { sendMessageToSW } = await import('./notification-logic.js'); // Esto ahora es válido
-
-            // --- Status de Notificaciones ---
-            const updateNotificationStatus = () => {
-                const statusEl = document.getElementById('notification-permission-status');
-                const lightEl = document.getElementById('notification-status-light');
-                const permission = Notification.permission;
-                statusEl.textContent = permission;
-                lightEl.className = 'status-light'; // Reset
-                if (permission === 'granted') lightEl.classList.add('green');
-                else if (permission === 'denied') lightEl.classList.add('red');
-                else lightEl.classList.add('orange');
-            };
-            
-            document.getElementById('request-permission-btn').addEventListener('click', () => {
-                Notification.requestPermission().then(updateNotificationStatus);
-            });
-            
-            document.getElementById('toggle-notifications-btn').addEventListener('click', () => {
-                const enabled = localStorage.getItem('notificationsEnabled') !== 'true';
-                localStorage.setItem('notificationsEnabled', enabled);
-                sendMessageToSW({ type: 'SET_NOTIFICATIONS', payload: { enabled } }); // <-- Llamada directa a la función importada
-                alert(`Notificaciones de clase ${enabled ? 'ACTIVADAS' : 'DESACTIVADAS'}.`);
-                // Actualiza el botón principal si existe
-                const mainBtn = document.getElementById('notifications-btn');
-                if(mainBtn) mainBtn.textContent = enabled ? '🔔' : '🔕';
-            });
-
-            // --- Simulación de Tiempo ---
-            document.getElementById('time-simulation-form').addEventListener('submit', (e) => {
-                e.preventDefault();
-                const day = parseInt(document.getElementById('day').value, 10);
-                const hour = parseInt(document.getElementById('hour').value, 10);
-                const minute = parseInt(document.getElementById('minute').value, 10);
-                localStorage.setItem('simulatedTime', JSON.stringify({ day, hour, minute }));
-                alert('Tiempo simulado. Recargando la página...');
-                window.location.reload();
-            });
-
-            document.getElementById('reset-time-btn').addEventListener('click', () => {
-                localStorage.removeItem('simulatedTime');
-                alert('Simulación eliminada. Recargando la página...');
-                window.location.reload();
-            });
-
-            // --- Service Worker ---
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistration().then(reg => {
-                    if (reg && reg.active) {
-                        document.getElementById('sw-status').textContent = 'Activo y Controlando';
-                        document.getElementById('sw-status-light').className = 'status-light green';
-                    }
-                });
-            }
-
-            document.getElementById('trigger-sync-btn').addEventListener('click', async () => {
-                if ('serviceWorker' in navigator && 'SyncManager' in window) {
-                    const reg = await navigator.serviceWorker.ready;
-                    await reg.sync.register('update-app-content');
-                    alert('Background Sync ("update-app-content") registrado.\nSe ejecutará cuando haya conexión (o inmediatamente si la hay). Revisa la consola del SW.');
-                } else {
-                    alert('Background Sync no está soportado en este navegador.');
-                }
-            });
-
-            document.getElementById('clear-cache-btn').addEventListener('click', async () => {
-                if ('caches' in window) {
-                    const keys = await caches.keys();
-                    await Promise.all(keys.map(key => caches.delete(key)));
-                    alert('Todas las cachés han sido eliminadas. La página se recargará.');
-                    window.location.reload();
-                }
-            });
-
-            document.getElementById('unregister-sw-btn').addEventListener('click', async () => {
-                if ('serviceWorker' in navigator) {
-                    const reg = await navigator.serviceWorker.getRegistration();
-                    if (reg) {
-                        await reg.unregister();
-                        alert('Service Worker desregistrado. La página se recargará.');
-                        window.location.reload();
-                    } else {
-                        alert('No hay Service Worker registrado.');
-                    }
-                }
-            });
-
-            // --- Gestión de Usuario ---
-            const updateUserStatus = () => {
-                const userStatusEl = document.getElementById('current-user-status');
-                const username = localStorage.getItem('username') || 'No establecido';
-                userStatusEl.textContent = username;
-            };
-
-            document.getElementById('change-username-btn').addEventListener('click', () => {
-                const currentUsername = localStorage.getItem('username') || 'invitado';
-                const newUsername = prompt('Por favor, ingresa tu nombre o apodo:', currentUsername);
-
-                if (newUsername && newUsername.trim() !== '') {
-                    const sanitizedUsername = newUsername.trim();
-                    localStorage.setItem('username', sanitizedUsername);
-                    alert(`¡Nombre guardado como: ${sanitizedUsername}!`);
-                    updateUserStatus();
-                } else if (newUsername !== null) {
-                    alert('El nombre no puede estar vacío.');
-                }
-            });
-
-            // --- Anuncios ---
-            document.getElementById('clear-dismissed-announcements-btn').addEventListener('click', () => {
-                localStorage.removeItem('dismissedAnnouncements');
-                alert('Se han limpiado los anuncios descartados. Recarga la página principal para verlos de nuevo.');
-            });
-
-            // Inicializar estados al cargar
-            updateNotificationStatus();
-            updateUserStatus();
+        import { initializeTestUI } from './test-ui-logic.js';
+        document.addEventListener('DOMContentLoaded', () => {
+            // Inicializa la UI específica de la página de pruebas
+            initializeTestUI();
         });
 
         // Registro del Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('Test Page: ServiceWorker registrado:', reg.scope))
-                    .catch(err => console.log('Test Page: Fallo en registro de ServiceWorker:', err));
+                    .then(reg => console.log('ServiceWorker registrado:', reg.scope))
+                    .catch(err => console.log('Fallo en registro de ServiceWorker:', err));
             });
         }
     </script>

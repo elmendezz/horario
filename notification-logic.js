@@ -42,10 +42,10 @@ export function initializeNotifications() {
         console.log('Service Worker listo. Configurando botón de notificaciones.');
         // Actualizar el estado del botón de notificaciones al cargar la página
         if (localStorage.getItem('notificationsEnabled') === 'true' && Notification.permission === 'granted') {
-            notificationsBtn.textContent = '🔔';
+            notificationsBtn.innerHTML = '🔔 Notificaciones';
             sendMessageToSW({ type: 'SET_NOTIFICATIONS', payload: { enabled: true } });
         } else {
-            notificationsBtn.textContent = '🔕';
+            notificationsBtn.innerHTML = '🔕 Notificaciones';
             // Si el permiso no está concedido, asegurar que el estado en localStorage sea 'false'
             if (Notification.permission !== 'granted') {
                 localStorage.setItem('notificationsEnabled', 'false');
@@ -59,7 +59,7 @@ export function initializeNotifications() {
         if (localStorage.getItem('notificationsEnabled') === 'true' && Notification.permission === 'granted') {
             // Si las notificaciones están activadas y el permiso concedido, desactivarlas
             localStorage.setItem('notificationsEnabled', 'false');
-            notificationsBtn.textContent = '🔕';
+            notificationsBtn.innerHTML = '🔕 Notificaciones';
             sendMessageToSW({ type: 'SET_NOTIFICATIONS', payload: { enabled: false } });
             console.log('Notificaciones desactivadas.');
         } else {
@@ -68,7 +68,7 @@ export function initializeNotifications() {
                 if (permission === 'granted') {
                     // Si el permiso es concedido, activar notificaciones
                     localStorage.setItem('notificationsEnabled', 'true');
-                    notificationsBtn.textContent = '🔔';
+                    notificationsBtn.innerHTML = '🔔 Notificaciones';
                     sendMessageToSW({ type: 'SET_NOTIFICATIONS', payload: { enabled: true } });
                     console.log('Permiso concedido. Notificaciones activadas.');
                 } else {

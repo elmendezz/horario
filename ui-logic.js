@@ -1,8 +1,9 @@
 // c:\Users\Admin\Documents\GitHub\horario\ui-logic.js
 
+import { reportError } from './error-logic.js';
 import { schedule, classDuration } from './schedule-data.js';
 import { getCurrentAndNextClass } from './schedule-utils.js';
-import { sendMessageToSW, initializeTestNotificationButton } from './notification-logic.js';
+import { sendMessageToSW } from './notification-logic.js';
 
 // Variables de estado globales para la UI
 let serverTime = null;
@@ -32,8 +33,13 @@ export async function fetchTime() {
             const data = await response.json();
             serverTime = new Date(data.datetime);
         } catch (error) {
-            console.error('Error fetching time, using local time:', error);
+            // Reportar el error para que el desarrollador lo sepa.
+            reportError(error, 'fetchTime API');
+            // Usar hora local como fallback.
             serverTime = new Date(); // Fallback a la hora local si falla la API
+            // Notificar al usuario que algo no está bien.
+            const aviso = document.getElementById('aviso');
+            if (aviso) aviso.textContent = "⚠️ No se pudo sincronizar la hora. Usando hora local.";
         } finally {
             isSimulated = false;
         }
@@ -301,6 +307,30 @@ function initializeDevToolsToggle() {
 }
 
 /**
+ * Inicializa la lógica del menú lateral (hamburguesa).
+ */
+function initializeMenu() {
+    const menuToggle = document.getElementById('menu-toggle');
+    const closeMenuBtn = document.getElementById('close-menu-btn');
+    const sideMenu = document.getElementById('side-menu');
+    const overlay = document.getElementById('menu-overlay');
+
+    const openMenu = () => {
+        sideMenu.classList.add('open');
+        overlay.classList.add('open');
+    };
+
+    const closeMenu = () => {
+        sideMenu.classList.remove('open');
+        overlay.classList.remove('open');
+    };
+
+    menuToggle?.addEventListener('click', openMenu);
+    closeMenuBtn?.addEventListener('click', closeMenu);
+    overlay?.addEventListener('click', closeMenu);
+}
+
+/**
  * Carga y muestra los anuncios del administrador.
  */
 async function initializeAnnouncements() {
@@ -350,6 +380,7 @@ async function initializeAnnouncements() {
  * Función principal para inicializar toda la lógica de la UI.
  */
 export function initializeUI() {
+    initializeMenu();
     initializeThemeToggle();
     initializeAnnouncements();
     initializeModal();
@@ -357,7 +388,6 @@ export function initializeUI() {
     initializeUser();
     initializeScheduleToggle();
     initializeDevToolsToggle();
-    initializeTestNotificationButton(); // Del módulo de notificaciones
     renderScheduleTable(); // Renderizar la tabla inicialmente
 }
 
