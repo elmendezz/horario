@@ -279,7 +279,18 @@ function highlightCurrentClassInTable() {
  */
 function initializeThemeToggle() {
     const themeToggle = document.getElementById('theme-toggle-menu');
+    const resetThemeBtn = document.getElementById('reset-theme-btn');
     const htmlElement = document.documentElement;
+
+    /**
+     * Muestra u oculta el botón de reseteo de tema basado en si hay
+     * una preferencia guardada en localStorage.
+     */
+    const updateResetButtonVisibility = () => {
+        if (resetThemeBtn) {
+            resetThemeBtn.style.display = localStorage.getItem('theme') ? 'block' : 'none';
+        }
+    };
 
     const applyTheme = (theme) => {
         htmlElement.dataset.theme = theme;
@@ -311,7 +322,17 @@ function initializeThemeToggle() {
     themeToggle?.addEventListener('click', () => {
         const newTheme = htmlElement.dataset.theme === 'dark' ? 'light' : 'dark';
         localStorage.setItem('theme', newTheme);
+        updateResetButtonVisibility();
         applyTheme(newTheme);
+    });
+
+    // 5. Manejar el clic en el botón de reseteo.
+    resetThemeBtn?.addEventListener('click', () => {
+        localStorage.removeItem('theme');
+        updateResetButtonVisibility();
+        const osTheme = osThemeQuery.matches ? 'dark' : 'light';
+        applyTheme(osTheme);
+        alert('Preferencia de tema eliminada. Ahora se sincronizará con tu sistema.');
     });
 }
 
@@ -361,11 +382,23 @@ function initializeUser() {
     };
 
     const displayGreeting = (username) => {
+        const hour = new Date().getHours();
+        let greetingIcon = '👋'; // Icono por defecto
+
+        if (hour >= 5 && hour < 12) {
+            greetingIcon = '☀️'; // Mañana
+        } else if (hour >= 12 && hour < 19) {
+            greetingIcon = '🌇'; // Tarde
+        } else {
+            greetingIcon = '🌙'; // Noche
+        }
+
         if (username && userGreetingEl) {
             userGreetingEl.textContent = `¡Hola, ${username}!`;
         }
         if (username && userGreetingMenuEl) {
-            userGreetingMenuEl.textContent = `¡Hola, ${username}!`;
+            // Usamos innerHTML para poder añadir el ícono
+            userGreetingMenuEl.innerHTML = `${greetingIcon} ¡Hola, ${username}!`;
         }
     };
 
@@ -466,10 +499,14 @@ async function initializeAnnouncements() {
 
         const dismissedAnnouncements = JSON.parse(localStorage.getItem('dismissedAnnouncements')) || [];
 
+        let hasUnread = false;
+
         announcements.forEach(ann => {
             if (dismissedAnnouncements.includes(ann.id)) {
                 return; // No mostrar si ya fue descartado
             }
+
+            hasUnread = true; // Si llegamos aquí, hay al menos un anuncio sin leer
 
             const card = document.createElement('div');
             card.className = `announcement-card ${ann.type || 'info'}`;
@@ -492,6 +529,11 @@ async function initializeAnnouncements() {
 
             container.appendChild(card);
         });
+
+        // Añadir la insignia al botón del menú si hay anuncios sin leer
+        if (hasUnread) {
+            document.getElementById('menu-toggle')?.classList.add('has-unread');
+        }
     } catch (error) {
         console.error("Error fetching announcements:", error);
         // No es necesario mostrar un error en la UI, simplemente no se mostrarán anuncios.

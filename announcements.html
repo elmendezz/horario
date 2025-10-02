@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anuncios - Horario 1CV</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            justify-content: flex-start;
+            padding: 2em;
+        }
+        .announcements-page-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        /* Reusando estilos de la página principal para consistencia */
+        .announcement-card {
+            background-color: var(--container-bg);
+            padding: 1.5em;
+            border-radius: 8px;
+            box-shadow: var(--container-shadow);
+            text-align: left;
+            position: relative;
+            border-left: 5px solid var(--accent-color);
+            margin-bottom: 1em;
+        }
+        .announcement-card.info { border-left-color: #17a2b8; }
+        .announcement-card.warning { border-left-color: #ffc107; }
+        .announcement-card.success { border-left-color: #28a745; }
+        .announcement-card h3 { margin-top: 0; margin-bottom: 0.5em; }
+        .announcement-card p { margin-bottom: 0; font-size: 0.9em; }
+        .loading-spinner {
+            text-align: center;
+            font-size: 2em;
+            padding: 2em;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="announcements-page-container">
+        <h1 style="color: var(--accent-color); text-align: center;">Historial de Anuncios</h1>
+        <p style="text-align: center;">Aquí puedes ver todos los anuncios publicados.</p>
+        
+        <div id="announcement-list">
+            <div class="loading-spinner">🔄 Cargando anuncios...</div>
+        </div>
+
+        <div style="text-align: center; margin-top: 2em;">
+            <a href="index.html" class="styled-button" style="background-color: #6c757d;">Volver al Horario</a>
+        </div>
+    </div>
+
+    <script>
+        // Mantener tema
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.dataset.theme = savedTheme;
+
+        const announcementList = document.getElementById('announcement-list');
+
+        async function fetchAnnouncements() {
+            try {
+                const response = await fetch('/api/messages?announcements=true');
+                if (!response.ok) throw new Error('Error al cargar los anuncios.');
+                const announcements = await response.json();
+                renderAnnouncements(announcements);
+            } catch (error) {
+                announcementList.innerHTML = `<p style="color: #dc3545; text-align: center;">${error.message}</p>`;
+            }
+        }
+
+        function renderAnnouncements(announcements) {
+            announcementList.innerHTML = '';
+            if (announcements.length === 0) {
+                announcementList.innerHTML = '<p style="text-align: center;">No hay anuncios para mostrar.</p>';
+                return;
+            }
+            announcements.reverse().forEach(ann => { // Mostrar los más nuevos primero
+                const card = document.createElement('div');
+                card.className = `announcement-card ${ann.type || 'info'}`;
+                card.innerHTML = `<h3>${ann.title}</h3><p>${ann.content}</p>`;
+                announcementList.appendChild(card);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const pin = prompt('Ingresa el PIN de administrador para ver los anuncios:');
+            if (pin === '26435') {
+                fetchAnnouncements();
+            } else {
+                alert('PIN incorrecto. No tienes acceso a esta página.');
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>

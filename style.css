@@ -363,6 +363,26 @@ body {
     line-height: 1; /* Para centrar el texto del icono */
 }
 
+.menu-toggle-btn::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #dc3545;
+    border: 2px solid var(--container-bg);
+    transform: scale(0);
+    transition: transform 0.2s ease-in-out;
+    opacity: 0;
+}
+
+.menu-toggle-btn.has-unread::after {
+    transform: scale(1);
+    opacity: 1;
+}
+
 .menu-toggle-btn:hover {
     transform: scale(1.05); /* Efecto de escala al pasar el ratón */
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* Sombra más pronunciada al pasar el ratón */
