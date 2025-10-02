@@ -99,11 +99,6 @@ body {
     transition: background-color 0.3s ease, box-shadow 0.5s linear; /* Transición suave del color del resplandor */
 }
 
-:root {
-    /* Variable para el color dinámico del resplandor */
-    --dynamic-glow-color: var(--accent-color);
-}
-
 /* Aplicar animación solo cuando hay una clase en sesión */
 .container.is-in-session {
     animation: pulsate-glow 2.5s infinite ease-in-out;
@@ -479,13 +474,13 @@ body {
 /* --- Animación de Resplandor --- */
 @keyframes pulsate-glow {
     0% {
-        box-shadow: var(--container-shadow), 0 0 15px 0 var(--dynamic-glow-color);
+        box-shadow: var(--container-shadow), 0 0 15px 0 var(--accent-color);
     }
     50% {
-        box-shadow: var(--container-shadow), 0 0 30px 5px var(--dynamic-glow-color);
+        box-shadow: var(--container-shadow), 0 0 30px 5px var(--accent-color);
     }
     100% {
-        box-shadow: var(--container-shadow), 0 0 15px 0 var(--dynamic-glow-color);
+        box-shadow: var(--container-shadow), 0 0 15px 0 var(--accent-color);
     }
 }
 

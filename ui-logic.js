@@ -65,28 +65,6 @@ export function updateClock() {
     if (currentClassEnd) {
         const diff = currentClassEnd - now;
         if (diff > 0) {
-            let finalGlowColor;
-            const fiveMinutesInMs = 5 * 60 * 1000;
-
-            if (diff <= fiveMinutesInMs) {
-                // Últimos 5 minutos: color rojo de advertencia
-                finalGlowColor = '#dc3545';
-            } else {
-                // Lógica de interpolación normal
-                const classStart = new Date(currentClassEnd.getTime() - (currentActiveClassInfo.duration || classDuration) * 60000);
-                const totalDuration = currentClassEnd - classStart;
-                const elapsed = now - classStart;
-                const progress = Math.min(elapsed / totalDuration, 1);
-                const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim();
-                const endColor = '#ffc107'; // Amarillo
-                finalGlowColor = interpolateColor(accentColor, endColor, progress);
-            }
-            
-            const container = document.querySelector('.container');
-            if (container) {
-                container.style.setProperty('--dynamic-glow-color', finalGlowColor);
-            }
-
             const mins = Math.floor(diff / 60000);
             const secs = Math.floor((diff % 60000) / 1000);
             countdownEl.textContent = `Faltan: ${mins}m ${secs}s para terminar`;
@@ -125,31 +103,6 @@ export function updateClock() {
 }
 
 /**
- * Interpola entre dos colores hexadecimales.
- * @param {string} color1 - Color inicial en formato hex (ej. '#6200ea').
- * @param {string} color2 - Color final en formato hex (ej. '#ffc107').
- * @param {number} factor - Factor de interpolación de 0 a 1.
- * @returns {string} El color interpolado en formato hex.
- */
-function interpolateColor(color1, color2, factor) {
-    const result = color1.slice(1).match(/.{2}/g).map((hex, i) => {
-        const val1 = parseInt(hex, 16);
-        const val2 = parseInt(color2.slice(1).match(/.{2}/g)[i], 16);
-        const val = Math.round(val1 + factor * (val2 - val1));
-        return val.toString(16).padStart(2, '0');
-    }).join('');
-    return `#${result}`;
-}
-
-/**
- * Restablece el color del resplandor al color de acento por defecto.
- */
-function resetGlowColor() {
-    const container = document.querySelector('.container');
-    if (container) container.style.setProperty('--dynamic-glow-color', 'var(--accent-color)');
-}
-
-/**
  * Actualiza la información de la clase actual y la siguiente en la UI.
  */
 export function updateSchedule() {
@@ -164,7 +117,6 @@ export function updateSchedule() {
     currentClassEnd = null;
     currentActiveClassInfo = null; // Reiniciar en cada actualización
     countdownEl.dataset.nextClassStart = "";
-    resetGlowColor(); // Restablecer el color del glow en cada actualización
     container?.classList.remove('is-in-session'); // Quitar la animación por defecto
     container?.classList.remove('no-class-glow'); // Quitar la animación dorada por defecto
     const formatTime = (h, m) => `${(h % 12 || 12)}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
