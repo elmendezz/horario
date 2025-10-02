@@ -124,21 +124,14 @@ self.addEventListener('periodicsync', (event) => {
 
 // =================== LÓGICA DE NOTIFICACIONES DE CLASES ===================
 
-let notificationTimer = null;
 let notificationsEnabled = false;
-const NOTIFICATION_LEAD_TIME = 2 * 60 * 1000; // Notificar 2 minutos antes
 
-function scheduleNextNotification() {
-    clearTimeout(notificationTimer);
-    if (!notificationsEnabled) {
-        console.log('SW: Notificaciones de clase desactivadas. No se programará ninguna.');
-        return;
-    }
-
+/**
+ * Busca la próxima clase y devuelve su información.
+ * @returns {object|null} Información de la próxima clase o null.
+ */
+function getNextClassInfo() {
     const now = new Date();
-    let nextClassInfo = null;
-
-    // Buscar la próxima clase en los siguientes 7 días
     for (let i = 0; i < 7; i++) {
         const checkDate = new Date(now);
         checkDate.setDate(now.getDate() + i);
@@ -151,36 +144,47 @@ function scheduleNextNotification() {
                 classStartTime.setHours(classItem.time[0], classItem.time[1], 0, 0);
 
                 if (classStartTime > now) {
-                    nextClassInfo = { ...classItem, startTime: classStartTime };
-                    // Encontramos la próxima clase, salimos de los bucles
-                    i = 7; 
-                    break;
+                    // Encontramos la próxima clase, devolvemos su info
+                    return { ...classItem, startTime: classStartTime };
                 }
             }
         }
     }
+    return null; // No se encontraron próximas clases
+}
+
+/**
+ * Muestra o actualiza una notificación persistente con el estado de la próxima clase.
+ * Esta es una forma más fiable que usar setTimeout a largo plazo.
+ */
+async function updatePersistentNotification() {
+    if (!notificationsEnabled) {
+        // Si están desactivadas, cerramos cualquier notificación existente.
+        const notifs = await self.registration.getNotifications({ tag: 'class-status' });
+        notifs.forEach(notif => notif.close());
+        console.log('SW: Notificaciones desactivadas, notificación de estado cerrada.');
+        return;
+    }
+
+    const nextClassInfo = getNextClassInfo();
 
     if (nextClassInfo) {
-        const notificationTime = new Date(nextClassInfo.startTime.getTime() - NOTIFICATION_LEAD_TIME);
-        const timeUntilNotification = notificationTime.getTime() - now.getTime();
-
-        if (timeUntilNotification > 0) {
-            console.log(`SW: Próxima notificación programada para "${nextClassInfo.name}" a las ${notificationTime.toLocaleTimeString()}`);
-            notificationTimer = setTimeout(() => {
-                self.registration.showNotification(nextClassInfo.name, {
-                    body: `Tu clase comienza en 2 minutos.`,
-                    icon: 'images/icons/icon-192x192.png',
-                    tag: 'class-notification' // Usamos una etiqueta para que no se acumulen
-                });
-                // Volver a programar la siguiente después de esta
-                setTimeout(scheduleNextNotification, 60 * 1000); // Esperar 1 min para evitar re-notificar la misma clase
-            }, timeUntilNotification);
-        } else {
-             // Si ya pasó el tiempo de notificación, buscar la siguiente en 1 minuto
-             setTimeout(scheduleNextNotification, 60 * 1000);
-        }
+        const options = {
+            body: `Próxima clase: ${nextClassInfo.name} a las ${nextClassInfo.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+            icon: 'images/icons/icon-192x192.png',
+            tag: 'class-status', // Etiqueta para poder actualizarla o cerrarla
+            silent: true, // No vibra ni hace sonido en cada actualización
+            requireInteraction: false, // No requiere que el usuario la descarte
+        };
+        await self.registration.showNotification('Estado del Horario', options);
+        console.log('SW: Notificación de estado actualizada.');
     } else {
-        console.log('SW: No se encontraron próximas clases para notificar.');
+        await self.registration.showNotification('Estado del Horario', {
+            body: 'No hay más clases programadas por ahora.',
+            icon: 'images/icons/icon-192x192.png',
+            tag: 'class-status',
+            silent: true,
+        });
     }
 }
 
@@ -190,7 +194,7 @@ self.addEventListener('message', event => {
     if (type === 'SET_NOTIFICATIONS') {
         notificationsEnabled = payload.enabled;
         console.log(`SW: Notificaciones de clase ${notificationsEnabled ? 'ACTIVADAS' : 'DESACTIVADAS'}.`);
-        scheduleNextNotification(); // (Re)programar notificaciones al cambiar el estado
+        event.waitUntil(updatePersistentNotification()); // Actualizar la notificación de estado
     }
 
     if (type === 'TEST_NOTIFICATION') {
@@ -250,7 +254,7 @@ self.addEventListener('activate', event => {
             self.registration.periodicSync?.register('update-widget-periodic', {
                 minInterval: 15 * 60 * 1000, // Cada 15 minutos
             }).catch(e => console.error('SW: Fallo al registrar la sincronización periódica:', e)),
-            scheduleNextNotification() // Programar notificaciones al activar
+            updatePersistentNotification() // Programar notificaciones al activar
         ])
     );
     return self.clients.claim();
