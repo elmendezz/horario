@@ -209,6 +209,24 @@ self.addEventListener('message', event => {
     }
 });
 
+// =================== LÓGICA DE BACKGROUND SYNC (ONE-OFF) ===================
+
+self.addEventListener('sync', event => {
+    console.log('SW: Evento de sincronización de fondo recibido:', event.tag);
+    
+    if (event.tag === 'update-app-content') {
+        console.log('SW: Sincronizando contenido de la app...');
+        event.waitUntil(
+            caches.open(CACHE_NAME).then(cache => {
+                console.log('SW: Re-cacheando archivos principales.');
+                // Aquí podrías volver a descargar los archivos importantes
+                // para asegurar que la app esté actualizada la próxima vez que se abra.
+                return cache.addAll(urlsToCache);
+            })
+        );
+    }
+});
+
 // =================== LÓGICA DE INSTALACIÓN Y CACHÉ ===================
 
 self.addEventListener('install', event => {
@@ -230,7 +248,7 @@ self.addEventListener('activate', event => {
             }),
             // Registrar la sincronización periódica cuando el SW se activa
             self.registration.periodicSync?.register('update-widget-periodic', {
-                minInterval: 1* 60 * 1000, // Cada 15 minutos
+                minInterval: 15 * 60 * 1000, // Cada 15 minutos
             }).catch(e => console.error('SW: Fallo al registrar la sincronización periódica:', e)),
             scheduleNextNotification() // Programar notificaciones al activar
         ])

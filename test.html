@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Pruebas - Horario 1CV</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            justify-content: flex-start;
+            padding: 2em;
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2em;
+            width: 100%;
+            max-width: 1200px;
+        }
+        .test-card {
+            background-color: var(--container-bg);
+            border-radius: 15px;
+            padding: 1.5em;
+            box-shadow: var(--container-shadow);
+        }
+        .test-card h2 {
+            color: var(--accent-color);
+            margin-top: 0;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 0.5em;
+        }
+        .button-group-test {
+            display: flex;
+            flex-direction: column;
+            gap: 1em;
+            margin-top: 1em;
+        }
+        .status-light {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        .status-light.green { background-color: #28a745; }
+        .status-light.red { background-color: #dc3545; }
+        .status-light.orange { background-color: #fd7e14; }
+        
+        #main-display {
+            grid-column: 1 / -1; /* Ocupa todo el ancho */
+            text-align: center;
+        }
+        #main-display #current-class-display { font-size: 2em; }
+        #main-display #teacher-display { font-size: 1.2em; }
+        #main-display #clock { font-size: 1.5em; }
+        #main-display #countdown { font-size: 1.2em; }
+
+        .form-group {
+            margin-bottom: 1em;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5em;
+        }
+        .form-group select, .form-group input {
+            width: 100%;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+    <h1 style="color: var(--accent-color); text-align: center; width: 100%;">Panel de Pruebas exhaustivas</h1>
+    <p style="text-align: center; width: 100%; margin-bottom: 2em;">Usa esta página para probar todas las funcionalidades de la PWA.</p>
+
+    <div class="test-grid">
+        <!-- Display Principal -->
+        <div id="main-display" class="test-card">
+            <div id="current-class-display">Cargando...</div>
+            <div id="teacher-display"></div>
+            <div id="clock"></div>
+            <div id="countdown"></div>
+        </div>
+
+        <!-- Controles Generales -->
+        <div class="test-card">
+            <h2>Controles Generales</h2>
+            <div class="button-group-test">
+                <button id="theme-toggle" class="styled-button">Cambiar Tema</button>
+                <button id="fullscreen-btn" class="styled-button">Pantalla Completa</button>
+                <a href="index.html" class="styled-button" style="background-color: #6c757d;">Volver a la App Principal</a>
+            </div>
+        </div>
+
+        <!-- Notificaciones -->
+        <div class="test-card">
+            <h2>Notificaciones</h2>
+            <p>Permiso: <strong id="notification-permission-status">Desconocido</strong><span id="notification-status-light" class="status-light"></span></p>
+            <div class="button-group-test">
+                <button id="request-permission-btn" class="styled-button">1. Solicitar Permiso</button>
+                <button id="toggle-notifications-btn" class="styled-button">Activar/Desactivar Notificaciones de Clase</button>
+                <button id="test-notification-btn" class="styled-button" style="background-color: #ffc107; color: #000;">Probar Notificación (5s)</button>
+            </div>
+        </div>
+
+        <!-- Simulación de Tiempo -->
+        <div class="test-card">
+            <h2>Simulación de Tiempo</h2>
+            <form id="time-simulation-form">
+                <div class="form-group">
+                    <label for="day">Día:</label>
+                    <select id="day" name="day">
+                        <option value="1">Lunes</option>
+                        <option value="2">Martes</option>
+                        <option value="3">Miércoles</option>
+                        <option value="4">Jueves</option>
+                        <option value="5">Viernes</option>
+                        <option value="6">Sábado</option>
+                        <option value="0">Domingo</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="hour">Hora (0-23):</label>
+                    <input type="number" id="hour" name="hour" min="0" max="23" required value="12">
+                </div>
+                <div class="form-group">
+                    <label for="minute">Minuto (0-59):</label>
+                    <input type="number" id="minute" name="minute" min="0" max="59" required value="30">
+                </div>
+                <div class="button-group-test">
+                    <button type="submit" class="styled-button">Simular Hora</button>
+                    <button type="button" id="reset-time-btn" class="styled-button" style="background-color: #dc3545;">Restablecer Hora Real</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Service Worker y Caché -->
+        <div class="test-card">
+            <h2>Service Worker y Caché</h2>
+            <p>Estado del SW: <strong id="sw-status">No registrado</strong><span id="sw-status-light" class="status-light red"></span></p>
+            <div class="button-group-test">
+                <button id="trigger-sync-btn" class="styled-button">Forzar Background Sync</button>
+                <button id="clear-cache-btn" class="styled-button" style="background-color: #dc3545;">Limpiar Todas las Cachés</button>
+                <button id="unregister-sw-btn" class="styled-button" style="background-color: #dc3545;">Desregistrar Service Worker</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Incluimos el script principal que contiene toda la lógica -->
+    <script src="script.js"></script>
+    <script>
+        // Script específico para la página de pruebas
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Lógica de la UI de Pruebas ---
+
+            // Mantener tema
+            const currentTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.dataset.theme = currentTheme;
+
+            // --- Status de Notificaciones ---
+            const updateNotificationStatus = () => {
+                const statusEl = document.getElementById('notification-permission-status');
+                const lightEl = document.getElementById('notification-status-light');
+                const permission = Notification.permission;
+                statusEl.textContent = permission;
+                lightEl.className = 'status-light'; // Reset
+                if (permission === 'granted') lightEl.classList.add('green');
+                else if (permission === 'denied') lightEl.classList.add('red');
+                else lightEl.classList.add('orange');
+            };
+            
+            document.getElementById('request-permission-btn').addEventListener('click', () => {
+                Notification.requestPermission().then(updateNotificationStatus);
+            });
+            
+            document.getElementById('toggle-notifications-btn').addEventListener('click', () => {
+                const enabled = localStorage.getItem('notificationsEnabled') !== 'true';
+                localStorage.setItem('notificationsEnabled', enabled);
+                sendMessageToSW({ type: 'SET_NOTIFICATIONS', payload: { enabled } });
+                alert(`Notificaciones de clase ${enabled ? 'ACTIVADAS' : 'DESACTIVADAS'}.`);
+                // Actualiza el botón principal si existe
+                const mainBtn = document.getElementById('notifications-btn');
+                if(mainBtn) mainBtn.textContent = enabled ? '🔔' : '🔕';
+            });
+
+            // --- Simulación de Tiempo ---
+            document.getElementById('time-simulation-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const day = parseInt(document.getElementById('day').value, 10);
+                const hour = parseInt(document.getElementById('hour').value, 10);
+                const minute = parseInt(document.getElementById('minute').value, 10);
+                localStorage.setItem('simulatedTime', JSON.stringify({ day, hour, minute }));
+                alert('Tiempo simulado. Recargando la página...');
+                window.location.reload();
+            });
+
+            document.getElementById('reset-time-btn').addEventListener('click', () => {
+                localStorage.removeItem('simulatedTime');
+                alert('Simulación eliminada. Recargando la página...');
+                window.location.reload();
+            });
+
+            // --- Service Worker ---
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistration().then(reg => {
+                    if (reg && reg.active) {
+                        document.getElementById('sw-status').textContent = 'Activo y Controlando';
+                        document.getElementById('sw-status-light').className = 'status-light green';
+                    }
+                });
+            }
+
+            document.getElementById('trigger-sync-btn').addEventListener('click', async () => {
+                if ('serviceWorker' in navigator && 'SyncManager' in window) {
+                    const reg = await navigator.serviceWorker.ready;
+                    await reg.sync.register('update-app-content');
+                    alert('Background Sync ("update-app-content") registrado.\nSe ejecutará cuando haya conexión (o inmediatamente si la hay). Revisa la consola del SW.');
+                } else {
+                    alert('Background Sync no está soportado en este navegador.');
+                }
+            });
+
+            document.getElementById('clear-cache-btn').addEventListener('click', async () => {
+                if ('caches' in window) {
+                    const keys = await caches.keys();
+                    await Promise.all(keys.map(key => caches.delete(key)));
+                    alert('Todas las cachés han sido eliminadas. La página se recargará.');
+                    window.location.reload();
+                }
+            });
+
+            document.getElementById('unregister-sw-btn').addEventListener('click', async () => {
+                if ('serviceWorker' in navigator) {
+                    const reg = await navigator.serviceWorker.getRegistration();
+                    if (reg) {
+                        await reg.unregister();
+                        alert('Service Worker desregistrado. La página se recargará.');
+                        window.location.reload();
+                    } else {
+                        alert('No hay Service Worker registrado.');
+                    }
+                }
+            });
+
+            // Inicializar estados al cargar
+            updateNotificationStatus();
+        });
+
+        // Registro del Service Worker
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+              .then(reg => console.log('Test Page: ServiceWorker registrado:', reg.scope))
+              .catch(err => console.log('Test Page: Fallo en registro de ServiceWorker:', err));
+          });
+        }
+    </script>
+</body>
+</html>
