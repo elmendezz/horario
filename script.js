@@ -10,6 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchTime().then(() => {
         initializeUI(); // Inicializar todos los componentes de la UI
         initializeNotifications(); // Inicializar la lógica de notificaciones
+
+        // Ejecutar una vez de inmediato para evitar el retraso inicial
+        updateSchedule();
+        updateClock();
         
         // Configurar los intervalos de actualización
         const updateInterval = isSimulated ? 1000 : 10000; // 1 segundo si es simulado, 10 segundos si es real
