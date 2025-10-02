@@ -92,16 +92,21 @@ body {
     padding: 2em 1.5em;
     background-color: var(--container-bg);
     border-radius: 15px;
-    box-shadow: var(--container-shadow);
+    /* La sombra base se aplicará en la animación para combinarla con el glow */
     position: relative;
     max-width: 90%;
     margin-bottom: 1em;
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    transition: background-color 0.3s ease, box-shadow 0.5s linear; /* Transición suave del color del resplandor */
 }
 
 :root {
     /* Variable para el color dinámico del resplandor */
     --dynamic-glow-color: var(--accent-color);
+}
+
+/* Aplicar animación solo cuando hay una clase en sesión */
+.container.is-in-session {
+    animation: pulsate-glow 2.5s infinite ease-in-out;
 }
 
 #current-class-display {
@@ -110,9 +115,7 @@ body {
     margin-bottom: 0.1em;
     line-height: 1.2;
     word-wrap: break-word;
-    text-shadow: 0 0 12px var(--dynamic-glow-color); /* Usar la variable para el resplandor */
-    animation: pulsate-glow 2.5s infinite ease-in-out; /* Animación de parpadeo */
-    transition: text-shadow 0.5s linear; /* Transición suave del color del resplandor */
+    /* Se eliminó el resplandor del texto */
 }
 #teacher-display {
     font-size: 1.1em;
@@ -448,12 +451,65 @@ body {
 /* --- Animación de Resplandor --- */
 @keyframes pulsate-glow {
     0% {
-        text-shadow: 0 0 12px var(--dynamic-glow-color);
+        box-shadow: var(--container-shadow), 0 0 15px var(--dynamic-glow-color);
     }
     50% {
-        text-shadow: 0 0 22px var(--dynamic-glow-color);
+        box-shadow: var(--container-shadow), 0 0 30px var(--dynamic-glow-color);
     }
     100% {
-        text-shadow: 0 0 12px var(--dynamic-glow-color);
+        box-shadow: var(--container-shadow), 0 0 15px var(--dynamic-glow-color);
     }
+}
+
+/* --- Estilos de la Cuenta Regresiva Grande --- */
+.next-class-countdown {
+    display: none; /* Oculto por defecto */
+    flex-direction: column;
+    align-items: center;
+    background-color: var(--container-bg);
+    padding: 1.5em;
+    border-radius: 15px;
+    box-shadow: var(--container-shadow);
+    margin-bottom: 1em;
+    width: 100%;
+    max-width: 90%;
+    box-sizing: border-box;
+}
+
+.next-class-countdown.visible {
+    display: flex; /* Mostrar cuando sea necesario */
+}
+
+.next-class-countdown .countdown-label {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: var(--accent-color);
+    margin-bottom: 0.75em;
+}
+
+.next-class-countdown .countdown-timer {
+    display: flex;
+    gap: 1em;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.next-class-countdown .time-segment {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: var(--bg-color);
+    padding: 0.5em 1em;
+    border-radius: 10px;
+    min-width: 60px;
+}
+
+.next-class-countdown .time-segment span:first-child {
+    font-size: 2.5em;
+    font-weight: bold;
+}
+
+.next-class-countdown .time-segment .time-label {
+    font-size: 0.8em;
+    text-transform: uppercase;
 }

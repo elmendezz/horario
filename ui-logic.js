@@ -61,6 +61,7 @@ export function updateClock() {
     if (clockEl) clockEl.textContent = isSimulated ? `Hora Simulada: ${hours}:${minutes}:${seconds} ${am_pm}` : `Hora: ${hours}:${minutes}:${seconds} ${am_pm}`;
 
     const countdownEl = document.getElementById('countdown');
+    const nextClassCountdownContainer = document.getElementById('next-class-countdown-container');
     if (currentClassEnd) {
         const diff = currentClassEnd - now;
         if (diff > 0) {
@@ -87,18 +88,26 @@ export function updateClock() {
             countdownEl.textContent = "Clase finalizada";
         }
     } else {
+        // Lógica para la cuenta regresiva grande
         const nextClassStartTime = countdownEl.dataset.nextClassStart ? new Date(countdownEl.dataset.nextClassStart) : null;
         if (nextClassStartTime) {
             const diff = nextClassStartTime - now;
             if (diff > 0) {
                 const days = Math.floor(diff / 86400000);
-                const hoursLeft = Math.floor((diff % 86400000) / 3600000);
-                const minsLeft = Math.floor((diff % 3600000) / 60000);
-                const secsLeft = Math.floor((diff % 60000) / 1000);
-                let countdownText = "Próxima clase en: ";
-                if (days > 0) countdownText += `${days}d `;
-                countdownText += `${hoursLeft}h ${minsLeft}m ${secsLeft}s`;
-                countdownEl.innerHTML = countdownEl.dataset.nextClassTimeDisplay ? `Próxima clase a las ${countdownEl.dataset.nextClassTimeDisplay}<br>${countdownText}` : countdownText;
+                const hours = Math.floor((diff % 86400000) / 3600000);
+                const minutes = Math.floor((diff % 3600000) / 60000);
+                const seconds = Math.floor((diff % 60000) / 1000);
+
+                document.getElementById('countdown-days').textContent = days;
+                document.getElementById('countdown-hours').textContent = hours;
+                document.getElementById('countdown-minutes').textContent = minutes;
+                document.getElementById('countdown-seconds').textContent = seconds;
+
+                // Ocultar el segmento de días si es 0
+                document.getElementById('days-segment').style.display = days > 0 ? 'flex' : 'none';
+
+                nextClassCountdownContainer.classList.add('visible');
+                countdownEl.textContent = ''; // Limpiar el contador pequeño
             } else {
                 countdownEl.textContent = "";
             }
@@ -138,6 +147,7 @@ function resetGlowColor() {
  */
 export function updateSchedule() {
     if (!serverTime) return;
+    const container = document.querySelector('.container');
     const now = new Date(serverTime.getTime() + (Date.now() - startTime));
     const currentClassDisplay = document.getElementById('current-class-display');
     const teacherDisplay = document.getElementById('teacher-display');
@@ -148,11 +158,16 @@ export function updateSchedule() {
     currentActiveClassInfo = null; // Reiniciar en cada actualización
     countdownEl.dataset.nextClassStart = "";
     resetGlowColor(); // Restablecer el color del glow en cada actualización
+    container?.classList.remove('is-in-session'); // Quitar la animación por defecto
     const formatTime = (h, m) => `${(h % 12 || 12)}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
+    const nextClassCountdownContainer = document.getElementById('next-class-countdown-container');
 
     const { currentClass, nextClass } = getCurrentAndNextClass(now);
 
     if (currentClass) {
+        container?.classList.add('is-in-session'); // Añadir la animación si hay clase
+        nextClassCountdownContainer?.classList.remove('visible'); // Ocultar contador grande
+
         currentClassDisplay.textContent = currentClass.name;
         teacherDisplay.textContent = currentClass.teacher;
         const classStartMinutes = currentClass.time[0] * 60 + currentClass.time[1];
