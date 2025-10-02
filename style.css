@@ -99,19 +99,6 @@ body {
     transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-#notifications-btn {
-    position: absolute;
-    top: 1em;
-    left: 1em;
-    font-size: 1.5em;
-    cursor: pointer;
-    border: none;
-    background: none;
-    color: var(--text-color);
-    transition: color 0.3s ease;
-    visibility: hidden; /* Oculto por defecto hasta que JS lo active */
-}
-
 #current-class-display {
     font-size: 2.5em;
     font-weight: bold;
@@ -336,4 +323,104 @@ body {
         font-size: 0.8em;
         padding: 8px 4px;
     }
+}
+
+/* --- Estilos del Menú Hamburguesa --- */
+
+.menu-toggle-btn {
+    position: fixed; /* Usar fixed para que no se mueva con el scroll */
+    top: 1em; /* Ajustar posición */
+    left: 1em; /* Ajustar posición */
+    font-size: 1.2em; /* Tamaño de fuente ligeramente más pequeño para el icono */
+    padding: 0.6em 0.9em; /* Añadir padding para que sea un botón más visible */
+    border-radius: 8px; /* Bordes redondeados */
+    background-color: var(--container-bg); /* Fondo del botón */
+    box-shadow: var(--container-shadow); /* Sombra para darle profundidad */
+    color: var(--text-color); /* Color del icono */
+    cursor: pointer; /* Cursor de puntero */
+    border: none; /* Sin borde */
+    z-index: 1001; /* Asegura que esté sobre el contenido pero debajo del menú abierto */
+    transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease, color 0.3s ease; /* Transiciones suaves */
+    line-height: 1; /* Para centrar el texto del icono */
+}
+
+.menu-toggle-btn:hover {
+    transform: scale(1.05); /* Efecto de escala al pasar el ratón */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* Sombra más pronunciada al pasar el ratón */
+}
+
+.menu-toggle-btn.open {
+    /* No necesita estilos específicos aquí, el JS cambiará el texto */
+}
+
+.side-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 280px;
+    background-color: var(--container-bg);
+    box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    z-index: 1002;
+    padding: 1em;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+
+.side-menu.open {
+    transform: translateX(0);
+}
+
+.close-menu-btn {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 2em;
+    cursor: pointer;
+    align-self: flex-end;
+}
+
+.menu-section {
+    margin-top: 1em;
+    border-top: 1px solid var(--text-color);
+    padding-top: 1em;
+}
+
+.menu-button {
+    display: block;
+    width: 100%;
+    padding: 1em;
+    background: none;
+    border: none;
+    color: var(--text-color);
+    text-align: left;
+    font-size: 1em;
+    cursor: pointer;
+    border-radius: 8px;
+    text-decoration: none;
+}
+
+.menu-button:hover {
+    background-color: var(--bg-color);
+}
+
+.menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    pointer-events: none; /* No se puede hacer clic cuando está invisible */
+    z-index: 1000;
+}
+
+.menu-overlay.open {
+    opacity: 1;
+    pointer-events: auto; /* Se puede hacer clic para cerrar el menú */
 }

@@ -316,13 +316,17 @@ function initializeMenu() {
     const overlay = document.getElementById('menu-overlay');
 
     const openMenu = () => {
+        if (!menuToggle) return;
         sideMenu.classList.add('open');
         overlay.classList.add('open');
+        menuToggle.textContent = '×'; // Cambiar a 'X'
     };
 
     const closeMenu = () => {
+        if (!menuToggle) return;
         sideMenu.classList.remove('open');
         overlay.classList.remove('open');
+        menuToggle.textContent = '☰'; // Volver a '☰'
     };
 
     menuToggle?.addEventListener('click', openMenu);
