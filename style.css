@@ -77,7 +77,7 @@ body {
 #chat-btn {
     position: absolute;
     top: 1em;
-    left: 4em; /* Posicionado al lado del botón de notificaciones */
+    left: 3.5em; /* Posicionado al lado del botón de notificaciones */
     font-size: 1.5em;
     cursor: pointer;
     text-decoration: none;
@@ -85,6 +85,51 @@ body {
     transition: color 0.3s ease;
 }
 
+/* --- Estilos para el Chat Integrado --- */
+.messages-container {
+    width: 100%;
+    height: 100%;
+}
+.message-card {
+    background-color: var(--bg-color);
+    border-radius: 10px;
+    padding: 1em;
+    margin-bottom: 1em;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-left: 4px solid var(--accent-color);
+}
+.message-card p {
+    margin: 0;
+    word-wrap: break-word;
+}
+.message-card .author {
+    font-size: 0.8em;
+    color: #888;
+    margin-top: 0.5em;
+    font-weight: bold;
+}
+.message-card .time {
+    font-size: 0.8em;
+    color: #888;
+    margin-top: 0.5em;
+    text-align: right;
+}
+.message-form textarea {
+    width: 100%;
+    min-height: 60px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    box-sizing: border-box;
+    font-size: 1em;
+    margin-bottom: 1em;
+}
+.delete-btn {
+    background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; float: right;
+}
+.loading-spinner { text-align: center; font-size: 1.5em; padding: 2em; }
 
 #current-class-display {
     font-size: 2.5em;

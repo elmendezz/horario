@@ -73,6 +73,14 @@ export default async function handler(req, res) {
       }
     }
 
+    // --- OBTENER ESTADO DE UN USUARIO ESPECÍFICO ---
+    if (req.method === 'GET' && req.query.user) {
+        const { content: users } = await getFile(usersFile);
+        const username = req.query.user;
+        const status = users[username] || 'not_found';
+        return res.status(200).json({ status });
+    }
+
     // --- LEER MENSAJES (GET) ---
     if (req.method === "GET") {
       const { content: messages } = await getFile(messagesFile);
