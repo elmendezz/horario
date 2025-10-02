@@ -226,6 +226,7 @@ function renderScheduleTable() {
             return;
         }
         const row = document.createElement('tr');
+        row.dataset.time = timeInMinutes; // <-- ¡AQUÍ ESTABA EL ERROR! Añadimos el dato de la hora a la fila.
         const hours = Math.floor(timeInMinutes/60), minutes = timeInMinutes%60;
         row.innerHTML = `<td>${formatTime(hours, minutes)}</td>` + 
                         [0,1,2,3,4].map(dayIndex => {
@@ -238,6 +239,7 @@ function renderScheduleTable() {
 showScheduleBtn.addEventListener('click', () => {
     scheduleTable.classList.toggle('visible');
     showScheduleBtn.textContent = scheduleTable.classList.contains('visible') ? 'Ocultar Horario' : 'Mostrar Horario';
+    highlightCurrentClassInTable(); // Volver a resaltar al mostrar la tabla
 });
 
 function highlightCurrentClassInTable() {
@@ -255,7 +257,7 @@ function highlightCurrentClassInTable() {
 
     // Iterar sobre las filas de la tabla para encontrar la celda correcta
     const rows = scheduleTableBody.getElementsByTagName('tr');
-    for (const row of rows) {
+    for (const row of Array.from(rows)) { // Convertir a Array para usar .find()
         const timeInMinutes = parseInt(row.dataset.time, 10);
         if (timeInMinutes === timeToFind) {
             row.cells[dayIndexToFind + 1].classList.add('current-class-highlight');

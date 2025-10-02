@@ -1,6 +1,6 @@
 {
   "name": "Horario 1CV Por elmendezz",
-  "short_name": "Horario - Beta 58",
+  "short_name": "Horario - Beta 89",
   "start_url": ".",
   "display": "standalone",
   "orientation": "any",
@@ -61,5 +61,5 @@
       "data": "widget_data.json"
     }
   ],
-  "id": "2"
+  "id": "3"
 }
