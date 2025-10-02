@@ -54,6 +54,7 @@ let serverTime = null;
 let startTime = Date.now();
 let currentClassEnd = null;
 let isSimulated = false;
+let currentActiveClassInfo = null; // Almacenará la clase activa para resaltarla
 
 async function fetchTime() {
     const simulatedTime = localStorage.getItem('simulatedTime');
@@ -132,6 +133,7 @@ function updateSchedule() {
     const nextClassDisplay = document.getElementById('next-class-display');
     const countdownEl = document.getElementById('countdown');
     currentClassEnd = null;
+    currentActiveClassInfo = null; // Reiniciar en cada actualización
     countdownEl.dataset.nextClassStart = "";
     const formatTime = (h, m) => `${(h % 12 || 12)}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
 
@@ -154,6 +156,7 @@ function updateSchedule() {
                 currentClassEnd.setHours(Math.floor(classEndMinutes / 60), classEndMinutes % 60, 0, 0);
                 if (i + 1 < todaySchedule.length) nextClassInfo = todaySchedule[i + 1];
                 else nextClassInfo = { name: "Clases terminadas por hoy." };
+                currentActiveClassInfo = { ...classItem, dayIndex: dayOfWeek - 1 }; // Guardar info de la clase activa
                 foundCurrent = true;
                 break;
             }
@@ -189,6 +192,7 @@ function updateSchedule() {
     currentClassDisplay.textContent = currentClass;
     teacherDisplay.textContent = currentTeacher;
     nextClassDisplay.textContent = `Siguiente clase: ${nextClassInfo.name}`;
+    highlightCurrentClassInTable(); // Llamar a la función para resaltar
 }
 
 const themeToggle = document.getElementById('theme-toggle');
@@ -235,6 +239,30 @@ showScheduleBtn.addEventListener('click', () => {
     scheduleTable.classList.toggle('visible');
     showScheduleBtn.textContent = scheduleTable.classList.contains('visible') ? 'Ocultar Horario' : 'Mostrar Horario';
 });
+
+function highlightCurrentClassInTable() {
+    // Primero, quitar el resaltado anterior
+    document.querySelectorAll('#schedule-table td.current-class-highlight').forEach(cell => {
+        cell.classList.remove('current-class-highlight');
+    });
+
+    if (!currentActiveClassInfo || !scheduleTable.classList.contains('visible')) {
+        return; // No hacer nada si no hay clase activa o la tabla está oculta
+    }
+
+    const timeToFind = currentActiveClassInfo.time[0] * 60 + currentActiveClassInfo.time[1];
+    const dayIndexToFind = currentActiveClassInfo.dayIndex; // Lunes: 0, Martes: 1, etc.
+
+    // Iterar sobre las filas de la tabla para encontrar la celda correcta
+    const rows = scheduleTableBody.getElementsByTagName('tr');
+    for (const row of rows) {
+        const timeInMinutes = parseInt(row.dataset.time, 10);
+        if (timeInMinutes === timeToFind) {
+            row.cells[dayIndexToFind + 1].classList.add('current-class-highlight');
+            break; // Celda encontrada, salimos del bucle
+        }
+    }
+}
 
 const modal = document.getElementById('imageModal');
 document.getElementById('next-class-display').addEventListener('click', () => modal.style.display = "block");

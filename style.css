@@ -4,6 +4,7 @@
     --text-color: #333;
     --container-bg: #fff;
     --container-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    --accent-color: #4CAF50; /* Color principal para tema claro */
     --next-class-bg: #4CAF50;
     --next-class-hover-bg: #45a049;
     --table-header-bg: #4CAF50;
@@ -15,6 +16,7 @@
     --text-color: #e0e0e0;
     --container-bg: #1e1e1e;
     --container-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    --accent-color: #6200ea; /* Color principal para tema oscuro */
     --next-class-bg: #6200ea;
     --next-class-hover-bg: #3700b3;
     --table-header-bg: #3700b3;
@@ -22,7 +24,7 @@
 }
 
 #aviso {
-	font-family: Arial, sans-serif;
+    font-family: Arial, sans-serif;
     text-align: center;
     color: var(--text-color);
     transition: background-color 0.3s ease, color 0.3s ease;
@@ -145,6 +147,7 @@ body {
     padding: 12px 8px;
     text-align: center;
     border: 1px solid #ccc;
+    transition: background-color 0.3s, color 0.3s;
 }
 
 #schedule-table td:first-child {
@@ -158,6 +161,13 @@ body {
 
 #schedule-table tr:nth-child(even) {
     background-color: var(--table-row-bg);
+}
+
+/* Estilo para resaltar la clase actual */
+#schedule-table td.current-class-highlight {
+    background-color: var(--accent-color) !important;
+    color: white !important;
+    font-weight: bold;
 }
 
 #schedule-table .receso-row {
