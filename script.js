@@ -346,23 +346,34 @@ document.getElementById('test-notification-btn').addEventListener('click', () =>
     alert('Recibirás una notificación en 5 segundos. Puedes cambiar de app o bloquear la pantalla para verla.');
 });
 
-document.getElementById('show-dev-tools-btn').addEventListener('click', () => {
-    const password = prompt('Ingresa la contraseña para ver las herramientas de desarrollo:');
-    if (password === '1CV') {
-        document.getElementById('developer-tools').style.display = 'flex';
-        document.getElementById('show-dev-tools-btn').style.display = 'none'; // Ocultar el botón después de usarlo
-        alert('Acceso concedido. Herramientas de desarrollo visibles.');
-    } else if (password !== null) { // Si el usuario no presionó "Cancelar"
-        alert('Contraseña incorrecta.');
+/**
+ * Función principal que inicializa la aplicación.
+ * Se asegura de que el DOM esté cargado antes de asignar eventos y empezar las actualizaciones.
+ */
+function main() {
+    const showDevToolsBtn = document.getElementById('show-dev-tools-btn');
+    if (showDevToolsBtn) {
+        showDevToolsBtn.addEventListener('click', () => {
+            const password = prompt('Ingresa la contraseña para ver las herramientas de desarrollo:');
+            if (password === '1CV') {
+                document.getElementById('developer-tools').style.display = 'flex';
+                showDevToolsBtn.style.display = 'none';
+                alert('Acceso concedido. Herramientas de desarrollo visibles.');
+            } else if (password !== null) {
+                alert('Contraseña incorrecta.');
+            }
+        });
     }
-});
 
+    fetchTime().then(() => {
+        updateSchedule();
+        renderScheduleTable();
+        initializeNotifications();
+        const updateInterval = isSimulated ? 1000 : 10000;
+        setInterval(updateSchedule, updateInterval);
+        setInterval(updateClock, 1000);
+    });
+}
 
-fetchTime().then(() => {
-    updateSchedule();
-    renderScheduleTable();
-    initializeNotifications();
-    const updateInterval = isSimulated ? 1000 : 10000;
-    setInterval(updateSchedule, updateInterval);
-    setInterval(updateClock, 1000);
-});
+// Ejecutar la función principal cuando el contenido del DOM esté listo.
+document.addEventListener('DOMContentLoaded', main);
