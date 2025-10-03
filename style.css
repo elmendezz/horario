@@ -443,10 +443,7 @@ body {
     cursor: pointer;
     border-radius: 8px;
     text-decoration: none;
-    /* Ajustes para texto largo */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal; /* Permitir que el texto se divida en varias líneas */
 }
 
 .menu-button:hover {

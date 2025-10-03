@@ -16,7 +16,10 @@ let currentActiveClassInfo = null; // Almacenará la clase activa para resaltarl
  * Obtiene la hora actual del servidor o usa una hora simulada.
  */
 export async function fetchTime() {
+    const timeSource = localStorage.getItem('timeSource') || 'local'; // 'local' es el nuevo valor por defecto
     const simulatedTime = localStorage.getItem('simulatedTime');
+    const aviso = document.getElementById('aviso');
+
     if (simulatedTime) {
         const { day, hour, minute } = JSON.parse(simulatedTime);
         const now = new Date();
@@ -26,24 +29,30 @@ export async function fetchTime() {
             serverTime.setDate(serverTime.getDate() + 7); // Si el día simulado ya pasó esta semana, simularlo para la próxima
         }
         isSimulated = true;
-    } else {
+        if (aviso) aviso.textContent = "🕒 Usando hora simulada.";
+    } else if (timeSource === 'internet') {
         try {
             const response = await fetch('https://worldtimeapi.org/api/timezone/America/Tijuana');
-            if (!response.ok) throw new Error('Network response was not ok');
+            if (!response.ok) throw new Error('La respuesta de la red no fue correcta');
             const data = await response.json();
             serverTime = new Date(data.datetime);
+            if (aviso) aviso.textContent = "☁️ Hora sincronizada con internet.";
         } catch (error) {
-            // Reportar el error para que el desarrollador lo sepa.
             reportError(error, 'fetchTime API');
-            // Usar hora local como fallback.
             serverTime = new Date(); // Fallback a la hora local si falla la API
-            // Notificar al usuario que algo no está bien.
-            const aviso = document.getElementById('aviso');
             if (aviso) aviso.textContent = "⚠️ No se pudo sincronizar la hora. Usando hora local.";
         } finally {
             isSimulated = false;
         }
+    } else {
+        // Por defecto o si timeSource === 'local'
+        serverTime = new Date();
+        isSimulated = false;
+        if (aviso) aviso.textContent = "📱 Usando la hora de tu dispositivo.";
     }
+
+    // Reiniciar el punto de partida para el cálculo del reloj local
+    startTime = Date.now();
 }
 
 /**
@@ -493,6 +502,35 @@ async function initializeAnnouncements() {
 }
 
 /**
+ * Inicializa el control para cambiar la fuente de la hora (local/internet).
+ */
+function initializeTimeSourceToggle() {
+    const timeSourceToggle = document.getElementById('time-source-toggle');
+    if (!timeSourceToggle) return;
+
+    const updateButtonText = () => {
+        const timeSource = localStorage.getItem('timeSource') || 'local';
+        timeSourceToggle.innerHTML = timeSource === 'local' 
+            ? '☁️ Usar Hora de Internet' 
+            : '📱 Usar Hora Local';
+    };
+
+    timeSourceToggle.addEventListener('click', () => {
+        const currentSource = localStorage.getItem('timeSource') || 'local';
+        const newSource = currentSource === 'local' ? 'internet' : 'local';
+        localStorage.setItem('timeSource', newSource);
+        updateButtonText();
+        const sourceName = newSource === 'local' 
+            ? 'la hora de tu dispositivo (Local)' 
+            : 'la hora de Internet';
+        alert(`¡Listo! Ahora se usará ${sourceName}. La página se recargará para aplicar el cambio.`);
+        window.location.reload();
+    });
+
+    updateButtonText(); // Establecer texto inicial al cargar
+}
+
+/**
  * Función principal para inicializar toda la lógica de la UI.
  */
 export function initializeUI() {
@@ -504,6 +542,7 @@ export function initializeUI() {
     initializeCacheControls();
     initializeUser();
     initializeScheduleToggle();
+    initializeTimeSourceToggle();
     initializeDevToolsToggle();
     renderScheduleTable(); // Renderizar la tabla inicialmente
 }
