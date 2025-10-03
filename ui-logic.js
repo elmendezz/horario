@@ -29,11 +29,21 @@ export async function fetchTime() {
         // Ajustar la fecha para que la simulación siempre sea en el futuro si el día ya pasó esta semana
         serverTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay() + day, hour, minute, 0);
         if (serverTime < now) {
+            serverTime.setDate(serverTime.getDate() + 7); // Si el día simulado ya pasó esta semana, simularlo para la próxima
             serverTime.setDate(serverTime.getDate() + 7); // Si el día simulado ya pasó esta semana, simularlo para la próxima.
         }
         isSimulated = true;
         if (aviso) aviso.textContent = "🕒 Usando hora simulada.";
     } else if (timeSource === 'internet') {
+        try {
+            const response = await fetch('https://worldtimeapi.org/api/timezone/America/Tijuana');
+            if (!response.ok) throw new Error('La respuesta de la red no fue correcta');
+            const data = await response.json();
+            serverTime = new Date(data.datetime);
+            if (aviso) aviso.textContent = "☁️ Hora sincronizada con internet.";
+        } catch (error) {
+            reportError(error, 'fetchTime API');
+            serverTime = new Date(); // Fallback a la hora local si falla la API
         const timeAPIs = [
             {
                 name: 'WorldTimeAPI',
@@ -77,6 +87,9 @@ export async function fetchTime() {
         isSimulated = false;
         if (aviso) aviso.textContent = "📱 Usando la hora de tu dispositivo.";
     }
+
+    // Reiniciar el punto de partida para el cálculo del reloj local
+    startTime = Date.now();
 }
 
 /**
@@ -544,7 +557,6 @@ function initializeTimeSourceToggle() {
         const newSource = currentSource === 'local' ? 'internet' : 'local';
         localStorage.setItem('timeSource', newSource);
         updateButtonText();
-        const sourceName = newSource === 'local' 
             ? 'la hora de tu dispositivo (Local)' 
             : 'la hora de Internet';
         alert(`¡Listo! Ahora se usará ${sourceName}. La página se recargará para aplicar el cambio.`);
