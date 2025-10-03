@@ -20,9 +20,6 @@ export async function fetchTime() {
     const simulatedTime = localStorage.getItem('simulatedTime');
     const aviso = document.getElementById('aviso');
 
-    // Reiniciar el punto de partida para el cálculo del reloj local
-    startTime = Date.now();
-
     if (simulatedTime) {
         const { day, hour, minute } = JSON.parse(simulatedTime);
         const now = new Date();
@@ -30,7 +27,6 @@ export async function fetchTime() {
         serverTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay() + day, hour, minute, 0);
         if (serverTime < now) {
             serverTime.setDate(serverTime.getDate() + 7); // Si el día simulado ya pasó esta semana, simularlo para la próxima
-            serverTime.setDate(serverTime.getDate() + 7); // Si el día simulado ya pasó esta semana, simularlo para la próxima.
         }
         isSimulated = true;
         if (aviso) aviso.textContent = "🕒 Usando hora simulada.";
@@ -44,39 +40,6 @@ export async function fetchTime() {
         } catch (error) {
             reportError(error, 'fetchTime API');
             serverTime = new Date(); // Fallback a la hora local si falla la API
-        const timeAPIs = [
-            {
-                name: 'WorldTimeAPI',
-                url: 'https://worldtimeapi.org/api/timezone/America/Tijuana',
-                parser: (data) => new Date(data.datetime)
-            },
-            {
-                name: 'TimeAPI.io',
-                url: 'https://timeapi.io/api/TimeZone/zone?timeZone=America/Tijuana',
-                parser: (data) => new Date(data.currentLocalTime)
-            }
-            // Se podrían añadir más APIs aquí si fuera necesario
-        ];
-
-        let timeFetched = false;
-        for (const api of timeAPIs) {
-            try {
-                const response = await fetch(api.url);
-                if (!response.ok) throw new Error(`Network response from ${api.name} was not ok`);
-                const data = await response.json();
-                serverTime = api.parser(data);
-                if (aviso) aviso.textContent = `☁️ Hora sincronizada con internet (${api.name}).`;
-                timeFetched = true;
-                break; // Salir del bucle si una API tiene éxito
-            } catch (error) {
-                reportError(error, `fetchTime API (${api.name})`);
-                console.warn(`Fallo al obtener la hora de ${api.name}. Intentando con la siguiente...`);
-            }
-        }
-
-        if (!timeFetched) {
-            serverTime = new Date(); // Fallback a la hora local si todas las APIs fallan
-            isSimulated = false;
             if (aviso) aviso.textContent = "⚠️ No se pudo sincronizar la hora. Usando hora local.";
         } finally {
             isSimulated = false;
@@ -557,6 +520,7 @@ function initializeTimeSourceToggle() {
         const newSource = currentSource === 'local' ? 'internet' : 'local';
         localStorage.setItem('timeSource', newSource);
         updateButtonText();
+        const sourceName = newSource === 'local' 
             ? 'la hora de tu dispositivo (Local)' 
             : 'la hora de Internet';
         alert(`¡Listo! Ahora se usará ${sourceName}. La página se recargará para aplicar el cambio.`);
