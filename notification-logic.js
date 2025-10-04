@@ -39,10 +39,14 @@ export function initializeNotifications() {
     
     // Esperar a que el Service Worker esté listo para interactuar con él
     navigator.serviceWorker.ready.then(() => {
-        console.log('Service Worker listo. Configurando botón de notificaciones.');
+        console.log('Service Worker listo. Configurando notificaciones.');
+        // Enviar la configuración actual al SW al iniciar
+        const leadTime = parseInt(localStorage.getItem('notificationLeadTime') || '2', 10);
+        sendMessageToSW({ type: 'SET_LEAD_TIME', payload: { leadTime } });
+
         // Actualizar el estado del botón de notificaciones al cargar la página
         if (localStorage.getItem('notificationsEnabled') === 'true' && Notification.permission === 'granted') {
-            notificationsBtn.innerHTML = '🔔 Notificaciones';
+            notificationsBtn.innerHTML = '🔔 Notificaciones Activas';
             sendMessageToSW({ type: 'SET_NOTIFICATIONS', payload: { enabled: true } });
         } else {
             notificationsBtn.innerHTML = '🔕 Notificaciones';
@@ -59,7 +63,7 @@ export function initializeNotifications() {
         if (localStorage.getItem('notificationsEnabled') === 'true' && Notification.permission === 'granted') {
             // Si las notificaciones están activadas y el permiso concedido, desactivarlas
             localStorage.setItem('notificationsEnabled', 'false');
-            notificationsBtn.innerHTML = '🔕 Notificaciones';
+            notificationsBtn.innerHTML = '🔕 Notificaciones Inactivas';
             sendMessageToSW({ type: 'SET_NOTIFICATIONS', payload: { enabled: false } });
             console.log('Notificaciones desactivadas.');
         } else {
@@ -68,7 +72,7 @@ export function initializeNotifications() {
                 if (permission === 'granted') {
                     // Si el permiso es concedido, activar notificaciones
                     localStorage.setItem('notificationsEnabled', 'true');
-                    notificationsBtn.innerHTML = '🔔 Notificaciones';
+                    notificationsBtn.innerHTML = '🔔 Notificaciones Activas';
                     sendMessageToSW({ type: 'SET_NOTIFICATIONS', payload: { enabled: true } });
                     console.log('Permiso concedido. Notificaciones activadas.');
                 } else {

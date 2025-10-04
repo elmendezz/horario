@@ -147,7 +147,8 @@ self.addEventListener('periodicsync', (event) => {
 
 let notificationsEnabled = false;
 let notificationTimer = null; // Para el fallback con setTimeout
-const NOTIFICATION_LEAD_TIME_MINUTES = 2; // Notificar 2 minutos antes
+let notificationLeadTime = 2; // Notificar X minutos antes. Valor por defecto.
+
 
 /**
  * Lógica de respaldo (fallback) para navegadores que no soportan Notification Triggers.
@@ -180,13 +181,13 @@ async function scheduleNextNotificationFallback() {
                 const classStartTime = new Date(checkDate);
                 classStartTime.setHours(classItem.time[0], classItem.time[1], 0, 0);
 
-                const notificationTime = new Date(classStartTime.getTime() - (NOTIFICATION_LEAD_TIME_MINUTES * 60 * 1000));
+                const notificationTime = new Date(classStartTime.getTime() - (notificationLeadTime * 60 * 1000));
 
                 if (notificationTime > now) {
                     nextNotificationDetails = {
                         time: notificationTime,
                         title: classItem.name,
-                        body: `Tu clase comienza en ${NOTIFICATION_LEAD_TIME_MINUTES} minutos.`
+                        body: `Tu clase comienza en ${notificationLeadTime} minutos.`
                     };
                     // Rompemos los bucles en cuanto encontramos la más próxima
                     i = 7;
@@ -269,13 +270,13 @@ async function scheduleClassNotificationsWithTriggers() {
                 const classStartTime = new Date(checkDate);
                 classStartTime.setHours(classItem.time[0], classItem.time[1], 0, 0);
 
-                const notificationTime = new Date(classStartTime.getTime() - (NOTIFICATION_LEAD_TIME_MINUTES * 60 * 1000));
+                const notificationTime = new Date(classStartTime.getTime() - (notificationLeadTime * 60 * 1000));
 
                 // Solo programar si la notificación es en el futuro
                 if (notificationTime > now) {
                     try {
                         await self.registration.showNotification(classItem.name, {
-                            body: `Tu clase comienza en ${NOTIFICATION_LEAD_TIME_MINUTES} minutos.`,
+                            body: `Tu clase comienza en ${notificationLeadTime} minutos.`,
                             icon: 'images/icons/icon-192x192.png',
                             tag: `class-${classStartTime.getTime()}`, // Etiqueta única para cada notificación
                             showTrigger: new TimestampTrigger(notificationTime.getTime()),
@@ -303,6 +304,12 @@ self.addEventListener('message', event => {
         notificationsEnabled = payload.enabled;
         console.log(`SW: Notificaciones de clase ${notificationsEnabled ? 'ACTIVADAS' : 'DESACTIVADAS'}.`);
         event.waitUntil(scheduleClassNotifications()); // (Re)programar notificaciones al cambiar el estado
+    }
+
+    if (type === 'SET_LEAD_TIME') {
+        notificationLeadTime = payload.leadTime || 2;
+        console.log(`SW: Tiempo de antelación para notificaciones actualizado a ${notificationLeadTime} minutos.`);
+        event.waitUntil(scheduleClassNotifications()); // Re-programar con el nuevo tiempo
     }
 
     if (type === 'TEST_NOTIFICATION') {
@@ -392,14 +399,35 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-    event.respondWith(
-        caches.match(event.request).then(response => {
-            return response || fetch(event.request).then(fetchResponse => {
-                return caches.open(CACHE_NAME).then(cache => {
-                    cache.put(event.request, fetchResponse.clone());
-                    return fetchResponse;
-                });
-            });
-        })
-    );
+    const request = event.request;
+
+    // Estrategia "Network First, then Cache" para las peticiones a la API (ej. anuncios).
+    if (request.url.includes('/api/')) { // Identifica las llamadas a nuestra API
+        event.respondWith(
+            fetch(request)
+                .then(networkResponse => {
+                    // Si la red responde, actualizamos la caché con la nueva respuesta
+                    // y devolvemos la respuesta de la red.
+                    const responseClone = networkResponse.clone();
+                    caches.open(CACHE_NAME).then(cache => {
+                        cache.put(request, responseClone);
+                    });
+                    return networkResponse;
+                })
+                .catch(error => {
+                    // Si la red falla (estamos offline), intentamos servir desde la caché como respaldo.
+                    console.warn(`SW: Fallo de red para ${request.url}. Intentando desde caché.`);
+                    return caches.match(request);
+                })
+        );
+    } else {
+        // Estrategia "Cache First" para todos los demás recursos (HTML, CSS, JS, imágenes).
+        // Sirve desde la caché si está disponible para una carga súper rápida.
+        // Si no está en caché, lo busca en la red.
+        event.respondWith(
+            caches.match(request).then(cachedResponse => {
+                return cachedResponse || fetch(request);
+            })
+        );
+    }
 });
