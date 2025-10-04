@@ -614,9 +614,11 @@ export function initializeLiveAnnouncements() {
                 return;
             }
             const announcements = await response.json();
+            const dismissedToastIds = JSON.parse(localStorage.getItem('dismissedToastIds')) || [];
 
             announcements.forEach(ann => {
-                if (!shownAnnouncementIds.has(ann.id)) {
+                // Mostrar solo si no se ha mostrado en esta sesión Y no ha sido descartado permanentemente.
+                if (!shownAnnouncementIds.has(ann.id) && !dismissedToastIds.includes(ann.id)) {
                     shownAnnouncementIds.add(ann.id);
                     displayAnnouncementToast(ann);
                 }
@@ -629,6 +631,9 @@ export function initializeLiveAnnouncements() {
     };
 
     const displayAnnouncementToast = (ann) => {
+        // Limpiar toasts anteriores para mostrar solo el más reciente
+        container.innerHTML = '';
+
         const toast = document.createElement('div');
         toast.className = `live-announcement-toast ${ann.type || 'info'}`;
         
@@ -638,18 +643,30 @@ export function initializeLiveAnnouncements() {
                 <p>${ann.content}</p>
             </div>
             <button class="toast-dismiss-btn">&times;</button>
+            <div class="toast-progress-bar"></div>
         `;
 
         const dismiss = () => {
+            // Guardar el ID de este toast para no volver a mostrarlo.
+            const dismissedToastIds = JSON.parse(localStorage.getItem('dismissedToastIds')) || [];
+            if (!dismissedToastIds.includes(ann.id)) {
+                dismissedToastIds.push(ann.id);
+                localStorage.setItem('dismissedToastIds', JSON.stringify(dismissedToastIds));
+            }
+
             toast.classList.add('fade-out');
-            setTimeout(() => toast.remove(), 500);
+            // Esperar a que la animación de salida termine antes de remover
+            toast.addEventListener('animationend', () => toast.remove(), { once: true });
         };
 
         toast.querySelector('.toast-dismiss-btn').addEventListener('click', dismiss);
         container.appendChild(toast);
 
-        // El toast se elimina automáticamente después de 15 segundos
-        setTimeout(dismiss, 15000);
+        // El toast se elimina automáticamente después de 2 segundos (sin guardarlo como descartado)
+        setTimeout(() => {
+            toast.classList.add('fade-out');
+            toast.addEventListener('animationend', () => toast.remove(), { once: true });
+        }, 2000);
     };
 
     // Evitar múltiples intervalos si la función se llama de nuevo

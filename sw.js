@@ -211,39 +211,6 @@ async function checkAndShowDueNotifications() {
     }
 }
 
-    const now = new Date();
-    let nextNotificationDetails = null;
-
-    // Buscar la próxima clase en los siguientes 7 días
-    for (let i = 0; i < 7; i++) {
-        const checkDate = new Date(now);
-        checkDate.setDate(now.getDate() + i);
-        const dayOfWeek = checkDate.getDay();
-
-        if (dayOfWeek >= 1 && dayOfWeek <= 5) { // Lunes a Viernes
-            const todaySchedule = schedule[dayOfWeek - 1];
-            for (const classItem of todaySchedule) {
-                if (classItem.name === "Receso") continue;
-
-                const classStartTime = new Date(checkDate);
-                classStartTime.setHours(classItem.time[0], classItem.time[1], 0, 0);
-
-                const notificationTime = new Date(classStartTime.getTime() - (notificationLeadTime * 60 * 1000));
-
-                if (notificationTime > now) {
-                    nextNotificationDetails = {
-                        time: notificationTime,
-                        title: classItem.name,
-                        body: `Tu clase comienza en ${notificationLeadTime} minutos.`
-                    };
-                    // Rompemos los bucles en cuanto encontramos la más próxima
-                    i = 7;
-                    break;
-                }
-            }
-        }
-    }
-
 /**
  * Orquestador principal de notificaciones.
  * Intenta usar el método moderno (Triggers) y si no puede, usa el fallback (setTimeout).
