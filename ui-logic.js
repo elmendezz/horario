@@ -344,7 +344,7 @@ function initializeUser() {
 
     const displayGreeting = (username) => {
         const hour = new Date().getHours();
-        let greetingIcon = '👋'; // Icono por defecto para el menú
+        let greetingIcon = '👋'; // Icono por defecto
 
         if (hour >= 5 && hour < 12) {
             greetingIcon = '☀️'; // Mañana
@@ -727,17 +727,6 @@ export function initializeUI() {
     initializeDevToolsToggle();
     initializeSWRegistrationButton();
     renderScheduleTable(); // Renderizar la tabla inicialmente
-
-    // Iniciar el ciclo principal de actualización
-    async function main() {
-        await fetchTime();
-        updateSchedule();
-        updateClock();
-
-        setInterval(updateClock, 1000);
-        setInterval(updateSchedule, isSimulated ? 1000 : 10000);
-    }
-    main();
 }
 
 export { isSimulated }; // Exportar para que script.js pueda usarlo en setInterval
