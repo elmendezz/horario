@@ -616,10 +616,14 @@ export function initializeLiveAnnouncements() {
             const announcements = await response.json();
             const dismissedToastIds = JSON.parse(localStorage.getItem('dismissedToastIds')) || [];
 
-            announcements.forEach(ann => {
+            // Tomar solo los 3 anuncios más recientes para evitar una avalancha de toasts.
+            const recentAnnouncements = announcements.slice().reverse().slice(0, 3);
+
+            recentAnnouncements.forEach(ann => {
                 // Mostrar solo si no se ha mostrado en esta sesión Y no ha sido descartado permanentemente.
                 if (!shownAnnouncementIds.has(ann.id) && !dismissedToastIds.includes(ann.id)) {
                     shownAnnouncementIds.add(ann.id);
+                    // Solo se mostrará el toast del anuncio más reciente debido al innerHTML = '' en la función.
                     displayAnnouncementToast(ann);
                 }
             });
