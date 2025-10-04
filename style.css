@@ -74,14 +74,14 @@ body {
     font-family: Arial, sans-serif;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start; /* Alinear contenido arriba para un scroll natural */
     align-items: center;
     min-height: 100vh;
     margin: 0;
     background-color: var(--bg-color);
     color: var(--text-color);
     text-align: center;
-    padding: 1em;
+    padding: 2em 1em; /* Añadir más espacio superior para que no se pegue */
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 .container {
