@@ -323,80 +323,52 @@ function initializeFullscreen() {
  * Inicializa la gestión del nombre de usuario.
  */
 function initializeUser() {
-    const usernameModal = document.getElementById('username-modal');
-    const usernameForm = document.getElementById('username-form');
-    const usernameInput = document.getElementById('username-input');
-    const usernameError = document.getElementById('username-error');
+    const changeUsernameBtn = document.getElementById('change-username-btn');
     const userGreetingEl = document.getElementById('user-greeting');
     const changeUsernameMenuBtn = document.getElementById('change-username-menu-btn');
     const userGreetingMenuEl = document.getElementById('user-greeting-menu');
 
-    const showUsernameModal = () => {
-        usernameModal.style.display = 'flex';
-        usernameInput.value = localStorage.getItem('username') || '';
-        usernameInput.focus();
-    };
+    const setUsername = () => {
+        const currentUsername = localStorage.getItem('username') || 'invitado';
+        const newUsername = prompt('Por favor, ingresa tu nombre o apodo:', currentUsername);
 
-    const hideUsernameModal = () => {
-        usernameModal.style.display = 'none';
-    };
-
-    const saveUsername = (newUsername) => {
-        const sanitizedUsername = newUsername.trim();
-        if (sanitizedUsername) {
+        if (newUsername && newUsername.trim() !== '') {
+            const sanitizedUsername = newUsername.trim();
             localStorage.setItem('username', sanitizedUsername);
             displayGreeting(sanitizedUsername);
-            hideUsernameModal();
-            usernameError.style.display = 'none';
-            // Solo muestra alerta si no es la primera vez.
-            if (localStorage.getItem('hasUsername')) {
-                alert(`¡Nombre guardado como: ${sanitizedUsername}!`);
-            }
-            localStorage.setItem('hasUsername', 'true'); // Marcar que ya se estableció un nombre.
-        } else {
-            usernameError.style.display = 'block';
+            alert(`¡Nombre guardado como: ${sanitizedUsername}!`);
+        } else if (newUsername !== null) { // Si no presionó "Cancelar"
+            alert('El nombre no puede estar vacío.');
         }
     };
 
-    usernameForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        saveUsername(usernameInput.value);
-    };
-
     const displayGreeting = (username) => {
-        const now = new Date();
-        const hour = now.getHours();
-        let greeting = '¡Hola';
+        const hour = new Date().getHours();
         let greetingIcon = '👋'; // Icono por defecto para el menú
 
         if (hour >= 5 && hour < 12) {
-            greeting = '¡Buenos días';
             greetingIcon = '☀️'; // Mañana
         } else if (hour >= 12 && hour < 19) {
-            greeting = '¡Buenas tardes';
             greetingIcon = '🌇'; // Tarde
         } else {
-            greeting = '¡Buenas noches';
             greetingIcon = '🌙'; // Noche
         }
 
         if (username && userGreetingEl) {
-            userGreetingEl.textContent = `${greeting}, ${username}!`;
+            userGreetingEl.textContent = `¡Hola, ${username}!`;
         }
         if (username && userGreetingMenuEl) {
-            userGreetingMenuEl.innerHTML = `${greetingIcon} ${greeting}, ${username}!`;
+            // Usamos innerHTML para poder añadir el ícono
+            userGreetingMenuEl.innerHTML = `${greetingIcon} ¡Hola, ${username}!`;
         }
     };
 
-    changeUsernameMenuBtn?.addEventListener('click', showUsernameModal);
+    changeUsernameBtn?.addEventListener('click', setUsername);
+    changeUsernameMenuBtn?.addEventListener('click', setUsername);
 
-    // Mostrar saludo al cargar la página o pedir nombre si no existe.
+    // Mostrar saludo al cargar la página si ya hay un nombre
     const savedUsername = localStorage.getItem('username');
-    if (savedUsername) {
-        displayGreeting(savedUsername);
-    } else {
-        showUsernameModal();
-    }
+    displayGreeting(savedUsername);
 }
 
 /**
@@ -755,6 +727,17 @@ export function initializeUI() {
     initializeDevToolsToggle();
     initializeSWRegistrationButton();
     renderScheduleTable(); // Renderizar la tabla inicialmente
+
+    // Iniciar el ciclo principal de actualización
+    async function main() {
+        await fetchTime();
+        updateSchedule();
+        updateClock();
+
+        setInterval(updateClock, 1000);
+        setInterval(updateSchedule, isSimulated ? 1000 : 10000);
+    }
+    main();
 }
 
 export { isSimulated }; // Exportar para que script.js pueda usarlo en setInterval

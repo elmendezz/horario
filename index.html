@@ -127,24 +127,14 @@
         </div>
     </div>
     
-    <!-- Modal para solicitar nombre de usuario -->
-    <div id="username-modal" class="modal" style="display: none; background-color: rgba(0,0,0,0.8);">
-        <div class="modal-content" style="max-width: 500px; text-align: center;">
-            <h2>¡Bienvenido/a!</h2>
-            <p>Para una mejor experiencia, por favor ingresa tu nombre o apodo.</p>
-            <form id="username-form" style="margin-top: 1.5em;">
-                <input type="text" id="username-input" placeholder="Tu nombre aquí..." required style="width: 80%; padding: 12px; font-size: 1em; border-radius: 8px; border: 1px solid var(--text-color); background-color: var(--bg-color); color: var(--text-color);">
-                <p id="username-error" style="color: #dc3545; display: none; margin-top: 0.5em;">El nombre no puede estar vacío.</p>
-                <button type="submit" class="styled-button" style="margin-top: 1em;">Guardar y Continuar</button>
-            </form>
-        </div>
-    </div>
-
     <!-- Contenedor para los anuncios en vivo (toasts) -->
     <div id="live-announcements-container"></div>
 
-    <!-- Este es el único script principal necesario. Él se encarga de importar los demás módulos. -->
-    <script type="module" src="script.js"></script>
+    <script type="module" src="schedule-data.js"></script>
+    <script type="module" src="schedule-utils.js"></script>
+    <script type="module" src="notification-logic.js"></script>
+    <script type="module" src="ui-logic.js"></script>
+    
     
     <script>
         if ('serviceWorker' in navigator) {
