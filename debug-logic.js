@@ -182,13 +182,16 @@ function initializeUIControls() {
  */
 function initializeMiscControls() {
     document.getElementById('clear-dismissed-announcements-btn').addEventListener('click', () => {
-        localStorage.removeItem('dismissedAnnouncements');
-        alert('Anuncios descartados limpiados. Recarga la página principal para verlos de nuevo.');
+        const userConfirmed = confirm('¿Estás seguro de que quieres limpiar los anuncios descartados? Volverán a aparecer en la página principal.');
+        if (userConfirmed) {
+            localStorage.removeItem('dismissedAnnouncements');
+            localStorage.removeItem('dismissedToastIds');
+            alert('Anuncios descartados limpiados. Recarga la página principal para verlos de nuevo.');
+        }
     });
 
     document.getElementById('test-error-btn').addEventListener('click', () => {
         try {
-            // Forzamos un error
             nonExistentFunction();
         } catch (error) {
             reportError(error, 'Error de Prueba Manual');

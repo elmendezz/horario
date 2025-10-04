@@ -323,52 +323,80 @@ function initializeFullscreen() {
  * Inicializa la gestión del nombre de usuario.
  */
 function initializeUser() {
-    const changeUsernameBtn = document.getElementById('change-username-btn');
+    const usernameModal = document.getElementById('username-modal');
+    const usernameForm = document.getElementById('username-form');
+    const usernameInput = document.getElementById('username-input');
+    const usernameError = document.getElementById('username-error');
     const userGreetingEl = document.getElementById('user-greeting');
     const changeUsernameMenuBtn = document.getElementById('change-username-menu-btn');
     const userGreetingMenuEl = document.getElementById('user-greeting-menu');
 
-    const setUsername = () => {
-        const currentUsername = localStorage.getItem('username') || 'invitado';
-        const newUsername = prompt('Por favor, ingresa tu nombre o apodo:', currentUsername);
+    const showUsernameModal = () => {
+        usernameModal.style.display = 'flex';
+        usernameInput.value = localStorage.getItem('username') || '';
+        usernameInput.focus();
+    };
 
-        if (newUsername && newUsername.trim() !== '') {
-            const sanitizedUsername = newUsername.trim();
+    const hideUsernameModal = () => {
+        usernameModal.style.display = 'none';
+    };
+
+    const saveUsername = (newUsername) => {
+        const sanitizedUsername = newUsername.trim();
+        if (sanitizedUsername) {
             localStorage.setItem('username', sanitizedUsername);
             displayGreeting(sanitizedUsername);
-            alert(`¡Nombre guardado como: ${sanitizedUsername}!`);
-        } else if (newUsername !== null) { // Si no presionó "Cancelar"
-            alert('El nombre no puede estar vacío.');
+            hideUsernameModal();
+            usernameError.style.display = 'none';
+            // Solo muestra alerta si no es la primera vez.
+            if (localStorage.getItem('hasUsername')) {
+                alert(`¡Nombre guardado como: ${sanitizedUsername}!`);
+            }
+            localStorage.setItem('hasUsername', 'true'); // Marcar que ya se estableció un nombre.
+        } else {
+            usernameError.style.display = 'block';
         }
     };
 
+    usernameForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        saveUsername(usernameInput.value);
+    };
+
     const displayGreeting = (username) => {
-        const hour = new Date().getHours();
-        let greetingIcon = '👋'; // Icono por defecto
+        const now = new Date();
+        const hour = now.getHours();
+        let greeting = '¡Hola';
+        let greetingIcon = '👋'; // Icono por defecto para el menú
 
         if (hour >= 5 && hour < 12) {
+            greeting = '¡Buenos días';
             greetingIcon = '☀️'; // Mañana
         } else if (hour >= 12 && hour < 19) {
+            greeting = '¡Buenas tardes';
             greetingIcon = '🌇'; // Tarde
         } else {
+            greeting = '¡Buenas noches';
             greetingIcon = '🌙'; // Noche
         }
 
         if (username && userGreetingEl) {
-            userGreetingEl.textContent = `¡Hola, ${username}!`;
+            userGreetingEl.textContent = `${greeting}, ${username}!`;
         }
         if (username && userGreetingMenuEl) {
-            // Usamos innerHTML para poder añadir el ícono
-            userGreetingMenuEl.innerHTML = `${greetingIcon} ¡Hola, ${username}!`;
+            userGreetingMenuEl.innerHTML = `${greetingIcon} ${greeting}, ${username}!`;
         }
     };
 
-    changeUsernameBtn?.addEventListener('click', setUsername);
-    changeUsernameMenuBtn?.addEventListener('click', setUsername);
+    changeUsernameMenuBtn?.addEventListener('click', showUsernameModal);
 
-    // Mostrar saludo al cargar la página si ya hay un nombre
+    // Mostrar saludo al cargar la página o pedir nombre si no existe.
     const savedUsername = localStorage.getItem('username');
-    displayGreeting(savedUsername);
+    if (savedUsername) {
+        displayGreeting(savedUsername);
+    } else {
+        showUsernameModal();
+    }
 }
 
 /**
