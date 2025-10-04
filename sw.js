@@ -145,10 +145,6 @@ self.addEventListener('periodicsync', (event) => {
 
 // =================== LÓGICA DE NOTIFICACIONES DE CLASES ===================
 
-let notificationsEnabled = false;
-let notificationTimer = null; // Para el fallback con setTimeout
-let notificationLeadTime = 2; // Notificar X minutos antes. Valor por defecto.
-
 
 /**
  * Lógica de respaldo (fallback) para navegadores que no soportan Notification Triggers.
@@ -156,6 +152,10 @@ let notificationLeadTime = 2; // Notificar X minutos antes. Valor por defecto.
  */
 async function scheduleNextNotificationFallback() {
     clearTimeout(notificationTimer); // Limpiar cualquier temporizador pendiente
+    // En el nuevo modelo, esta función ya no programa con setTimeout.
+    // Su propósito es simplemente asegurar que el estado es correcto.
+    // La función checkAndShowDueNotifications() se encargará de mostrar las notificaciones.
+    console.log('SW (Fallback): Verificando estado de notificaciones. La próxima sincronización mostrará las notificaciones pendientes.');
 
     if (!notificationsEnabled) {
         console.log('SW (Fallback): Notificaciones desactivadas.');
@@ -163,6 +163,53 @@ async function scheduleNextNotificationFallback() {
     }
 
     const { schedule } = await getSchedule();
+    // Simplemente verificamos que todo esté en orden. No se necesita más aquí.
+}
+
+/**
+ * (NUEVA FUNCIÓN)
+ * Esta función se ejecuta periódicamente y al inicio.
+ * Comprueba si alguna notificación de clase debería haberse mostrado y la muestra.
+ * Es el corazón del nuevo sistema de fallback robusto.
+ */
+async function checkAndShowDueNotifications() {
+    if (!notificationsEnabled || self.Notification.showTrigger) {
+        // No hacer nada si las notificaciones están desactivadas o si el navegador usa el método moderno (Triggers).
+        return;
+    }
+
+    console.log('SW (Fallback Check): Comprobando si hay notificaciones pendientes...');
+    const { schedule } = await getSchedule();
+    const now = new Date();
+
+    for (let i = 0; i < 2; i++) { // Comprobar hoy y mañana
+        const checkDate = new Date();
+        checkDate.setDate(now.getDate() + i);
+        const dayOfWeek = checkDate.getDay();
+
+        if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+            const daySchedule = schedule[dayOfWeek - 1];
+            for (const classItem of daySchedule) {
+                if (classItem.name === "Receso") continue;
+
+                const classStartTime = new Date(checkDate);
+                classStartTime.setHours(classItem.time[0], classItem.time[1], 0, 0);
+                const notificationTime = new Date(classStartTime.getTime() - (notificationLeadTime * 60 * 1000));
+
+                // Comprobar si la notificación debió mostrarse en el último intervalo de chequeo (ej. 15 mins)
+                const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60 * 1000);
+                if (notificationTime > fifteenMinutesAgo && notificationTime <= now) {
+                    console.log(`SW (Fallback Check): Mostrando notificación pendiente para ${classItem.name}`);
+                    self.registration.showNotification(classItem.name, {
+                        body: `Tu clase está por comenzar.`, // Mensaje genérico ya que el tiempo exacto pasó
+                        icon: 'images/icons/icon-192x192.png',
+                        tag: `class-${classStartTime.getTime()}`
+                    });
+                }
+            }
+        }
+    }
+}
 
     const now = new Date();
     let nextNotificationDetails = null;
@@ -196,25 +243,6 @@ async function scheduleNextNotificationFallback() {
             }
         }
     }
-
-    if (nextNotificationDetails) {
-        const timeUntilNotification = nextNotificationDetails.time.getTime() - now.getTime();
-        console.log(`SW (Fallback): Próxima notificación para "${nextNotificationDetails.title}" programada en ${Math.round(timeUntilNotification / 60000)} minutos.`);
-
-        notificationTimer = setTimeout(() => {
-            self.registration.showNotification(nextNotificationDetails.title, {
-                body: nextNotificationDetails.body,
-                icon: 'images/icons/icon-192x192.png',
-                tag: `class-${nextNotificationDetails.time.getTime()}` // Etiqueta única
-            });
-            // Una vez mostrada, se auto-invoca para programar la siguiente.
-            // Se añade un pequeño delay para no volver a programar la misma.
-            setTimeout(scheduleNextNotificationFallback, 2000);
-        }, timeUntilNotification);
-    } else {
-        console.log('SW (Fallback): No hay próximas clases para notificar.');
-    }
-}
 
 /**
  * Orquestador principal de notificaciones.
@@ -314,17 +342,24 @@ self.addEventListener('message', event => {
 
     if (type === 'TEST_NOTIFICATION') {
         const delaySeconds = event.data.delay || 0;
-        console.log(`SW: Recibida solicitud para notificación de prueba en ${delaySeconds}s.`);
-        
-        // Usar un temporizador diferente para la prueba para no interferir
-        setTimeout(() => {
-            self.registration.showNotification('¡Notificación de Prueba! 🧪', {
-                body: 'Si ves esto, las notificaciones funcionan incluso con la app cerrada.',
-                icon: 'images/icons/icon-192x192.png',
-                tag: 'test-notification'
-            });
-            console.log('SW: Notificación de prueba enviada.');
-        }, delaySeconds * 1000);
+        console.log(`SW: Solicitud para notificación de prueba en ${delaySeconds}s.`);
+
+        const options = {
+            body: 'Si ves esto, las notificaciones funcionan incluso con la app cerrada.',
+            icon: 'images/icons/icon-192x192.png',
+            tag: 'test-notification'
+        };
+
+        if (self.Notification.showTrigger) {
+            // Método moderno y fiable
+            options.showTrigger = new TimestampTrigger(Date.now() + delaySeconds * 1000);
+            event.waitUntil(self.registration.showNotification('¡Notificación de Prueba! 🧪', options));
+            console.log('SW: Notificación de prueba programada con TimestampTrigger.');
+        } else {
+            // Fallback con setTimeout (solo para la prueba, ya que es a corto plazo)
+            setTimeout(() => self.registration.showNotification('¡Notificación de Prueba! 🧪', options), delaySeconds * 1000);
+            console.log('SW: Notificación de prueba programada con setTimeout (fallback).');
+        }
     }
 
     if (type === 'NEW_ANNOUNCEMENT_PUSH') {
@@ -350,9 +385,7 @@ self.addEventListener('sync', event => {
         event.waitUntil(
             caches.open(CACHE_NAME).then(cache => {
                 console.log('SW: Re-cacheando archivos principales.');
-                // Aquí podrías volver a descargar los archivos importantes
-                // para asegurar que la app esté actualizada la próxima vez que se abra.
-                return cache.addAll(urlsToCache);
+                return cache.addAll(urlsToCache).catch(err => console.error("SW Sync: Fallo al re-cachear", err));
             })
         );
     }
@@ -404,7 +437,10 @@ self.addEventListener('activate', event => {
             self.registration.periodicSync?.register('update-widget-periodic', {
                 minInterval: 15 * 60 * 1000, // Cada 15 minutos
             }).catch(e => console.error('SW: Fallo al registrar la sincronización periódica:', e)),
-            scheduleClassNotifications() // Programar notificaciones al activar
+            // Al activar, programamos las notificaciones de clase y también hacemos
+            // una comprobación inicial para el fallback.
+            scheduleClassNotifications(),
+            checkAndShowDueNotifications()
         ])
     );
     return self.clients.claim();
