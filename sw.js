@@ -341,6 +341,12 @@ async function scheduleClassNotificationsWithTriggers() {
 self.addEventListener('message', event => {
     const { type, payload } = event.data;
 
+    if (type === 'GET_VERSION') {
+        console.log('SW: Recibida solicitud de versión.');
+        event.source.postMessage({ type: 'SW_VERSION', version: CACHE_NAME });
+        return;
+    }
+
     if (type === 'SET_NOTIFICATIONS') {
         notificationsEnabled = payload.enabled;
         event.waitUntil(setSetting('notificationsEnabled', notificationsEnabled));
