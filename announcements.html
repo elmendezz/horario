@@ -51,9 +51,17 @@
         .announcement-list li {
             background-color: var(--bg-color);
             padding: 1em;
+            padding-left: 3em; /* Espacio para el checkbox */
             border-radius: 8px;
             margin-bottom: 1em;
             border-left: 4px solid;
+            position: relative;
+        }
+        .announcement-list li input[type="checkbox"] {
+            position: absolute;
+            left: 1em;
+            top: 50%;
+            transform: translateY(-50%) scale(1.5);
         }
         .announcement-list li.info { border-left-color: #17a2b8; }
         .announcement-list li.warning { border-left-color: #ffc107; }
@@ -73,7 +81,7 @@
 <body>
 
     <div class="main-container">
-        <h1>Toolbox de Anuncios</h1>
+        <h1 id="admin-greeting">Toolbox de Anuncios</h1>
 
         <!-- Card para crear anuncios -->
         <div class="toolbox-card">
@@ -105,7 +113,7 @@
             <ul id="announcement-list">
                 <li>Cargando anuncios...</li>
             </ul>
-            <button id="delete-all-btn" class="styled-button delete-button">Borrar Todos los Anuncios</button>
+            <button id="delete-selected-btn" class="styled-button delete-button">Borrar Seleccionados</button>
         </div>
 
         <div style="text-align: center;">
@@ -120,22 +128,45 @@
 
         const announcementList = document.getElementById('announcement-list');
         const announcementChannel = new BroadcastChannel('announcement_channel');
+        let currentAdmin = null;
 
         async function fetchAnnouncements() {
             try {
                 const response = await fetch('/api/messages?announcements=true');
                 const announcements = await response.json();
                 announcementList.innerHTML = '';
+
                 if (announcements.length === 0) {
                     announcementList.innerHTML = '<li>No hay anuncios para mostrar.</li>';
                 } else {
                     announcements.slice().reverse().forEach(ann => {
                         const li = document.createElement('li');
                         li.className = ann.type || 'info';
-                        li.innerHTML = `<h3>${ann.title}</h3><p>${ann.content}</p>`;
+                        
+                        // Solo el super-admin o el autor pueden borrar
+                        const canDelete = currentAdmin.profile === 'elmendezz' || currentAdmin.profile === ann.author;
+                        const checkboxHTML = canDelete 
+                            ? `<input type="checkbox" value="${ann.id}" class="delete-checkbox">` 
+                            : '';
+
+                        const authorHTML = ann.author ? `<small style="color: #888;">Por: ${ann.author}</small>` : '';
+
+                        li.innerHTML = `
+                            ${checkboxHTML}
+                            <div>
+                                <h3>${ann.title}</h3>
+                                <p>${ann.content}</p>
+                                ${authorHTML}
+                            </div>
+                        `;
                         announcementList.appendChild(li);
                     });
                 }
+
+                // Deshabilitar el botón de borrado si no hay checkboxes
+                const checkboxes = document.querySelectorAll('.delete-checkbox');
+                document.getElementById('delete-selected-btn').style.display = checkboxes.length > 0 ? 'block' : 'none';
+
             } catch (error) {
                 announcementList.innerHTML = '<li>Error al cargar los anuncios.</li>';
                 console.error(error);
@@ -151,7 +182,7 @@
             await fetch('/api/messages', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type: 'announcement', title, content, announcementType: type })
+                body: JSON.stringify({ type: 'announcement', title, content, announcementType: type, author: currentAdmin.profile })
             });
             
             alert('Anuncio publicado. Se reflejará en la app principal en breve.');
@@ -160,17 +191,47 @@
             announcementChannel.postMessage({ type: 'NEW_ANNOUNCEMENT' });
         });
 
-        document.getElementById('delete-all-btn').addEventListener('click', async () => {
-            if (!confirm('¿Estás seguro de que quieres borrar TODOS los anuncios? Esta acción no se puede deshacer.')) return;
+        document.getElementById('delete-selected-btn').addEventListener('click', async () => {
+            const selectedIds = Array.from(document.querySelectorAll('.delete-checkbox:checked')).map(cb => cb.value);
 
-            await fetch('/api/messages?announcements=true', { method: 'DELETE' });
+            if (selectedIds.length === 0) {
+                alert('No has seleccionado ningún anuncio para borrar.');
+                return;
+            }
+
+            if (!confirm(`¿Estás seguro de que quieres borrar ${selectedIds.length} anuncio(s)?`)) return;
+
+            await fetch('/api/messages?announcements=true', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: selectedIds })
+            });
             
-            alert('Todos los anuncios han sido borrados.');
+            alert('Los anuncios seleccionados han sido borrados.');
             fetchAnnouncements();
             announcementChannel.postMessage({ type: 'NEW_ANNOUNCEMENT' });
         });
 
-        fetchAnnouncements();
+        // Lógica de autenticación por PIN
+        document.addEventListener('DOMContentLoaded', () => {
+            const admins = {
+                '26435': { profile: 'elmendezz', greeting: '¡Hola, Super Admin!' },
+                '81532': { profile: 'Gustavo', greeting: '¡Hola, Gustavo!' },
+                '49671': { profile: 'Eveleth', greeting: '¡Hola, Eveleth!' }
+            };
+
+            const pin = prompt('Ingresa tu PIN de administrador para continuar:');
+            currentAdmin = admins[pin];
+
+            if (currentAdmin) {
+                document.getElementById('admin-greeting').textContent = currentAdmin.greeting;
+                fetchAnnouncements();
+            } else {
+                alert('PIN incorrecto. No tienes acceso a esta página.');
+                window.location.href = 'index.html';
+            }
+        });
+
     </script>
 
 </body>

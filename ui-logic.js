@@ -480,10 +480,18 @@ export async function initializeAnnouncements() {
             card.className = `announcement-card ${ann.type || 'info'}`;
             card.dataset.id = ann.id;
 
+            const date = ann.timestamp ? new Date(ann.timestamp) : null;
+            const formattedDate = date ? date.toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }) : 'Fecha no disponible';
+            const author = ann.author || 'Admin';
+
             card.innerHTML = `
                 <button class="announcement-dismiss-btn" aria-label="Descartar anuncio">&times;</button>
                 <h3>${ann.title}</h3>
                 <p>${ann.content}</p>
+                <div class="announcement-meta">
+                    <button class="info-btn" aria-label="Información del anuncio">ⓘ</button>
+                    <span class="info-tooltip">Publicado por ${author} el ${formattedDate}</span>
+                </div>
             `;
 
             card.querySelector('.announcement-dismiss-btn').addEventListener('click', () => {

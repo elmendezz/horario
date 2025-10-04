@@ -68,6 +68,39 @@
     right: 10px;
     background: none; border: none; font-size: 1.2em; cursor: pointer; color: var(--text-color);
 }
+.announcement-meta {
+    margin-top: 1em;
+    text-align: right;
+    position: relative;
+}
+.info-btn {
+    background: none;
+    border: 1px solid var(--text-color);
+    color: var(--text-color);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 0.8em;
+    line-height: 22px;
+    cursor: pointer;
+    padding: 0;
+}
+.info-tooltip {
+    visibility: hidden;
+    width: max-content;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%; /* Posicionar encima del botón */
+    right: 0;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.info-btn:hover + .info-tooltip { visibility: visible; opacity: 1; }
 
 
 body {

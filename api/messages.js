@@ -76,31 +76,35 @@ export default async function handler(req, res) {
 
     // --- LÓGICA DE ANUNCIOS (POST para agregar) ---
     if (req.method === "POST" && req.body.type === 'announcement') {
-        const { title, content, announcementType } = req.body;
+        const { title, content, announcementType, author } = req.body;
         if (!title || !content) return res.status(400).json({ error: "Faltan datos en el anuncio." });
 
         const { content: announcements, sha: announcementsSha } = await getFile(announcementsFile);
         
         const newAnnouncement = {
             id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`, // ID único
+            timestamp: new Date().toISOString(),
             type: announcementType || 'info',
             title,
-            content
+            content,
+            author: author || 'Admin' // Guardar el autor del anuncio
         };
         announcements.push(newAnnouncement);
         await updateFile(announcementsFile, announcements, announcementsSha, `Nuevo anuncio: ${title}`);
         return res.status(201).json({ success: true, message: "Anuncio publicado." });
     }
 
-    // --- LÓGICA DE ANUNCIOS (DELETE para borrar todos) ---
+    // --- LÓGICA DE ANUNCIOS (DELETE para borrar selectivamente) ---
     if (req.method === 'DELETE' && req.query.announcements === 'true') {
-        const { sha: announcementsSha } = await getFile(announcementsFile);
-        // Si no hay archivo (o está vacío y no tiene SHA), no hay nada que hacer.
-        if (!announcementsSha) {
-            return res.status(200).json({ success: true, message: "No hay anuncios que borrar." });
-        }
-        await updateFile(announcementsFile, [], announcementsSha, "Borrar todos los anuncios");
-        return res.status(200).json({ success: true, message: "Todos los anuncios han sido borrados." });
+        const { content: announcements, sha: announcementsSha } = await getFile(announcementsFile);
+        const { ids } = req.body; // Array de IDs a borrar
+
+        if (!ids || !Array.isArray(ids)) return res.status(400).json({ error: "Se requiere un array de IDs." });
+
+        const updatedAnnouncements = announcements.filter(ann => !ids.includes(ann.id));
+        
+        await updateFile(announcementsFile, updatedAnnouncements, announcementsSha, `Borrar ${ids.length} anuncio(s)`);
+        return res.status(200).json({ success: true, message: "Anuncios seleccionados borrados." });
     }
 
     // --- LÓGICA DE ANUNCIOS (GET) ---
