@@ -135,9 +135,7 @@ self.addEventListener('periodicsync', (event) => {
   if (event.tag === 'update-widget-periodic') {
     // Aprovechamos la sincronización periódica para re-evaluar las notificaciones,
     // lo que hace más robusto el sistema de fallback.
-    if (notificationsEnabled && !self.Notification.showTrigger) {
-        scheduleNextNotificationFallback();
-    }
+    event.waitUntil(checkAndShowDueNotifications());
     event.waitUntil(updateWidget());
   }
 });

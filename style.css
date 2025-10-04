@@ -490,7 +490,6 @@ body {
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    overflow-y: auto; /* Permite el scroll si el contenido es muy largo */
 }
 
 .side-menu.open {
@@ -504,6 +503,12 @@ body {
     font-size: 2em;
     cursor: pointer;
     align-self: flex-end;
+}
+
+.menu-content {
+    flex-grow: 1; /* Ocupa el espacio restante */
+    overflow-y: auto; /* Permite el scroll vertical */
+    padding-right: 10px; /* Espacio para la barra de scroll */
 }
 
 .menu-greeting {
