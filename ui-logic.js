@@ -449,10 +449,10 @@ function initializeCacheControls() {
 /**
  * Carga y muestra los anuncios del administrador.
  */
-async function initializeAnnouncements() {
+export async function initializeAnnouncements() {
     const container = document.getElementById('announcements-container');
     if (!container) return;
-
+    container.innerHTML = ''; // Limpiar antes de renderizar
     try {
         const response = await fetch('/api/messages?announcements=true');
         if (!response.ok) throw new Error('Failed to fetch announcements');
@@ -460,14 +460,21 @@ async function initializeAnnouncements() {
 
         const dismissedAnnouncements = JSON.parse(localStorage.getItem('dismissedAnnouncements')) || [];
 
+        // Mostrar siempre los 3 anuncios más recientes
+        const recentAnnouncements = announcements.slice().reverse().slice(0, 3);
+
         let hasUnread = false;
 
-        announcements.forEach(ann => {
-            if (dismissedAnnouncements.includes(ann.id)) {
-                return; // No mostrar si ya fue descartado
-            }
+        if (recentAnnouncements.length > 0) {
+            container.innerHTML = '<h2 style="color: var(--accent-color); text-align: center; width: 100%; margin-bottom: 1em;">Anuncios Recientes</h2>';
+        }
 
-            hasUnread = true; // Si llegamos aquí, hay al menos un anuncio sin leer
+        recentAnnouncements.forEach(ann => {
+            if (dismissedAnnouncements.includes(ann.id)) {
+                // No marcar como no leído si ya fue descartado
+            } else {
+                hasUnread = true;
+            }
 
             const card = document.createElement('div');
             card.className = `announcement-card ${ann.type || 'info'}`;
@@ -534,11 +541,15 @@ function initializeTimeSourceToggle() {
  * Inicializa la carga de anuncios en tiempo real (polling).
  * Los anuncios se mostrarán como toasts en la parte inferior de la página.
  */
-function initializeLiveAnnouncements() {
+export function initializeLiveAnnouncements() {
     const container = document.getElementById('live-announcements-container');
     if (!container) return;
 
-    let shownAnnouncementIds = new Set(); // Usamos un Set para eficiencia
+    // Usar una variable global para que no se reinicie el Set cada vez que se llama.
+    if (!window.shownAnnouncementIds) {
+        window.shownAnnouncementIds = new Set();
+    }
+    let shownAnnouncementIds = window.shownAnnouncementIds;
 
     const fetchAndDisplayAnnouncements = async () => {
         try {
@@ -588,7 +599,22 @@ function initializeLiveAnnouncements() {
         setTimeout(dismiss, 15000);
     };
 
-    setInterval(fetchAndDisplayAnnouncements, 30000); // Consultar cada 30 segundos
+    // Evitar múltiples intervalos si la función se llama de nuevo
+    if (!window.announcementInterval) {
+        fetchAndDisplayAnnouncements(); // Llamar una vez al inicio
+        window.announcementInterval = setInterval(fetchAndDisplayAnnouncements, 30000); // Consultar cada 30 segundos
+    } else {
+        // Si el intervalo ya existe, solo ejecuta la búsqueda una vez para actualizar.
+        fetchAndDisplayAnnouncements();
+    }
+}
+
+/**
+ * Función unificada para actualizar ambos tipos de anuncios.
+ */
+export function updateAnnouncements() {
+    initializeAnnouncements();
+    initializeLiveAnnouncements();
 }
 
 /**
@@ -597,7 +623,8 @@ function initializeLiveAnnouncements() {
 export function initializeUI() {
     initializeMenu();
     initializeThemeToggle();
-    initializeAnnouncements();
+    // Llamada unificada para inicializar los anuncios
+    updateAnnouncements();
     initializeModal();
     initializeFullscreen();
     initializeCacheControls();
@@ -605,7 +632,6 @@ export function initializeUI() {
     initializeScheduleToggle();
     initializeTimeSourceToggle();
     initializeDevToolsToggle();
-    initializeLiveAnnouncements(); // Añadido para los anuncios en vivo
     renderScheduleTable(); // Renderizar la tabla inicialmente
 }
 
