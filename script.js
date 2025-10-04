@@ -1,6 +1,7 @@
 // c:\Users\Admin\Documents\GitHub\horario\script.js
 
 import { fetchTime, initializeUI, updateSchedule, updateClock, isSimulated, updateAnnouncements } from './ui-logic.js';
+import { initializeNotifications } from './notification-logic.js';
 import { reportError } from './error-logic.js';
 
 // Versión: 40 (Modularizado)
@@ -20,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Inicializar la lógica de tiempo y luego la UI y notificaciones
     fetchTime().then(() => {
         initializeUI(); // Inicializar todos los componentes de la UI
+        initializeNotifications(); // Inicializar la lógica de notificaciones
 
         // Ejecutar una vez de inmediato para evitar el retraso inicial
         updateSchedule();

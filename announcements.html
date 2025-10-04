@@ -148,6 +148,12 @@
             });
         }
 
+        // Canal para notificar a otras pestañas que los anuncios han cambiado.
+        const broadcastChannel = new BroadcastChannel('announcement_channel');
+        function notifyOtherTabs() {
+            broadcastChannel.postMessage({ type: 'NEW_ANNOUNCEMENT' });
+        }
+
         // Function to mark all announcements as read
         function markAllAnnouncementsAsRead() {
             localStorage.removeItem('dismissedAnnouncements');
@@ -191,6 +197,7 @@
 
                 alert('Anuncio publicado con éxito.');
                 document.getElementById('add-announcement-form').reset();
+                notifyOtherTabs(); // Notificar a otras pestañas para actualización instantánea
                 fetchAnnouncements(); // Actualizar la lista de anuncios
             } catch (error) {
                 alert(`Fallo al publicar el anuncio: ${error.message}`);
