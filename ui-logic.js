@@ -531,6 +531,67 @@ function initializeTimeSourceToggle() {
 }
 
 /**
+ * Inicializa la carga de anuncios en tiempo real (polling).
+ * Los anuncios se mostrarán como toasts en la parte inferior de la página.
+ */
+function initializeLiveAnnouncements() {
+    const container = document.getElementById('live-announcements-container');
+    if (!container) return;
+
+    let shownAnnouncementIds = new Set(); // Usamos un Set para eficiencia
+
+    const fetchAndDisplayAnnouncements = async () => {
+        try {
+            // Usamos 'no-cache' para asegurarnos de obtener siempre la última versión
+            const response = await fetch('/api/messages?announcements=true', { cache: 'no-cache' });
+            if (!response.ok) {
+                // No lanzamos error para no llenar la consola en cada fallo de polling
+                console.warn('Live Announcements: Could not fetch from server.');
+                return;
+            }
+            const announcements = await response.json();
+
+            announcements.forEach(ann => {
+                if (!shownAnnouncementIds.has(ann.id)) {
+                    shownAnnouncementIds.add(ann.id);
+                    displayAnnouncementToast(ann);
+                }
+            });
+
+        } catch (error) {
+            // Silenciamos el error en la consola para no ser intrusivos
+            // console.error("Error polling for live announcements:", error);
+        }
+    };
+
+    const displayAnnouncementToast = (ann) => {
+        const toast = document.createElement('div');
+        toast.className = `live-announcement-toast ${ann.type || 'info'}`;
+        
+        toast.innerHTML = `
+            <div class="toast-content">
+                <h3>${ann.title}</h3>
+                <p>${ann.content}</p>
+            </div>
+            <button class="toast-dismiss-btn">&times;</button>
+        `;
+
+        const dismiss = () => {
+            toast.classList.add('fade-out');
+            setTimeout(() => toast.remove(), 500);
+        };
+
+        toast.querySelector('.toast-dismiss-btn').addEventListener('click', dismiss);
+        container.appendChild(toast);
+
+        // El toast se elimina automáticamente después de 15 segundos
+        setTimeout(dismiss, 15000);
+    };
+
+    setInterval(fetchAndDisplayAnnouncements, 30000); // Consultar cada 30 segundos
+}
+
+/**
  * Función principal para inicializar toda la lógica de la UI.
  */
 export function initializeUI() {
@@ -544,6 +605,7 @@ export function initializeUI() {
     initializeScheduleToggle();
     initializeTimeSourceToggle();
     initializeDevToolsToggle();
+    initializeLiveAnnouncements(); // Añadido para los anuncios en vivo
     renderScheduleTable(); // Renderizar la tabla inicialmente
 }
 
