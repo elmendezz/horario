@@ -528,7 +528,6 @@ export async function initializeAnnouncements() {
             `;
 
             card.innerHTML = `
-                <button class="announcement-dismiss-btn" aria-label="Descartar anuncio">&times;</button>
                 <h3>${ann.title}</h3>
                 <p>${ann.content}</p>
                 <div class="announcement-footer">
@@ -539,15 +538,6 @@ export async function initializeAnnouncements() {
                     </div>
                 </div>
             `;
-
-            card.querySelector('.announcement-dismiss-btn').addEventListener('click', () => {
-                dismissedAnnouncements.push(ann.id);
-                localStorage.setItem('dismissedAnnouncements', JSON.stringify(dismissedAnnouncements));
-                card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-                card.style.opacity = '0';
-                card.style.transform = 'scale(0.95)';
-                setTimeout(() => card.remove(), 300);
-            });
 
             card.querySelector('.add-reaction-btn').addEventListener('click', (e) => {
                 e.currentTarget.closest('.reactions-container').classList.toggle('open');

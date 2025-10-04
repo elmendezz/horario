@@ -326,6 +326,18 @@ self.addEventListener('message', event => {
             console.log('SW: Notificación de prueba enviada.');
         }, delaySeconds * 1000);
     }
+
+    if (type === 'NEW_ANNOUNCEMENT_PUSH') {
+        const { title, content } = payload;
+        console.log('SW: Recibida solicitud para notificar nuevo anuncio.');
+        event.waitUntil(
+            self.registration.showNotification(`📢 Nuevo Anuncio: ${title}`, {
+                body: content,
+                icon: 'images/icons/icon-192x192.png',
+                tag: 'new-announcement' // Etiqueta para agrupar o reemplazar notificaciones de anuncios
+            })
+        );
+    }
 });
 
 // =================== LÓGICA DE BACKGROUND SYNC (ONE-OFF) ===================
