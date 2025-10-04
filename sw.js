@@ -1,6 +1,6 @@
 // sw.js (Versión con Widgets)
 
-const CACHE_NAME = 'horario-1cv-cache-v90'; // Incrementamos la versión del caché
+const CACHE_NAME = 'horario-1cv-cache-v91'; // Incrementamos la versión del caché
 const urlsToCache = [
     '/', 
     'index.html', 
@@ -143,6 +143,54 @@ self.addEventListener('periodicsync', (event) => {
 
 // =================== LÓGICA DE NOTIFICACIONES DE CLASES ===================
 
+let notificationsEnabled = false;
+let notificationLeadTime = 2; // Notificar X minutos antes. Valor por defecto.
+
+/**
+ * Abre la base de datos IndexedDB.
+ */
+function openDB() {
+    return new Promise((resolve, reject) => {
+        const request = self.indexedDB.open('sw-settings-db', 1);
+        request.onupgradeneeded = event => {
+            const db = event.target.result;
+            db.createObjectStore('settings');
+        };
+        request.onsuccess = event => resolve(event.target.result);
+        request.onerror = event => reject(event.target.error);
+    });
+}
+
+/**
+ * Guarda un valor en IndexedDB.
+ * @param {string} key
+ * @param {any} value
+ */
+async function setSetting(key, value) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(['settings'], 'readwrite');
+        const store = transaction.objectStore('settings');
+        const request = store.put(value, key);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+    });
+}
+
+/**
+ * Obtiene un valor de IndexedDB.
+ * @param {string} key
+ */
+async function getSetting(key) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(['settings'], 'readonly');
+        const store = transaction.objectStore('settings');
+        const request = store.get(key);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
 
 /**
  * Lógica de respaldo (fallback) para navegadores que no soportan Notification Triggers.
@@ -295,12 +343,14 @@ self.addEventListener('message', event => {
 
     if (type === 'SET_NOTIFICATIONS') {
         notificationsEnabled = payload.enabled;
+        event.waitUntil(setSetting('notificationsEnabled', notificationsEnabled));
         console.log(`SW: Notificaciones de clase ${notificationsEnabled ? 'ACTIVADAS' : 'DESACTIVADAS'}.`);
         event.waitUntil(scheduleClassNotifications()); // (Re)programar notificaciones al cambiar el estado
     }
 
     if (type === 'SET_LEAD_TIME') {
         notificationLeadTime = payload.leadTime || 2;
+        event.waitUntil(setSetting('notificationLeadTime', notificationLeadTime));
         console.log(`SW: Tiempo de antelación para notificaciones actualizado a ${notificationLeadTime} minutos.`);
         event.waitUntil(scheduleClassNotifications()); // Re-programar con el nuevo tiempo
     }
@@ -397,7 +447,16 @@ self.addEventListener('activate', event => {
                 return Promise.all(
                     cacheNames.filter(cacheName => cacheName !== CACHE_NAME).map(cacheName => caches.delete(cacheName))
                 );
-            }),
+            }).catch(e => console.error("SW: Fallo al limpiar cachés antiguas:", e)),
+
+            // Cargar la configuración guardada al activar
+            getSetting('notificationsEnabled').then(value => {
+                notificationsEnabled = value === true; // Asegurarse de que sea booleano
+            }).catch(e => console.error("SW: Fallo al cargar 'notificationsEnabled':", e)),
+            getSetting('notificationLeadTime').then(value => {
+                notificationLeadTime = value || 2; // Valor por defecto si no existe
+            }).catch(e => console.error("SW: Fallo al cargar 'notificationLeadTime':", e)),
+
             // Registrar la sincronización periódica cuando el SW se activa
             self.registration.periodicSync?.register('update-widget-periodic', {
                 minInterval: 15 * 60 * 1000, // Cada 15 minutos

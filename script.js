@@ -17,7 +17,38 @@ window.addEventListener('unhandledrejection', (event) => {
     reportError(event.reason, 'Promesa no controlada');
 });
 
+/**
+ * Comprueba si hay una nueva versión de la aplicación y fuerza la actualización.
+ */
+async function checkForUpdates() {
+    const currentVersion = 'v90'; // La versión actual del código que estás viendo
+    const lastCheckedVersion = localStorage.getItem('appVersion');
+
+    // Si la versión del código es más nueva que la guardada, forzamos la actualización.
+    // Esto soluciona el caso donde el SW está "atascado" en una versión vieja.
+    if (currentVersion !== lastCheckedVersion) {
+        console.log(`Nueva versión detectada. Local: ${lastCheckedVersion}, Código: ${currentVersion}. Forzando actualización...`);
+
+        if ('serviceWorker' in navigator) {
+            try {
+                const registration = await navigator.serviceWorker.getRegistration();
+                if (registration) {
+                    await registration.unregister();
+                    console.log('Service Worker desregistrado para la actualización.');
+                }
+            } catch (error) {
+                reportError(error, 'Fallo al desregistrar SW para actualización');
+            }
+        }
+        
+        localStorage.setItem('appVersion', currentVersion);
+        alert('¡Hay una nueva actualización! La aplicación se recargará para aplicar los cambios.');
+        window.location.reload();
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    checkForUpdates(); // Comprobar actualizaciones al inicio
     // Inicializar la lógica de tiempo y luego la UI y notificaciones
     fetchTime().then(() => {
         initializeUI(); // Inicializar todos los componentes de la UI
