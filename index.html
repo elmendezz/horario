@@ -28,6 +28,7 @@
             <button id="time-source-toggle" class="menu-button">☁️ Usar Hora de Internet</button>
             <button id="notifications-btn" class="menu-button" aria-label="Activar notificaciones">🔕 Notificaciones</button>
             <a href="notification-settings.html" class="menu-button">⚙️ Configurar Notificaciones</a>
+            <button id="register-sw-btn" class="menu-button" style="color: #17a2b8;">⚙️ Registrar Service Worker</button>
             <button id="clear-cache-btn" class="menu-button" style="color: #dc3545;">🗑️ Limpiar Caché y Recargar</button>
         </div>
         <div class="menu-section">
@@ -36,6 +37,10 @@
             <a href="feedback.html" class="menu-button">Reportar/Sugerir</a>
             <a href="announcements.html" class="menu-button">Toolbox de Anuncios</a>
             <a href="changelog.html" class="menu-button">Historial de Cambios</a>
+        </div>
+        <div class="menu-section">
+            <h3>Desarrollo</h3>
+            <button id="show-dev-tools-btn" class="menu-button" style="color: #ffc107;">🛠️ Mostrar Herramientas de Desarrollo</button>
         </div>
     </div>
     <div id="menu-overlay" class="menu-overlay"></div>
@@ -109,11 +114,6 @@
 
     <!-- Contenedor para los anuncios fijos -->
     <div id="announcements-container" style="margin-top: 2em;"></div>
-
-    <!-- Botón para mostrar las herramientas de desarrollo -->
-    <div style="margin-top: 2em; text-align: center;">
-        <button id="show-dev-tools-btn" class="styled-button" style="background-color: #6c757d; font-size: 0.7em; padding: 8px 15px;">Mostrar Botones de Desarrollo</button>
-    </div>
 
     <div id="imageModal" class="modal">
         <div class="modal-content">

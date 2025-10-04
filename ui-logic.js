@@ -671,6 +671,25 @@ export function updateAnnouncements() {
 }
 
 /**
+ * Inicializa el botón para registrar manualmente el Service Worker.
+ */
+function initializeSWRegistrationButton() {
+    const registerSWBtn = document.getElementById('register-sw-btn');
+    if (!registerSWBtn) return;
+
+    registerSWBtn.addEventListener('click', () => {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => {
+                    alert(`Service Worker registrado con éxito. Ámbito: ${reg.scope}`);
+                    window.location.reload();
+                })
+                .catch(err => alert(`Fallo en el registro del Service Worker: ${err}`));
+        }
+    });
+}
+
+/**
  * Función principal para inicializar toda la lógica de la UI.
  */
 export function initializeUI() {
@@ -685,6 +704,7 @@ export function initializeUI() {
     initializeScheduleToggle();
     initializeTimeSourceToggle();
     initializeDevToolsToggle();
+    initializeSWRegistrationButton();
     renderScheduleTable(); // Renderizar la tabla inicialmente
 }
 
