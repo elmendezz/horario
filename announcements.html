@@ -3,115 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anuncios - Horario 1CV</title>
+    <title>Toolbox de Anuncios - Horario 1CV</title>
     <link rel="stylesheet" href="style.css">
     <style>
         body {
             justify-content: flex-start;
             padding: 2em;
         }
-        .announcements-page-container {
+        .main-container {
             width: 100%;
             max-width: 800px;
             margin: 0 auto;
         }
-        /* Reusando estilos de la página principal para consistencia */
-        .announcement-card {
+        .toolbox-card, .history-card {
             background-color: var(--container-bg);
-            padding: 1.5em;
-            border-radius: 8px;
-            box-shadow: var(--container-shadow);
-            text-align: left;
-            position: relative;
-            border-left: 5px solid var(--accent-color);
-            margin-bottom: 1em;
-        }
-        .announcement-card.info { border-left-color: #17a2b8; }
-        .announcement-card.warning { border-left-color: #ffc107; }
-        .announcement-card.success { border-left-color: #28a745; }
-        .announcement-card h3 { margin-top: 0; margin-bottom: 0.5em; }
-        .announcement-card p { margin-bottom: 0; font-size: 0.9em; }
-        .loading-spinner {
-            text-align: center;
-            font-size: 2em;
             padding: 2em;
-        }
-        .admin-controls {
-            margin-top: 2em;
-            padding: 1.5em;
-            background-color: var(--container-bg);
-            border-radius: 8px;
+            border-radius: 15px;
             box-shadow: var(--container-shadow);
-            border: 1px solid var(--accent-color);
-            display: none; /* Oculto por defecto */
-            flex-direction: column;
-            gap: 1em;
+            margin-bottom: 2em;
         }
-        .admin-controls h2 {
+        h1, h2 {
             color: var(--accent-color);
-            margin-top: 0;
-            border-bottom: 1px solid var(--accent-color);
-            padding-bottom: 0.5em;
+            text-align: center;
         }
-        .admin-controls label {
+        .form-group {
+            margin-bottom: 1em;
+            text-align: left;
+        }
+        .form-group label {
             display: block;
             margin-bottom: 0.5em;
             font-weight: bold;
         }
-        .admin-controls input[type="text"],
-        .admin-controls textarea,
-        .admin-controls select {
+        .form-group input, .form-group textarea, .form-group select {
             width: 100%;
             padding: 10px;
-            margin-bottom: 1em;
             border-radius: 5px;
             border: 1px solid #ccc;
+            box-sizing: border-box;
             background-color: var(--bg-color);
             color: var(--text-color);
-            box-sizing: border-box;
         }
-        .admin-controls button {
-            width: auto; /* Para que no ocupe todo el ancho */
-            align-self: flex-start; /* Alinea a la izquierda */
+        .announcement-list {
+            list-style: none;
+            padding: 0;
         }
+        .announcement-list li {
+            background-color: var(--bg-color);
+            padding: 1em;
+            border-radius: 8px;
+            margin-bottom: 1em;
+            border-left: 4px solid;
+        }
+        .announcement-list li.info { border-left-color: #17a2b8; }
+        .announcement-list li.warning { border-left-color: #ffc107; }
+        .announcement-list li.success { border-left-color: #28a745; }
 
+        .announcement-list li h3 { margin: 0 0 0.5em 0; }
+        .announcement-list li p { margin: 0; }
+
+        .delete-button {
+            background-color: #dc3545;
+        }
+        .delete-button:hover {
+            background-color: #c82333;
+        }
     </style>
 </head>
 <body>
 
-    <div class="announcements-page-container">
-        <h1 style="color: var(--accent-color); text-align: center;">Historial de Anuncios</h1>
-        <p style="text-align: center;">Aquí puedes ver todos los anuncios publicados.</p>
-        
-        <div id="announcement-list">
-            <div class="loading-spinner">🔄 Cargando anuncios...</div>
-        </div>
+    <div class="main-container">
+        <h1>Toolbox de Anuncios</h1>
 
-        <div id="admin-announcement-controls" class="admin-controls">
-            <h2>Administrar Anuncios</h2>
-            <button id="mark-all-read-btn" class="styled-button" style="background-color: #28a745;">✅ Marcar todo como leído</button>
-            
-            <hr style="border-color: var(--text-color); margin: 1.5em 0;">
-
-            <h2>Agregar Nuevo Anuncio</h2>
-            <form id="add-announcement-form">
-                <label for="announcement-title">Título:</label>
-                <input type="text" id="announcement-title" required>
-
-                <label for="announcement-content">Contenido:</label>
-                <textarea id="announcement-content" rows="4" required></textarea>
-
-                <label for="announcement-type">Tipo:</label>
-                <select id="announcement-type">
-                    <option value="info">Información (Azul)</option>
-                    <option value="warning">Advertencia (Amarillo)</option>
-                    <option value="success">Éxito (Verde)</option>
-                </select>
-                <button type="submit" class="styled-button" style="background-color: #007bff;">➕ Publicar Anuncio</button>
+        <!-- Card para crear anuncios -->
+        <div class="toolbox-card">
+            <h2>Crear Nuevo Anuncio</h2>
+            <form id="announcement-form">
+                <div class="form-group">
+                    <label for="title">Título:</label>
+                    <input type="text" id="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="content">Contenido:</label>
+                    <textarea id="content" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="type">Tipo de Anuncio:</label>
+                    <select id="type">
+                        <option value="info">Información (Azul)</option>
+                        <option value="warning">Advertencia (Amarillo)</option>
+                        <option value="success">Éxito (Verde)</option>
+                    </select>
+                </div>
+                <button type="submit" class="styled-button">Publicar Anuncio</button>
             </form>
         </div>
 
-        <div style="text-align: center; margin-top: 2em;">
+        <!-- Card para el historial y borrado -->
+        <div class="history-card">
+            <h2>Historial de Anuncios</h2>
+            <ul id="announcement-list">
+                <li>Cargando anuncios...</li>
+            </ul>
+            <button id="delete-all-btn" class="styled-button delete-button">Borrar Todos los Anuncios</button>
+        </div>
+
+        <div style="text-align: center;">
             <a href="index.html" class="styled-button" style="background-color: #6c757d;">Volver al Horario</a>
         </div>
     </div>
@@ -122,107 +119,59 @@
         document.documentElement.dataset.theme = savedTheme;
 
         const announcementList = document.getElementById('announcement-list');
+        const announcementChannel = new BroadcastChannel('announcement_channel');
 
         async function fetchAnnouncements() {
             try {
                 const response = await fetch('/api/messages?announcements=true');
-                if (!response.ok) throw new Error('Error al cargar los anuncios.');
                 const announcements = await response.json();
-                renderAnnouncements(announcements);
-            } catch (error) {
-                announcementList.innerHTML = `<p style="color: #dc3545; text-align: center;">${error.message}</p>`;
-            }
-        }
-
-        function renderAnnouncements(announcements) {
-            announcementList.innerHTML = '';
-            if (announcements.length === 0) {
-                announcementList.innerHTML = '<p style="text-align: center;">No hay anuncios para mostrar.</p>';
-                return;
-            }
-            announcements.reverse().forEach(ann => { // Mostrar los más nuevos primero
-                const card = document.createElement('div');
-                card.className = `announcement-card ${ann.type || 'info'}`;
-                card.innerHTML = `<h3>${ann.title}</h3><p>${ann.content}</p>`;
-                announcementList.appendChild(card);
-            });
-        }
-
-        // Canal para notificar a otras pestañas que los anuncios han cambiado.
-        const broadcastChannel = new BroadcastChannel('announcement_channel');
-        function notifyOtherTabs() {
-            broadcastChannel.postMessage({ type: 'NEW_ANNOUNCEMENT' });
-        }
-
-        // Function to mark all announcements as read
-        function markAllAnnouncementsAsRead() {
-            localStorage.removeItem('dismissedAnnouncements');
-            alert('Todos los anuncios han sido marcados como leídos. La insignia del menú principal se actualizará al volver.');
-            // Redirigir a la página principal para que la insignia se actualice inmediatamente
-            window.location.href = 'index.html';
-        }
-
-        // Function to add a new announcement
-        async function addNewAnnouncement(event) {
-            event.preventDefault();
-            const title = document.getElementById('announcement-title').value.trim();
-            const content = document.getElementById('announcement-content').value.trim();
-            const type = document.getElementById('announcement-type').value;
-
-            if (!title || !content) {
-                alert('Por favor, completa todos los campos.');
-                return;
-            }
-
-            const submitButton = event.submitter;
-            submitButton.disabled = true;
-            submitButton.textContent = 'Publicando...';
-
-            try {
-                const response = await fetch('/api/messages', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        type: 'announcement', // Tipo para el manejador de la API
-                        title,
-                        content,
-                        announcementType: type // Usar una clave diferente para evitar conflicto con 'type' de la API
-                    })
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.details || 'Error al publicar el anuncio.');
+                announcementList.innerHTML = '';
+                if (announcements.length === 0) {
+                    announcementList.innerHTML = '<li>No hay anuncios para mostrar.</li>';
+                } else {
+                    announcements.slice().reverse().forEach(ann => {
+                        const li = document.createElement('li');
+                        li.className = ann.type || 'info';
+                        li.innerHTML = `<h3>${ann.title}</h3><p>${ann.content}</p>`;
+                        announcementList.appendChild(li);
+                    });
                 }
-
-                alert('Anuncio publicado con éxito.');
-                document.getElementById('add-announcement-form').reset();
-                notifyOtherTabs(); // Notificar a otras pestañas para actualización instantánea
-                fetchAnnouncements(); // Actualizar la lista de anuncios
             } catch (error) {
-                alert(`Fallo al publicar el anuncio: ${error.message}`);
-                console.error('Error adding announcement:', error);
-            } finally {
-                submitButton.disabled = false;
-                submitButton.textContent = '➕ Publicar Anuncio';
+                announcementList.innerHTML = '<li>Error al cargar los anuncios.</li>';
+                console.error(error);
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const pin = prompt('Ingresa el PIN de administrador para ver los anuncios:');
-            if (pin === '26435') {
-                // Mostrar los controles de administración si el PIN es correcto
-                document.getElementById('admin-announcement-controls').style.display = 'flex';
-                fetchAnnouncements();
+        document.getElementById('announcement-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('title').value;
+            const content = document.getElementById('content').value;
+            const type = document.getElementById('type').value;
 
-                // Adjuntar event listeners para los nuevos controles
-                document.getElementById('mark-all-read-btn').addEventListener('click', markAllAnnouncementsAsRead);
-                document.getElementById('add-announcement-form').addEventListener('submit', addNewAnnouncement);
-            } else {
-                alert('PIN incorrecto. No tienes acceso a esta página.');
-                window.location.href = 'index.html';
-            }
+            await fetch('/api/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'announcement', title, content, announcementType: type })
+            });
+            
+            alert('Anuncio publicado. Se reflejará en la app principal en breve.');
+            e.target.reset();
+            fetchAnnouncements();
+            announcementChannel.postMessage({ type: 'NEW_ANNOUNCEMENT' });
         });
+
+        document.getElementById('delete-all-btn').addEventListener('click', async () => {
+            if (!confirm('¿Estás seguro de que quieres borrar TODOS los anuncios? Esta acción no se puede deshacer.')) return;
+
+            await fetch('/api/messages?announcements=true', { method: 'DELETE' });
+            
+            alert('Todos los anuncios han sido borrados.');
+            fetchAnnouncements();
+            announcementChannel.postMessage({ type: 'NEW_ANNOUNCEMENT' });
+        });
+
+        fetchAnnouncements();
     </script>
+
 </body>
 </html>

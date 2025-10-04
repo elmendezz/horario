@@ -92,6 +92,17 @@ export default async function handler(req, res) {
         return res.status(201).json({ success: true, message: "Anuncio publicado." });
     }
 
+    // --- LÓGICA DE ANUNCIOS (DELETE para borrar todos) ---
+    if (req.method === 'DELETE' && req.query.announcements === 'true') {
+        const { sha: announcementsSha } = await getFile(announcementsFile);
+        // Si no hay archivo (o está vacío y no tiene SHA), no hay nada que hacer.
+        if (!announcementsSha) {
+            return res.status(200).json({ success: true, message: "No hay anuncios que borrar." });
+        }
+        await updateFile(announcementsFile, [], announcementsSha, "Borrar todos los anuncios");
+        return res.status(200).json({ success: true, message: "Todos los anuncios han sido borrados." });
+    }
+
     // --- LÓGICA DE ANUNCIOS (GET) ---
     if (req.method === "GET" && req.query.announcements === 'true') {
         const { content: announcements } = await getFile(announcementsFile);

@@ -47,3 +47,13 @@ announcementChannel.onmessage = (event) => {
         updateAnnouncements();
     }
 };
+
+// Escuchar cambios en los anuncios desde otras pestañas (ej. desde announcements.html)
+const announcementChannel = new BroadcastChannel('announcement_channel');
+announcementChannel.onmessage = (event) => {
+    if (event.data && event.data.type === 'NEW_ANNOUNCEMENT') {
+        console.log('Nuevo anuncio detectado, recargando anuncios...');
+        // Llamamos a la función unificada para actualizar todo.
+        updateAnnouncements();
+    }
+};
