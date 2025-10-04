@@ -447,6 +447,36 @@ function initializeCacheControls() {
 }
 
 /**
+ * Maneja el clic en una reacción de emoji.
+ * @param {string} annId - El ID del anuncio.
+ * @param {string} emoji - El emoji con el que se reaccionó.
+ */
+async function handleReaction(annId, emoji) {
+    const reactionButton = document.querySelector(`.announcement-card[data-id="${annId}"] .reaction-btn[data-emoji="${emoji}"]`);
+    if (reactionButton.classList.contains('reacted')) return; // Prevenir múltiples clics
+
+    reactionButton.classList.add('reacted');
+    const countSpan = reactionButton.querySelector('span');
+    countSpan.textContent = parseInt(countSpan.textContent, 10) + 1;
+
+    try {
+        await fetch('/api/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                type: 'reaction',
+                announcementId: annId,
+                emoji: emoji
+            })
+        });
+    } catch (error) {
+        console.error('Error al enviar la reacción:', error);
+        // Opcional: revertir el cambio visual si la API falla
+        countSpan.textContent = parseInt(countSpan.textContent, 10) - 1;
+        reactionButton.classList.remove('reacted');
+    }
+}
+/**
  * Carga y muestra los anuncios del administrador.
  */
 export async function initializeAnnouncements() {
@@ -484,13 +514,29 @@ export async function initializeAnnouncements() {
             const formattedDate = date ? date.toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }) : 'Fecha no disponible';
             const author = ann.author || 'Admin';
 
+            const reactions = ann.reactions || {};
+            const reactionsHTML = `
+                <div class="reactions-container">
+                    <div class="emoji-picker">
+                        <button class="reaction-btn" data-emoji="👍">👍 <span>${reactions['👍'] || 0}</span></button>
+                        <button class="reaction-btn" data-emoji="❤️">❤️ <span>${reactions['❤️'] || 0}</span></button>
+                        <button class="reaction-btn" data-emoji="😂">😂 <span>${reactions['😂'] || 0}</span></button>
+                        <button class="reaction-btn" data-emoji="😮">😮 <span>${reactions['😮'] || 0}</span></button>
+                    </div>
+                    <button class="add-reaction-btn">+</button>
+                </div>
+            `;
+
             card.innerHTML = `
                 <button class="announcement-dismiss-btn" aria-label="Descartar anuncio">&times;</button>
                 <h3>${ann.title}</h3>
                 <p>${ann.content}</p>
-                <div class="announcement-meta">
-                    <button class="info-btn" aria-label="Información del anuncio">ⓘ</button>
-                    <span class="info-tooltip">Publicado por ${author} el ${formattedDate}</span>
+                <div class="announcement-footer">
+                    ${reactionsHTML}
+                    <div class="announcement-meta">
+                        <button class="info-btn" aria-label="Información del anuncio">ⓘ</button>
+                        <span class="info-tooltip">Publicado por ${author} el ${formattedDate}</span>
+                    </div>
                 </div>
             `;
 
@@ -502,6 +548,15 @@ export async function initializeAnnouncements() {
                 card.style.transform = 'scale(0.95)';
                 setTimeout(() => card.remove(), 300);
             });
+
+            card.querySelector('.add-reaction-btn').addEventListener('click', (e) => {
+                e.currentTarget.closest('.reactions-container').classList.toggle('open');
+            });
+
+            card.querySelectorAll('.reaction-btn').forEach(btn => {
+                btn.addEventListener('click', () => handleReaction(ann.id, btn.dataset.emoji));
+            });
+
 
             container.appendChild(card);
         });

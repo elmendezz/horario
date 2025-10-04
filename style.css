@@ -68,9 +68,15 @@
     right: 10px;
     background: none; border: none; font-size: 1.2em; cursor: pointer; color: var(--text-color);
 }
-.announcement-meta {
+.announcement-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-top: 1em;
-    text-align: right;
+    gap: 1em;
+}
+.announcement-meta {
+    /* text-align: right; */ /* No longer needed with flexbox */
     position: relative;
 }
 .info-btn {
@@ -101,6 +107,55 @@
     transition: opacity 0.3s;
 }
 .info-btn:hover + .info-tooltip { visibility: visible; opacity: 1; }
+
+.reactions-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.emoji-picker {
+    display: flex;
+    gap: 0.5em;
+    background-color: var(--bg-color);
+    padding: 0.5em;
+    border-radius: 20px;
+    box-shadow: var(--container-shadow);
+    transform: scale(0) translateX(-50%);
+    transform-origin: left;
+    transition: transform 0.2s ease-out;
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    margin-bottom: 10px;
+    visibility: hidden;
+}
+
+.reactions-container.open .emoji-picker {
+    transform: scale(1) translateX(0);
+    visibility: visible;
+}
+
+.reaction-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1em;
+    padding: 0.2em 0.5em;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+}
+.reaction-btn:hover { background-color: var(--container-bg); }
+.reaction-btn.reacted { background-color: var(--accent-color); color: white; }
+
+.add-reaction-btn {
+    background-color: var(--bg-color);
+    border: 1px solid var(--text-color);
+    border-radius: 50%;
+    width: 30px; height: 30px;
+    font-size: 1.2em; line-height: 1;
+    cursor: pointer;
+}
 
 
 body {

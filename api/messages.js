@@ -73,6 +73,30 @@ export default async function handler(req, res) {
         if (!issueResponse.ok) throw new Error('Fallo al crear el issue en GitHub.');
         return res.status(201).json({ success: true, message: "Feedback recibido y issue creado." });
     }
+    
+    // --- LÓGICA DE REACCIONES (POST para reaccionar) ---
+    if (req.method === "POST" && req.body.type === 'reaction') {
+        const { announcementId, emoji } = req.body;
+        if (!announcementId || !emoji) return res.status(400).json({ error: "Faltan datos en la reacción." });
+
+        const { content: announcements, sha: announcementsSha } = await getFile(announcementsFile);
+        
+        const announcementIndex = announcements.findIndex(ann => ann.id === announcementId);
+        if (announcementIndex === -1) return res.status(404).json({ error: "Anuncio no encontrado." });
+
+        // Inicializar el objeto de reacciones si no existe
+        if (!announcements[announcementIndex].reactions) {
+            announcements[announcementIndex].reactions = {};
+        }
+        // Incrementar el contador para el emoji
+        if (!announcements[announcementIndex].reactions[emoji]) {
+            announcements[announcementIndex].reactions[emoji] = 0;
+        }
+        announcements[announcementIndex].reactions[emoji]++;
+
+        await updateFile(announcementsFile, announcements, announcementsSha, `Reacción [${emoji}] a anuncio ${announcementId}`);
+        return res.status(200).json({ success: true, message: "Reacción registrada." });
+    }
 
     // --- LÓGICA DE ANUNCIOS (POST para agregar) ---
     if (req.method === "POST" && req.body.type === 'announcement') {
