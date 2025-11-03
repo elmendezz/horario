@@ -379,10 +379,22 @@ self.addEventListener('notificationclick', event => {
 
 self.addEventListener('install', event => {
     console.log('SW: Instalando nueva versión...');
+    // Hacemos la instalación más robusta. En lugar de cache.addAll (que falla si un solo recurso no está disponible),
+    // abrimos la caché y añadimos los recursos uno por uno, ignorando los fallos.
+    // Esto es crucial para que las actualizaciones del SW no fallen si el usuario está offline.
     event.waitUntil(
-        caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+        caches.open(CACHE_NAME).then(cache => {
+            console.log('SW: Cache abierta, añadiendo recursos principales.');
+            const promises = urlsToCache.map(url => {
+                return cache.add(url).catch(err => {
+                    console.warn(`SW: Fallo al cachear ${url}, pero la instalación continúa.`, err);
+                });
+            });
+            return Promise.all(promises);
+        })
     );
-    self.skipWaiting();
+    // Ya no llamamos a self.skipWaiting() aquí. Esperaremos a que el usuario lo active.
+    // self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {

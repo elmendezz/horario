@@ -952,3 +952,35 @@ body {
     white-space: nowrap;
     border: 0;
 }
+
+/* --- Estilos para el Toast de Actualización --- */
+.update-toast {
+    position: fixed;
+    bottom: 1em;
+    left: 50%;
+    transform: translate(-50%, 150%); /* Oculto por defecto abajo */
+    background-color: var(--accent-color);
+    color: white;
+    padding: 1em 1.5em;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    z-index: 2001;
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.update-toast.visible {
+    transform: translate(-50%, 0); /* Visible */
+}
+
+.update-toast button {
+    background-color: white;
+    color: var(--accent-color);
+    border: none;
+    border-radius: 5px;
+    padding: 0.5em 1em;
+    cursor: pointer;
+    font-weight: bold;
+}

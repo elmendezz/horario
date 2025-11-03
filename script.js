@@ -18,36 +18,6 @@ window.addEventListener('unhandledrejection', (event) => {
 });
 
 /**
- * Comprueba si hay una nueva versión de la aplicación y fuerza la actualización.
- */
-async function checkForUpdates() {
-    const currentVersion = 'v90'; // La versión actual del código que estás viendo
-    const lastCheckedVersion = localStorage.getItem('appVersion');
-
-    // Si la versión del código es más nueva que la guardada, forzamos la actualización.
-    // Esto soluciona el caso donde el SW está "atascado" en una versión vieja.
-    if (currentVersion !== lastCheckedVersion) {
-        console.log(`Nueva versión detectada. Local: ${lastCheckedVersion}, Código: ${currentVersion}. Forzando actualización...`);
-
-        if ('serviceWorker' in navigator) {
-            try {
-                const registration = await navigator.serviceWorker.getRegistration();
-                if (registration) {
-                    await registration.unregister();
-                    console.log('Service Worker desregistrado para la actualización.');
-                }
-            } catch (error) {
-                reportError(error, 'Fallo al desregistrar SW para actualización');
-            }
-        }
-        
-        localStorage.setItem('appVersion', currentVersion);
-        alert('¡Hay una nueva actualización! La aplicación se recargará para aplicar los cambios.');
-        window.location.reload(); // Forzar recarga para que el nuevo SW tome el control
-    }
-}
-
-/**
  * Muestra el modal de "Novedades" si la versión ha cambiado.
  */
 function showWhatsNewModal() {
@@ -98,8 +68,49 @@ function promptForUsernameIfNeeded() {
     }
 }
 
+/**
+ * Gestiona la lógica de actualización del Service Worker, mostrando un toast al usuario.
+ */
+function manageSWUpdates() {
+    if (!('serviceWorker' in navigator)) return;
+
+    navigator.serviceWorker.getRegistration().then(reg => {
+        if (!reg) return;
+
+        // 1. Comprobar si ya hay un SW esperando al cargar la página.
+        if (reg.waiting) {
+            showUpdateToast(reg.waiting);
+            return;
+        }
+
+        // 2. Escuchar por nuevas versiones que se instalen.
+        reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            if (newWorker) {
+                newWorker.addEventListener('statechange', () => {
+                    // Si el nuevo SW está instalado y esperando, mostramos el toast.
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        showUpdateToast(newWorker);
+                    }
+                });
+            }
+        });
+    });
+
+    // 3. Escuchar el cambio de controlador y recargar la página.
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+            window.location.reload();
+            refreshing = true;
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    // checkForUpdates(); // Desactivado temporalmente para dar prioridad al modal de versión
+    // La nueva lógica de actualización del SW reemplaza a la antigua función checkForUpdates.
+    manageSWUpdates();
+
     showWhatsNewModal(); // Mostrar el modal de novedades si es necesario
     promptForUsernameIfNeeded(); // Pedir nombre de usuario si es necesario
     // Inicializar la lógica de tiempo y luego la UI y notificaciones
@@ -131,3 +142,19 @@ announcementChannel.onmessage = (event) => {
         updateAnnouncements();
     }
 };
+
+/**
+ * Muestra el toast de actualización y configura su botón.
+ * @param {ServiceWorker} worker - El nuevo Service Worker que está en estado 'waiting'.
+ */
+function showUpdateToast(worker) {
+    const toast = document.getElementById('update-toast');
+    const updateBtn = document.getElementById('update-now-btn');
+
+    if (!toast || !updateBtn) return;
+
+    toast.classList.add('visible');
+    updateBtn.onclick = () => {
+        worker.postMessage({ type: 'SKIP_WAITING' });
+    };
+}
