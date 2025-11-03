@@ -1,8 +1,6 @@
 // c:\Users\Admin\Documents\GitHub\horario\ui-logic.js
 
 import { reportError } from './error-logic.js';
-import { schedule, classDuration } from './schedule-data.js';
-import { getCurrentAndNextClass } from './schedule-utils.js';
 import { sendMessageToSW } from './notification-logic.js';
 
 // Variables de estado globales para la UI
@@ -131,25 +129,10 @@ export function updateSchedule() {
     const formatTime = (h, m) => `${(h % 12 || 12)}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
     const nextClassCountdownContainer = document.getElementById('next-class-countdown-container');
 
-    const { currentClass, nextClass } = getCurrentAndNextClass(now);
 
-    if (currentClass) {
-        container?.classList.add('is-in-session'); // Añadir la animación si hay clase
-        nextClassCountdownContainer?.classList.remove('visible'); // Ocultar contador grande
-
-        currentClassDisplay.textContent = currentClass.name;
+        L.rrentClassDisplay.textContent = currentClass.name;
         teacherDisplay.textContent = currentClass.teacher;
-        const classStartMinutes = currentClass.time[0] * 60 + currentClass.time[1];
-        const classEndMinutes = classStartMinutes + (currentClass.duration || classDuration);
-        currentClassEnd = new Date(now);
-        currentClassEnd.setHours(Math.floor(classEndMinutes / 60), classEndMinutes % 60, 59, 999); // Finaliza al terminar el minuto
-        currentActiveClassInfo = { ...currentClass, dayIndex: now.getDay() - 1 };
-    } else {
-        container?.classList.add('no-class-glow'); // Añadir animación dorada
-        currentClassDisplay.textContent = "¡Sin Clases!";
-        teacherDisplay.textContent = "Disfruta tu día";
-    }
-
+         r os
     if (nextClass) {
         nextClassDisplay.textContent = `Siguiente: ${nextClass.name}`;
         if (nextClass.time) {
@@ -190,6 +173,7 @@ export function renderScheduleTable() {
     schedule.forEach(day => day.forEach(c => allTimes.add(c.time[0] * 60 + c.time[1])));
     const sortedTimes = Array.from(allTimes).sort((a,b) => a - b);
     
+
     sortedTimes.forEach(timeInMinutes => {
         const row = document.createElement('tr');
         row.dataset.time = timeInMinutes;
@@ -197,21 +181,8 @@ export function renderScheduleTable() {
         row.innerHTML = `<td>${formatTime(hours, minutes)}</td>` + 
                         [0,1,2,3,4].map(dayIndex => {
                             const classItem = schedule[dayIndex].find(c => c.time[0]*60 + c.time[1] === timeInMinutes);
-                            return `<td>${classItem ? `<strong>${classItem.name}</strong><br>${classItem.teacher}` : ''}</td>`;
-                        }).join('');
-        
-        if (timeInMinutes === 15 * 60) { // 3:00 PM
-            row.classList.add('receso-row');
-        }
-        scheduleTableBody.appendChild(row);
-    });
-}
-
-/**
- * Resalta la clase actual en la tabla del horario.
- */
-function highlightCurrentClassInTable() {
-    document.querySelectorAll('#schedule-table td.current-class-highlight').forEach(cell => {
+                            retur
+    SelectorAll('#schedule-table td.current-class-highlight').forEach(cell => {
         cell.classList.remove('current-class-highlight');
     });
 
@@ -388,11 +359,15 @@ function initializeScheduleToggle() {
  * Inicializa el botón para mostrar las herramientas de desarrollo.
  */
 function initializeDevToolsToggle() {
-    document.getElementById('show-dev-tools-btn').addEventListener('click', () => {
+    const devToolsBtn = document.getElementById('show-dev-tools-btn');
+    const tempScheduleBtn = document.getElementById('temp-schedule-btn');
+
+    devToolsBtn.addEventListener('click', () => {
         const password = prompt('Ingresa la contraseña para ver las herramientas de desarrollo:');
+
         if (password === '1CV') {
             document.getElementById('developer-tools').style.display = 'flex';
-            document.getElementById('show-dev-tools-btn').style.display = 'none'; // Ocultar el botón después de usarlo
+            devToolsBtn.style.display = 'none'; // Ocultar el botón después de usarlo
             alert('Acceso concedido. Herramientas de desarrollo visibles.');
         } else if (password !== null) { // Si el usuario no presionó "Cancelar"
             alert('Contraseña incorrecta.');
@@ -413,67 +388,18 @@ function initializeMenu() {
         if (!menuToggle) return;
         sideMenu.classList.add('open');
         overlay.classList.add('open');
-        menuToggle.textContent = '×'; // Cambiar a 'X'
-    };
+        menuToggle.textConten 
 
     const closeMenu = () => {
         if (!menuToggle) return;
         sideMenu.classList.remove('open');
         overlay.classList.remove('open');
         menuToggle.textContent = '☰'; // Volver a '☰'
-    };
-
+   };
     menuToggle?.addEventListener('click', openMenu);
-    closeMenuBtn?.addEventListener('click', closeMenu);
-    overlay?.addEventListener('click', closeMenu);
-}
-
-/**
- * Inicializa los controles de caché.
- */
-function initializeCacheControls() {
-    const clearCacheBtn = document.getElementById('clear-cache-btn');
-    clearCacheBtn?.addEventListener('click', async () => {
-        if ('caches' in window) {
-            const userConfirmed = confirm('¿Estás seguro de que quieres limpiar toda la caché? La aplicación se recargará.');
-            if (userConfirmed) {
-                const keys = await caches.keys();
-                await Promise.all(keys.map(key => caches.delete(key)));
-                alert('Caché eliminada. La aplicación se recargará ahora.');
-                window.location.reload();
-            }
-        }
-    });
-}
-
-/**
- * Maneja el clic en una reacción de emoji.
- * @param {string} annId - El ID del anuncio.
- * @param {string} emoji - El emoji con el que se reaccionó.
- */
-async function handleReaction(annId, emoji) {
-    const reactionButton = document.querySelector(`.announcement-card[data-id="${annId}"] .reaction-btn[data-emoji="${emoji}"]`);
-    if (reactionButton.classList.contains('reacted')) return; // Prevenir múltiples clics
-
-    reactionButton.classList.add('reacted');
-    const countSpan = reactionButton.querySelector('span');
-    countSpan.textContent = parseInt(countSpan.textContent, 10) + 1;
-
-    try {
-        await fetch('/api/messages', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                type: 'reaction',
-                announcementId: annId,
-                emoji: emoji
-            })
-        });
-    } catch (error) {
-        console.error('Error al enviar la reacción:', error);
-        // Opcional: revertir el cambio visual si la API falla
-        countSpan.textContent = parseInt(countSpan.textContent, 10) - 1;
-        reactionButton.classList.remove('reacted');
+    closeMenu.cdEventListener('click', closeMenu);
+}c .krenmt=nI"lsintoee
+// OpcioreactionButton.classList.remove('reacted');
     }
 }
 /**
