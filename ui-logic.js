@@ -551,6 +551,12 @@ export async function initializeAnnouncements() {
             container.appendChild(card);
         });
 
+        // Aplicar animación de entrada escalonada a las tarjetas de anuncios
+        const announcementCards = container.querySelectorAll('.announcement-card');
+        announcementCards.forEach((card, index) => {
+            card.style.animation = `fadeInUp 0.6s ease-out forwards ${index * 0.1}s`;
+        });
+
         // Añadir la insignia al botón del menú si hay anuncios sin leer
         if (hasUnread) {
             document.getElementById('menu-toggle')?.classList.add('has-unread');
