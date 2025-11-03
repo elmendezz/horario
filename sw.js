@@ -2,6 +2,7 @@
 
 const CACHE_NAME = 'horario-1cv-cache-v91'; // Incrementamos la versión del caché
 const ASSETS_CACHE_NAME = 'assets-cache-v1'; // Nuevo caché para assets dinámicos
+import { schedule } from './schedule-data.js';
 import { getCurrentAndNextClass } from './schedule-utils.js';
 const urlsToCache = [
     '/', 
@@ -24,23 +25,8 @@ const urlsToCache = [
     'notification-settings.html'
 ];
 
-// Variable global para almacenar el horario una vez cargado.
-let scheduleData = null;
 // Variable para el temporizador de notificaciones de fallback.
 let notificationTimer;
-
-/**
- * Carga el horario desde el módulo centralizado.
- * Usa una variable global para cachear el resultado y no importarlo múltiples veces.
- */
-async function getSchedule() {
-    if (!scheduleData) {
-        console.log('SW: Cargando datos del horario por primera vez...');
-        // Usamos import() dinámico, que funciona en Service Workers modernos.
-        scheduleData = await import('./schedule-data.js');
-    }
-    return scheduleData;
-}
 
 // =================== LÓGICA DE WIDGETS ===================
 
@@ -171,7 +157,6 @@ async function scheduleNextNotificationFallback() {
         return;
     }
 
-    const { schedule } = await getSchedule();
     // Simplemente verificamos que todo esté en orden. No se necesita más aquí.
 }
 
@@ -188,7 +173,6 @@ async function checkAndShowDueNotifications() {
     }
 
     console.log('SW (Fallback Check): Comprobando si hay notificaciones pendientes...');
-    const { schedule } = await getSchedule();
     const now = new Date();
 
     for (let i = 0; i < 2; i++) { // Comprobar hoy y mañana
@@ -254,8 +238,6 @@ async function scheduleClassNotificationsWithTriggers() {
         console.log('SW (Triggers): Notificaciones desactivadas, no se programará nada.');
         return; 
     }
-
-    const { schedule } = await getSchedule(); // Esto es para compatibilidad, pero la lógica principal usará getCurrentAndNextClass
 
     const now = new Date();
     let scheduledCount = 0;

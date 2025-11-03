@@ -9,7 +9,10 @@ async function getNoClassDays() {
     // Cachear los resultados por 5 minutos para no sobrecargar la API
     if (Date.now() - lastFetched > 5 * 60 * 1000) {
         try {
-            const response = await fetch('/api/messages?noClassDays=true');
+            // Estrategia "Cache First": intenta obtener de la caché primero para una carga rápida y offline.
+            // 'no-cache' le dice al navegador que, aunque use la caché, debe revalidar con la red.
+            // El Service Worker interceptará esto y devolverá la caché mientras actualiza en segundo plano.
+            const response = await fetch('/api/messages?noClassDays=true', { cache: 'default' });
             if (response.ok) {
                 noClassDays = await response.json();
                 lastFetched = Date.now();
