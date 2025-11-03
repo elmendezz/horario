@@ -227,8 +227,8 @@ body {
 }
 
 /* Aplicar animación dorada cuando no hay clase */
-.container.no-class-glow {
-    animation: pulsate-gold-glow 4s infinite ease-in-out;
+.container.is-idle-glow {
+    animation: pulsate-idle-glow 4s infinite ease-in-out;
 }
 
 #current-class-display {
@@ -650,15 +650,15 @@ body {
     }
 }
 
-@keyframes pulsate-gold-glow {
+@keyframes pulsate-idle-glow {
     0% {
-        box-shadow: var(--container-shadow), 0 0 12px 0 #ffc107;
+        box-shadow: var(--container-shadow), 0 0 12px 0 rgba(227, 227, 227, 0.4);
     }
     50% {
-        box-shadow: var(--container-shadow), 0 0 22px 3px #ffc107;
+        box-shadow: var(--container-shadow), 0 0 22px 3px rgba(227, 227, 227, 0.6);
     }
     100% {
-        box-shadow: var(--container-shadow), 0 0 12px 0 #ffc107;
+        box-shadow: var(--container-shadow), 0 0 12px 0 rgba(227, 227, 227, 0.4);
     }
 }
 

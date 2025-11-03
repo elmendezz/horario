@@ -18,6 +18,8 @@ const urlsToCache = [
 
 // Variable global para almacenar el horario una vez cargado.
 let scheduleData = null;
+// Variable para el temporizador de notificaciones de fallback.
+let notificationTimer;
 
 /**
  * Carga el horario desde el módulo centralizado.

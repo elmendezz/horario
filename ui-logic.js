@@ -126,8 +126,8 @@ export function updateSchedule() {
     currentClassEnd = null;
     currentActiveClassInfo = null; // Reiniciar en cada actualización
     countdownEl.dataset.nextClassStart = "";
-    container?.classList.remove('is-in-session'); // Quitar la animación por defecto
-    container?.classList.remove('no-class-glow'); // Quitar la animación dorada por defecto
+    container?.classList.remove('is-in-session');
+    container?.classList.remove('is-idle-glow');
     const formatTime = (h, m) => `${(h % 12 || 12)}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
     const nextClassCountdownContainer = document.getElementById('next-class-countdown-container');
 
@@ -145,7 +145,7 @@ export function updateSchedule() {
         currentClassEnd.setHours(Math.floor(classEndMinutes / 60), classEndMinutes % 60, 59, 999); // Finaliza al terminar el minuto
         currentActiveClassInfo = { ...currentClass, dayIndex: now.getDay() - 1 };
     } else {
-        container?.classList.add('no-class-glow'); // Añadir animación dorada
+        container?.classList.add('is-idle-glow'); // Añadir animación de reposo
         currentClassDisplay.textContent = "¡Sin Clases!";
         teacherDisplay.textContent = "Disfruta tu día";
     }
