@@ -509,22 +509,21 @@ self.addEventListener('fetch', event => {
         return;
     } else {
         // Estrategia "Cache First" para el resto (HTML, JS, etc. precacheados)
-        // Esta es la estrategia más robusta para el "App Shell".
-        event.respondWith(
-            caches.match(event.request).then(cachedResponse => {
-                // Si la respuesta está en la caché, la devolvemos inmediatamente.
-                if (cachedResponse) {
-                    return cachedResponse;
-                }
-                // Si no está en la caché, intentamos obtenerla de la red.
-                return fetch(event.request).catch(() => {
-                    // Si la red también falla y es una petición de navegación,
-                    // devolvemos la página offline como último recurso.
-                    if (event.request.mode === 'navigate') {
-                        return caches.match('offline.html');
-                    }
+        // Para peticiones de navegación, usamos "Network falling back to offline page".
+        if (request.mode === 'navigate') {
+            event.respondWith(
+                fetch(request).catch(() => {
+                    // Si la red falla, servimos la página offline desde la caché.
+                    return caches.match('offline.html');
                 })
-            })
-        );
+            );
+        } else {
+            // Para todos los demás recursos (JS, CSS, imágenes), usamos "Cache First".
+            event.respondWith(
+                caches.match(request).then(cachedResponse => {
+                    return cachedResponse || fetch(request);
+                })
+            );
+        }
     }
 });
