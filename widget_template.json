@@ -1,40 +1,37 @@
 {
-    "type": "AdaptiveCard",
-    "version": "1.5",
-    "body": [
-      {
-        "type": "TextBlock",
-        "text": "🕒 Horario 1CV",
-        "weight": "Bolder",
-        "size": "Medium"
-      },
-      {
-        "type": "TextBlock",
-        "text": "${currentTitle}",
-        "size": "Large",
-        "weight": "Bolder",
-        "color": "Accent",
-        "spacing": "Medium"
-      },
-      {
-        "type": "TextBlock",
-        "text": "${currentSubtitle}",
-        "wrap": true,
-        "spacing": "Small"
-      },
-      {
-        "type": "TextBlock",
-        "text": "${nextTitle}",
-        "weight": "Bolder",
-        "color": "Accent",
-        "spacing": "Medium"
-      },
-      {
-        "type": "TextBlock",
-        "text": "${nextSubtitle}",
-        "wrap": true,
-        "spacing": "Small"
-      }
-    ],
-    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json"
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "body": [
+    {
+      "type": "Container",
+      "style": "emphasis",
+      "items": [
+        {
+          "type": "TextBlock",
+          "text": "${currentTitle}",
+          "weight": "Bolder",
+          "size": "Medium"
+        },
+        {
+          "type": "TextBlock",
+          "text": "${currentSubtitle}",
+          "size": "Large",
+          "wrap": true,
+          "spacing": "None"
+        }
+      ]
+    },
+    {
+      "type": "TextBlock",
+      "text": "${nextTitle}",
+      "weight": "Bolder",
+      "spacing": "Medium"
+    },
+    {
+      "type": "TextBlock",
+      "text": "${nextSubtitle}",
+      "wrap": true,
+      "spacing": "None"
+    }
+  ]
 }

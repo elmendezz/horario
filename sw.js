@@ -1,6 +1,7 @@
 // sw.js (Versión con Widgets)
 
 const CACHE_NAME = 'horario-1cv-cache-v91'; // Incrementamos la versión del caché
+import { getCurrentAndNextClass } from './schedule-utils.js';
 const urlsToCache = [
     '/', 
     'index.html', 
@@ -42,56 +43,9 @@ async function updateWidget() {
         return;
     }
 
-    // Obtenemos el horario y la duración de la clase de forma asíncrona.
-    const { schedule, classDuration } = await getSchedule();
-    
     const now = new Date();
-    const day = now.getDay();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-
-    let currentClass = null;
-    let nextClass = null;
-
-    if (day >= 1 && day <= 5) {
-        const todaySchedule = schedule[day - 1];
-        for (let i = 0; i < todaySchedule.length; i++) {
-            const classStartHour = todaySchedule[i].time[0];
-            const classStartMinute = todaySchedule[i].time[1];
-            const classStartTotalMinutes = classStartHour * 60 + classStartMinute;
-            const classEndTotalMinutes = classStartTotalMinutes + classDuration;
-            const nowTotalMinutes = currentHour * 60 + currentMinute;
-
-            if (nowTotalMinutes >= classStartTotalMinutes && nowTotalMinutes < classEndTotalMinutes) {
-                currentClass = { ...todaySchedule[i], index: i };
-                break;
-            }
-        }
-
-        if (currentClass) {
-            if (currentClass.index + 1 < todaySchedule.length) {
-                const nextClassStartHour = todaySchedule[currentClass.index + 1].time[0];
-                const nextClassStartMinute = todaySchedule[currentClass.index + 1].time[1];
-                const recessStartTotalMinutes = recessTime[0] * 60 + recessTime[1];
-                 // Check if the next class is after recess
-                 if(classEndTotalMinutes <= recessStartTotalMinutes && (nextClassStartHour * 60 + nextClassStartMinute) > recessStartTotalMinutes){
-                    nextClass = { name: "Receso", time: recessTime };
-                 } else {
-                    nextClass = todaySchedule[currentClass.index + 1];
-                 }
-            } else {
-                 nextClass = { name: "Fin de las clases por hoy", time: null };
-            }
-        } else {
-            for (let i = 0; i < todaySchedule.length; i++) {
-                const classStartTotalMinutes = todaySchedule[i].time[0] * 60 + todaySchedule[i].time[1];
-                if (classStartTotalMinutes > (currentHour * 60 + currentMinute)) {
-                    nextClass = todaySchedule[i];
-                    break;
-                }
-            }
-        }
-    }
+    // Usamos la lógica centralizada y robusta para obtener la clase actual y siguiente.
+    const { currentClass, nextClass } = getCurrentAndNextClass(now);
     
     const widgetData = {
         currentTitle: currentClass ? "Clase Actual:" : "No hay clase ahora",

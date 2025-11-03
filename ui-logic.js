@@ -10,6 +10,7 @@ let serverTime = null;
 let startTime = Date.now();
 let currentClassEnd = null;
 let isSimulated = false;
+let lastDisplayedClassName = null; // <-- NUEVA VARIABLE para controlar la animación
 let currentActiveClassInfo = null; // Almacenará la clase activa para resaltarla
 
 /**
@@ -136,11 +137,15 @@ export function updateSchedule() {
     if (currentClass) {
         container?.classList.add('is-in-session'); // Añadir la animación si hay clase
         nextClassCountdownContainer?.classList.remove('visible'); // Ocultar contador grande
-
-        const words = currentClass.name.split(' ');
-        currentClassDisplay.innerHTML = words.map((word, index) => 
-            `<span class="word" style="animation-delay: ${index * 0.1}s">${word}</span>`
-        ).join('');
+        
+        // --- Lógica para animar palabras SOLO si la clase ha cambiado ---
+        if (currentClass.name !== lastDisplayedClassName) {
+            const words = currentClass.name.split(' ');
+            currentClassDisplay.innerHTML = words.map((word, index) => 
+                `<span class="word" style="animation-delay: ${index * 0.1}s">${word}</span>`
+            ).join('');
+            lastDisplayedClassName = currentClass.name;
+        }
 
         teacherDisplay.textContent = currentClass.teacher;
         const classStartMinutes = currentClass.time[0] * 60 + currentClass.time[1];
@@ -150,7 +155,10 @@ export function updateSchedule() {
         currentActiveClassInfo = { ...currentClass, dayIndex: now.getDay() - 1 };
     } else {
         container?.classList.add('is-idle-glow'); // Añadir animación de reposo
-        currentClassDisplay.innerHTML = `<span class="word" style="animation-delay: 0s">¡Sin</span> <span class="word" style="animation-delay: 0.1s">Clases!</span>`;
+        if (lastDisplayedClassName !== "¡Sin Clases!") {
+            currentClassDisplay.innerHTML = `<span class="word" style="animation-delay: 0s">¡Sin</span> <span class="word" style="animation-delay: 0.1s">Clases!</span>`;
+            lastDisplayedClassName = "¡Sin Clases!";
+        }
         teacherDisplay.textContent = "Disfruta tu día";
     }
 

@@ -56,9 +56,25 @@
       "name": "Horario de Clase",
       "description": "Muestra la clase actual y la siguiente.",
       "tag": "schedule-widget",
-      "template": "schedule_template",
-      "ms_ac_template": "widget_template.json",
-      "data": "widget_data.json"
+      "template": "widget_template.json",
+      "ms_ac_template": "widget_template.json", 
+      "data": "widget_data.json",
+      "screenshots": [
+        {
+          "src": "images/screenshots/widget-screenshot.png",
+          "sizes": "320x640",
+          "type": "image/png",
+          "label": "Widget del Horario de Clase"
+        }
+      ],
+      "icons": [
+        {
+          "src": "images/icons/widget-icon-96.png",
+          "sizes": "96x96",
+          "type": "image/png",
+          "purpose": "any"
+        }
+      ]
     }
   ],
   "id": "7"
