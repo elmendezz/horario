@@ -140,12 +140,15 @@ export async function updateSchedule() {
     if (currentClass) {
         newClassName = currentClass.name;
         newTeacherName = currentClass.teacher;
-        container?.classList.add(currentClass.isHoliday ? 'is-idle-glow' : 'is-in-session');
-        const classStartMinutes = currentClass.time[0] * 60 + currentClass.time[1];
-        const classEndMinutes = classStartMinutes + (currentClass.duration || classDuration);
-        currentClassEnd = new Date(now);
-        currentClassEnd.setHours(Math.floor(classEndMinutes / 60), classEndMinutes % 60, 59, 999);
-        currentActiveClassInfo = { ...currentClass, dayIndex: now.getDay() - 1 };
+        container?.classList.add(currentClass.isHoliday ? 'is-idle-glow' : 'is-in-session'); // Aplica el efecto visual correcto
+        // Solo calcula el tiempo de finalización si NO es un día festivo y tiene una hora definida
+        if (!currentClass.isHoliday && currentClass.time) {
+            const classStartMinutes = currentClass.time[0] * 60 + currentClass.time[1];
+            const classEndMinutes = classStartMinutes + (currentClass.duration || classDuration);
+            currentClassEnd = new Date(now);
+            currentClassEnd.setHours(Math.floor(classEndMinutes / 60), classEndMinutes % 60, 59, 999);
+            currentActiveClassInfo = { ...currentClass, dayIndex: now.getDay() - 1 };
+        }
     }
 
     // Determinar el estado y el texto a mostrar
