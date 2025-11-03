@@ -18,7 +18,6 @@ const urlsToCache = [
 
 // Variable global para almacenar el horario una vez cargado.
 let scheduleData = null;
-let notificationTimer; // Declarar la variable para el temporizador de notificaciones
 
 /**
  * Carga el horario desde el módulo centralizado.
@@ -465,11 +464,9 @@ self.addEventListener('activate', event => {
             }).catch(e => console.error("SW: Fallo al cargar 'notificationLeadTime':", e)),
 
             // Registrar la sincronización periódica cuando el SW se activa
-            (async () => {
-                try {
-                    await self.registration.periodicSync?.register('update-widget-periodic', { minInterval: 15 * 60 * 1000 }); // Cada 15 minutos
-                } catch (e) { console.warn('SW: Fallo al registrar la sincronización periódica (permiso denegado).', e.message); }
-            })(),
+            self.registration.periodicSync?.register('update-widget-periodic', {
+                minInterval: 15 * 60 * 1000, // Cada 15 minutos
+            }).catch(e => console.error('SW: Fallo al registrar la sincronización periódica:', e)),
             // Al activar, programamos las notificaciones de clase y también hacemos
             // una comprobación inicial para el fallback.
             scheduleClassNotifications(),

@@ -1,12 +1,12 @@
 // c:\Users\Admin\Documents\GitHub\horario\schedule-utils.js
 
-import { classDuration } from './schedule-data.js';
+import { schedule, classDuration } from './schedule-data.js';
 
 // REUSABLE LOGIC FUNCTION
-export function getCurrentAndNextClass(date, scheduleToUse) {
+export function getCurrentAndNextClass(date) {
     const day = date.getDay();
     const currentTotalMinutes = date.getHours() * 60 + date.getMinutes();
-    
+
     let currentClass = null;
     let nextClass = null;
     let foundCurrent = false;
@@ -39,7 +39,7 @@ export function getCurrentAndNextClass(date, scheduleToUse) {
                  const classStartMinutes = classItem.time[0] * 60 + classItem.time[1];
                  if(classStartMinutes > currentTotalMinutes){
                     nextClass = classItem;
-                    break; 
+                    break;
                  }
             }
         }
@@ -47,14 +47,14 @@ export function getCurrentAndNextClass(date, scheduleToUse) {
     
     // If still no next class today, look for the next school day
     if (!nextClass) {
-         for (let i = 1; i <= 7; i++) { // Buscar en los próximos 7 días
+         for (let i = 1; i <= 7; i++) {
             const nextDayIndex = (day + i - 1) % 7; // 0=Sun, 1=Mon...
-            if (nextDayIndex >= 0 && nextDayIndex <= 4 && scheduleToUse[nextDayIndex] && scheduleToUse[nextDayIndex].length > 0) { // Asegurarse de que el día sea de L-V y el horario exista
-                 nextClass = scheduleToUse[nextDayIndex][0];
+            if (nextDayIndex >= 0 && nextDayIndex <= 4 && schedule[nextDayIndex] && schedule[nextDayIndex].length > 0) { // Ensure day is Mon-Fri and schedule exists
+                 nextClass = schedule[nextDayIndex][0];
                  nextClass.isNextDay = true; // Add a flag to indicate it's on a future day
                  break;
             }
         }
     }
-    return { currentClass, nextClass, day }; // Retornar también el día
+    return { currentClass, nextClass };
 }
