@@ -124,7 +124,7 @@ export default async function handler(req, res) {
         const { content: noClassDays, sha: noClassDaysSha } = await getFile(noClassDaysFile);
 
         if (req.method === 'GET') {
-            return res.status(200).json(noClassDays);
+            return res.status(200).json(noClassDays || []);
         }
 
         if (req.method === 'POST') {

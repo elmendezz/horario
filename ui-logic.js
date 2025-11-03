@@ -123,6 +123,7 @@ export async function updateSchedule() {
     const teacherDisplay = document.getElementById('teacher-display');
     const nextClassDisplay = document.getElementById('next-class-display');
     const countdownEl = document.getElementById('countdown');
+    nextClassDisplay.textContent = "Siguiente: Ninguna"; // <-- VALOR POR DEFECTO
     
     currentClassEnd = null;
     currentActiveClassInfo = null; // Reiniciar en cada actualización
@@ -188,8 +189,6 @@ export async function updateSchedule() {
             countdownEl.dataset.nextClassTimeDisplay = "";
             document.getElementById('next-class-time-label').textContent = '';
         }
-    } else {
-        nextClassDisplay.textContent = "Siguiente: Ninguna";
     }
 
     highlightCurrentClassInTable();

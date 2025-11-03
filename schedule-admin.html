@@ -94,6 +94,9 @@
                 return;
             }
             days.forEach(day => {
+                // Añadir una guarda para prevenir errores si hay datos malformados en el JSON
+                if (!day || !day.date) return;
+
                 const li = document.createElement('li');
                 // Usar replace para evitar problemas de zona horaria al parsear YYYY-MM-DD
                 const displayDate = new Date(day.date.replace(/-/g, '/'));
