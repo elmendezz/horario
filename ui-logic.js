@@ -137,7 +137,11 @@ export function updateSchedule() {
         container?.classList.add('is-in-session'); // Añadir la animación si hay clase
         nextClassCountdownContainer?.classList.remove('visible'); // Ocultar contador grande
 
-        currentClassDisplay.textContent = currentClass.name;
+        const words = currentClass.name.split(' ');
+        currentClassDisplay.innerHTML = words.map((word, index) => 
+            `<span class="word" style="animation-delay: ${index * 0.1}s">${word}</span>`
+        ).join('');
+
         teacherDisplay.textContent = currentClass.teacher;
         const classStartMinutes = currentClass.time[0] * 60 + currentClass.time[1];
         const classEndMinutes = classStartMinutes + (currentClass.duration || classDuration);
@@ -146,7 +150,7 @@ export function updateSchedule() {
         currentActiveClassInfo = { ...currentClass, dayIndex: now.getDay() - 1 };
     } else {
         container?.classList.add('is-idle-glow'); // Añadir animación de reposo
-        currentClassDisplay.textContent = "¡Sin Clases!";
+        currentClassDisplay.innerHTML = `<span class="word" style="animation-delay: 0s">¡Sin</span> <span class="word" style="animation-delay: 0.1s">Clases!</span>`;
         teacherDisplay.textContent = "Disfruta tu día";
     }
 
@@ -179,6 +183,7 @@ export function updateSchedule() {
     highlightCurrentClassInTable();
 }
 
+
 /**
  * Renderiza la tabla completa del horario.
  */
@@ -195,11 +200,11 @@ export function renderScheduleTable() {
         row.dataset.time = timeInMinutes;
         const hours = Math.floor(timeInMinutes/60), minutes = timeInMinutes%60;
         row.innerHTML = `<td>${formatTime(hours, minutes)}</td>` + 
-                        [0,1,2,3,4].map(dayIndex => {
-                            const classItem = schedule[dayIndex].find(c => c.time[0]*60 + c.time[1] === timeInMinutes);
+                        [0, 1, 2, 3, 4].map(dayIndex => {
+                            const classItem = schedule[dayIndex].find(c => c.time[0] * 60 + c.time[1] === timeInMinutes);
                             return `<td>${classItem ? `<strong>${classItem.name}</strong><br>${classItem.teacher}` : ''}</td>`;
                         }).join('');
-        
+
         if (timeInMinutes === 15 * 60) { // 3:00 PM
             row.classList.add('receso-row');
         }

@@ -43,12 +43,35 @@ async function checkForUpdates() {
         
         localStorage.setItem('appVersion', currentVersion);
         alert('¡Hay una nueva actualización! La aplicación se recargará para aplicar los cambios.');
-        window.location.reload();
+        window.location.reload(); // Forzar recarga para que el nuevo SW tome el control
+    }
+}
+
+/**
+ * Muestra el modal de "Novedades" si la versión ha cambiado.
+ */
+function showWhatsNewModal() {
+    const currentVersion = 'v91'; // Esta debe coincidir con la versión en CACHE_NAME
+    const lastSeenVersion = localStorage.getItem('lastSeenVersion');
+
+    if (currentVersion !== lastSeenVersion) {
+        const modal = document.getElementById('version-modal');
+        const closeBtn = document.getElementById('close-version-modal-btn');
+
+        if (modal && closeBtn) {
+            modal.style.display = 'block';
+
+            closeBtn.onclick = () => {
+                modal.style.display = 'none';
+                localStorage.setItem('lastSeenVersion', currentVersion);
+            };
+        }
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    checkForUpdates(); // Comprobar actualizaciones al inicio
+    // checkForUpdates(); // Desactivado temporalmente para dar prioridad al modal de versión
+    showWhatsNewModal(); // Mostrar el modal de novedades si es necesario
     // Inicializar la lógica de tiempo y luego la UI y notificaciones
     fetchTime().then(() => {
         initializeUI(); // Inicializar todos los componentes de la UI

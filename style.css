@@ -225,8 +225,9 @@ body {
     transition: background-color 0.3s ease, box-shadow 0.5s linear; /* Transición suave del color del resplandor */
 
     /* --- Animación de Entrada --- */
-    animation: fadeInUp var(--animation-duration-normal) var(--animation-timing-function) both;
+    animation: enter-3d var(--animation-duration-slow) cubic-bezier(0.19, 1, 0.22, 1) both;
     animation-delay: 0.2s;
+    transform-style: preserve-3d;
 }
 
 /* Aplicar animación solo cuando hay una clase en sesión */
@@ -250,7 +251,19 @@ body {
     background-clip: text;
     line-height: 1.2;
     word-wrap: break-word;
-    /* Se eliminó el resplandor del texto */
+    display: flex; /* Usamos flex para animar palabras */
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* Estilo para las palabras que animaremos */
+#current-class-display .word {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(20px) rotateX(-90deg);
+    transform-origin: bottom;
+    animation: reveal-word 0.8s cubic-bezier(0.215, 0.610, 0.355, 1.000) forwards;
+    margin: 0 0.2em; /* Espacio entre palabras */
 }
 #teacher-display {
     font-size: 1.1em;
@@ -433,10 +446,30 @@ body {
     font-weight: bold;
     text-transform: uppercase;
     color: white;
-    background-color: var(--next-class-bg);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease, filter 0.3s ease;
+    position: relative; /* Necesario para el pseudo-elemento del borde */
+    overflow: hidden; /* Para contener el borde */
+    background: var(--container-bg); /* Fondo base */
+    z-index: 1;
+}
+
+/* Borde animado con gradiente */
+.styled-button::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: conic-gradient(from 180deg at 50% 50%, #89b4f8, #b19df7, #f4a78f, #89b4f8);
+    transition: opacity 0.3s ease;
+    z-index: -1;
+    opacity: 0;
+    animation: rotate-border 4s linear infinite;
+}
+
+.styled-button:hover::before {
+    opacity: 1;
 }
 
 [data-theme="dark"] .styled-button {
@@ -448,17 +481,12 @@ body {
     transform: translateY(-2px);
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
     filter: brightness(1.2); /* Aumentar brillo al pasar el ratón */
-    background-color: var(--next-class-hover-bg);
 }
 
 .styled-button:active {
     transform: translateY(1px);
     transform: scale(0.98); /* --- Efecto de presionar --- */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-[data-theme="dark"] .styled-button:hover {
-    background: var(--gemini-gradient-fast); /* Mantener gradiente en hover */
 }
 
 #ios-install-prompt {
@@ -644,6 +672,26 @@ body {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
+}
+
+@keyframes rotate-border {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes enter-3d {
+    from {
+        opacity: 0;
+        transform: translateY(40px) scale(0.95) rotateX(-20deg);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1) rotateX(0deg);
+    }
+}
+
+@keyframes reveal-word {
+    to { opacity: 1; transform: translateY(0) rotateX(0); }
 }
 
 @keyframes pulse-dot {
