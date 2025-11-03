@@ -481,19 +481,85 @@ function initializeMenu() {
     const closeMenuBtn = document.getElementById('close-menu-btn');
     const sideMenu = document.getElementById('side-menu');
     const overlay = document.getElementById('menu-overlay');
+    let previouslyFocused = null;
 
+    // Obtiene todos los elementos focusables dentro del menú
+    function getFocusableElements(container) {
+        const selectors = 'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, [tabindex]:not([tabindex="-1"])';
+        return Array.from(container.querySelectorAll(selectors)).filter(el => el.offsetParent !== null);
+    }
+
+    function handleKeyDown(e) {
+        // Cerrar con Escape
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            closeMenu();
+            return;
+        }
+
+        // Trap focus dentro del menú
+        if (e.key === 'Tab') {
+            const focusables = getFocusableElements(sideMenu);
+            if (focusables.length === 0) {
+                e.preventDefault();
+                return;
+            }
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+            if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            } else if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            }
+        }
+    }
+    
     const openMenu = () => {
         if (!menuToggle) return;
+        previouslyFocused = document.activeElement;
+
         sideMenu.classList.add('open');
+        sideMenu.setAttribute('aria-hidden', 'false');
+        menuToggle.setAttribute('aria-expanded', 'true');
         overlay.classList.add('open');
-        menuToggle.textContent = '×'; // Cambiar a 'X'
+
+        // Aplicar animación escalonada a los botones del menú
+        const menuButtons = sideMenu.querySelectorAll('.menu-button');
+        menuButtons.forEach((button, index) => {
+            button.style.animationDelay = `${index * 0.05}s`;
+        });
+
+        // Mover el foco al primer elemento (que ahora es el botón de cerrar)
+        const focusables = getFocusableElements(sideMenu);
+        if (focusables.length) {
+            focusables[0].focus();
+        } else {
+            sideMenu.focus(); // Fallback por si no hay nada focusable
+        }
+
+        document.addEventListener('keydown', handleKeyDown);
     };
 
     const closeMenu = () => {
         if (!menuToggle) return;
         sideMenu.classList.remove('open');
+        sideMenu.setAttribute('aria-hidden', 'true');
+        menuToggle.setAttribute('aria-expanded', 'false');
         overlay.classList.remove('open');
-        menuToggle.textContent = '☰'; // Volver a '☰'
+
+        // Resetear la animación para la próxima vez que se abra
+        const menuButtons = sideMenu.querySelectorAll('.menu-button');
+        menuButtons.forEach((button) => button.style.animationDelay = '');
+
+        document.removeEventListener('keydown', handleKeyDown);
+
+        // Devolver el foco al botón que abrió el menú
+        if (previouslyFocused) {
+            previouslyFocused.focus();
+            previouslyFocused = null;
+        }
     };
 
     menuToggle?.addEventListener('click', openMenu);

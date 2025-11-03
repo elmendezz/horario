@@ -29,9 +29,10 @@
 <body>
     <!-- Menú Hamburguesa -->
     <button id="menu-toggle" class="menu-toggle-btn" aria-label="Abrir menú" aria-controls="side-menu" aria-expanded="false">☰</button>
-    <div id="side-menu" class="side-menu" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
-        <button id="close-menu-btn" class="close-menu-btn" aria-label="Cerrar menú">&times;</button>
+    <div id="side-menu" class="side-menu" role="dialog" aria-modal="true" aria-labelledby="menu-heading" aria-hidden="true" tabindex="-1">
         <div class="menu-content">
+            <h2 id="menu-heading" class="visually-hidden">Menú Principal</h2>
+            <button id="close-menu-btn" class="close-menu-btn" aria-label="Cerrar menú">&times;</button>
             <div id="user-greeting-menu" class="menu-greeting"></div>
         <div class="menu-section">
             <h3>Opciones</h3>
@@ -209,99 +210,6 @@
     <script type="module" src="ui-logic.js"></script>
     <script type="module" src="script.js"></script>
 
-    <!-- Script para accesibilidad y navegación por teclado del menú hamburguesa -->
-    <script>
-      (function() {
-        const menuToggle = document.getElementById('menu-toggle');
-        const sideMenu = document.getElementById('side-menu');
-        const closeMenuBtn = document.getElementById('close-menu-btn');
-        const overlay = document.getElementById('menu-overlay');
-
-        let previouslyFocused = null;
-
-        // Obtiene todos los elementos focusables dentro del menú
-        function getFocusableElements(container) {
-          const selectors = 'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, [tabindex]:not([tabindex="-1"])';
-          return Array.from(container.querySelectorAll(selectors)).filter(el => el.offsetParent !== null);
-        }
-
-        function openMenu() {
-          previouslyFocused = document.activeElement;
-          sideMenu.classList.add('open');
-          sideMenu.setAttribute('aria-hidden', 'false');
-          menuToggle.setAttribute('aria-expanded', 'true');
-          overlay.classList.add('open');
-
-          // --- Aplicar animación escalonada a los botones del menú ---
-          const menuButtons = sideMenu.querySelectorAll('.menu-button');
-          menuButtons.forEach((button, index) => {
-            button.style.animationDelay = `${index * 0.05}s`;
-          });
-
-          const focusables = getFocusableElements(sideMenu);
-          if (focusables.length) {
-            focusables[0].focus();
-          } else {
-            sideMenu.focus();
-          }
-
-          document.addEventListener('keydown', handleKeyDown);
-        }
-
-        function closeMenu() {
-          sideMenu.classList.remove('open');
-          sideMenu.setAttribute('aria-hidden', 'true');
-          menuToggle.setAttribute('aria-expanded', 'false');
-          overlay.classList.remove('open');
-
-          // --- Resetear la animación para la próxima vez que se abra ---
-          const menuButtons = sideMenu.querySelectorAll('.menu-button');
-          menuButtons.forEach((button) => {
-            button.style.animationDelay = '';
-          });
-
-          document.removeEventListener('keydown', handleKeyDown);
-
-          if (previouslyFocused) {
-            previouslyFocused.focus();
-            previouslyFocused = null;
-          }
-        }
-
-        function handleKeyDown(e) {
-          // Cerrar con Escape
-          if (e.key === 'Escape') {
-            e.preventDefault();
-            closeMenu();
-            return;
-          }
-
-          // Trap focus dentro del menú
-          if (e.key === 'Tab') {
-            const focusables = getFocusableElements(sideMenu);
-            if (focusables.length === 0) {
-              e.preventDefault();
-              return;
-            }
-            const first = focusables[0];
-            const last = focusables[focusables.length - 1];
-            if (!e.shiftKey && document.activeElement === last) {
-              e.preventDefault();
-              first.focus();
-            } else if (e.shiftKey && document.activeElement === first) {
-              e.preventDefault();
-              last.focus();
-            }
-          }
-        }
-
-        // Eventos
-        menuToggle.addEventListener('click', openMenu);
-        closeMenuBtn.addEventListener('click', closeMenu);
-        overlay.addEventListener('click', closeMenu);
-      })();
-    </script>
-    
     <script>
         if ('serviceWorker' in navigator) {
           window.addEventListener('load', () => {
