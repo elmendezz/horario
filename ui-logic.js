@@ -438,6 +438,9 @@ async function highlightHolidayColumns() {
     today.setHours(0, 0, 0, 0); // Normalizar a medianoche para comparaciones de día
 
     holidays.forEach(holiday => {
+        // Añadir una guarda para prevenir errores si hay datos malformados en el JSON
+        if (!holiday || !holiday.date) return;
+
         const holidayDate = new Date(holiday.date.replace(/-/g, '/'));
         const holidayDayOfWeek = holidayDate.getDay(); // 0=Sun, 1=Mon...
         if (holidayDate.getTime() >= today.getTime()) { // Solo para hoy y el futuro
