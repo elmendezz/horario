@@ -45,6 +45,10 @@
                     <label for="no-class-date">Selecciona una fecha:</label>
                     <input type="date" id="no-class-date" required>
                 </div>
+                <div class="form-group">
+                    <label for="no-class-reason">Razón (ej: Día de Muertos):</label>
+                    <input type="text" id="no-class-reason" placeholder="Opcional" required>
+                </div>
                 <button type="submit" class="styled-button">Añadir Fecha</button>
             </form>
         </div>
@@ -87,8 +91,8 @@
             }
             days.forEach(day => {
                 const li = document.createElement('li');
-                li.innerHTML = `<span>${new Date(day + 'T00:00:00-07:00').toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                              <button class="delete-btn" data-date="${day}">Borrar</button>`;
+                li.innerHTML = `<span><strong>${new Date(day.date + 'T00:00:00-07:00').toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</strong><br><small>${day.reason}</small></span>
+                              <button class="delete-btn" data-date="${day.date}">Borrar</button>`;
                 daysList.appendChild(li);
             });
         }
@@ -96,12 +100,13 @@
         addDayForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const date = document.getElementById('no-class-date').value;
-            if (!date) return;
+            const reason = document.getElementById('no-class-reason').value;
+            if (!date || !reason) return alert('La fecha y la razón son obligatorias.');
 
             await fetch('/api/messages', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type: 'no_class_day', date })
+                body: JSON.stringify({ type: 'no_class_day', date, reason })
             });
             alert('Fecha añadida con éxito.');
             addDayForm.reset();

@@ -67,10 +67,10 @@ export async function getCurrentAndNextClass(date) {
     // Comprobar si es un día sin clases
     const holidays = await getNoClassDays();
     const todayStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-    if (holidays.includes(todayStr)) {
-        currentClass = { name: "Día sin clases", teacher: "Suspensión de labores" };
+    const holidayInfo = holidays.find(h => h.date === todayStr);
+    if (holidayInfo) {
+        currentClass = { name: "Día sin clases", teacher: holidayInfo.reason, isHoliday: true };
         foundCurrent = true;
-        // La lógica para la siguiente clase ya busca el próximo día hábil, así que funcionará bien.
     }
 
     // If still no next class today, look for the next school day
@@ -80,7 +80,7 @@ export async function getCurrentAndNextClass(date) {
             const nextDate = new Date(date);
             nextDate.setDate(date.getDate() + i);
             const nextDateStr = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}-${String(nextDate.getDate()).padStart(2, '0')}`;
-            if (nextDayIndex >= 0 && nextDayIndex <= 4 && schedule[nextDayIndex] && schedule[nextDayIndex].length > 0 && !holidays.includes(nextDateStr)) {
+            if (nextDayIndex >= 0 && nextDayIndex <= 4 && schedule[nextDayIndex] && schedule[nextDayIndex].length > 0 && !holidays.find(h => h.date === nextDateStr)) {
                  nextClass = schedule[nextDayIndex][0]; // Ensure day is Mon-Fri, schedule exists, and it's not a holiday
                  nextClass.isNextDay = true; // Add a flag to indicate it's on a future day
                  break;

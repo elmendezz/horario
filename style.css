@@ -367,6 +367,12 @@ body {
     font-weight: bold;
 }
 
+/* Estilo para resaltar columnas de días festivos */
+#schedule-table .holiday-column {
+    background-color: rgba(220, 53, 69, 0.7) !important;
+    color: white !important;
+}
+
 #schedule-table .receso-row {
     background-color: #6c757d;
     color: white;

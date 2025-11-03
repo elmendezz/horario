@@ -135,7 +135,11 @@ export async function updateSchedule() {
     const { currentClass, nextClass } = await getCurrentAndNextClass(now);
 
     if (currentClass) {
-        container?.classList.add('is-in-session'); // Añadir la animación si hay clase
+        if (currentClass.isHoliday) {
+            container?.classList.add('is-idle-glow'); // Usar la animación de reposo para días festivos
+        } else {
+            container?.classList.add('is-in-session'); // Animación normal para clases
+        }
         nextClassCountdownContainer?.classList.remove('visible'); // Ocultar contador grande
         
         // --- Lógica para animar palabras SOLO si la clase ha cambiado ---
@@ -394,6 +398,7 @@ function initializeScheduleToggle() {
         scheduleTable.classList.toggle('visible');
         showScheduleBtn.textContent = scheduleTable.classList.contains('visible') ? 'Ocultar Horario' : 'Mostrar Horario';
         highlightCurrentClassInTable(); // Volver a resaltar al mostrar la tabla
+        highlightHolidayColumns(); // Resaltar columnas de días festivos
     });
 }
 
@@ -401,14 +406,49 @@ function initializeScheduleToggle() {
  * Inicializa el botón para mostrar las herramientas de desarrollo.
  */
 function initializeDevToolsToggle() {
-    document.getElementById('show-dev-tools-btn').addEventListener('click', () => {
+    const devToolsBtn = document.getElementById('show-dev-tools-btn');
+    const adminLink = document.createElement('a');
+    adminLink.href = 'schedule-admin.html';
+    adminLink.className = 'menu-button';
+    adminLink.style.color = '#ffc107';
+    adminLink.textContent = '📅 Admin. Días sin Clases';
+
+    devToolsBtn.addEventListener('click', () => {
         const password = prompt('Ingresa la contraseña para ver las herramientas de desarrollo:');
         if (password === '1CV') {
             document.getElementById('developer-tools').style.display = 'flex';
-            document.getElementById('show-dev-tools-btn').style.display = 'none'; // Ocultar el botón después de usarlo
+            devToolsBtn.style.display = 'none'; // Ocultar el botón después de usarlo
+            devToolsBtn.parentElement.appendChild(adminLink); // Añadir el enlace de admin
             alert('Acceso concedido. Herramientas de desarrollo visibles.');
         } else if (password !== null) { // Si el usuario no presionó "Cancelar"
             alert('Contraseña incorrecta.');
+        }
+    });
+}
+
+/**
+ * Resalta las columnas de días festivos en la tabla del horario.
+ */
+async function highlightHolidayColumns() {
+    const holidays = await (await fetch('/api/messages?noClassDays=true')).json();
+    const today = new Date();
+    const currentDayOfWeek = today.getDay(); // 0=Sun, 6=Sat
+
+    holidays.forEach(holiday => {
+        const holidayDate = new Date(holiday.date + 'T00:00:00-07:00');
+        const holidayDayOfWeek = holidayDate.getDay(); // 0=Sun, 1=Mon...
+        const dayDiff = (holidayDate.getTime() - today.getTime()) / (1000 * 3600 * 24);
+
+        // Solo resaltar si el día festivo está en la semana actual visible
+        if (dayDiff >= -currentDayOfWeek && dayDiff < (7 - currentDayOfWeek)) {
+            const columnIndex = holidayDayOfWeek; // 1=Lunes, 2=Martes...
+            if (columnIndex >= 1 && columnIndex <= 5) {
+                document.querySelectorAll(`#schedule-table tr`).forEach(row => {
+                    if (row.cells[columnIndex]) {
+                        row.cells[columnIndex].classList.add('holiday-column');
+                    }
+                });
+            }
         }
     });
 }

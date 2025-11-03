@@ -128,11 +128,12 @@ export default async function handler(req, res) {
         }
 
         if (req.method === 'POST') {
-            const { date } = req.body;
-            if (!date) return res.status(400).json({ error: "Falta la fecha." });
-            if (!noClassDays.includes(date)) {
-                noClassDays.push(date);
-                noClassDays.sort(); // Mantener la lista ordenada
+            const { date, reason } = req.body;
+            if (!date || !reason) return res.status(400).json({ error: "Faltan la fecha o la razón." });
+            // Evitar duplicados
+            if (!noClassDays.some(d => d.date === date)) {
+                noClassDays.push({ date, reason });
+                noClassDays.sort((a, b) => a.date.localeCompare(b.date)); // Mantener la lista ordenada por fecha
                 await updateFile(noClassDaysFile, noClassDays, noClassDaysSha, `Añadir día sin clases: ${date}`);
             }
             return res.status(201).json({ success: true });
@@ -140,9 +141,9 @@ export default async function handler(req, res) {
 
         if (req.method === 'DELETE') {
             const { date } = req.body;
-            if (!date) return res.status(400).json({ error: "Falta la fecha." });
+            if (!date) return res.status(400).json({ error: "Falta la fecha a eliminar." });
             
-            const updatedDays = noClassDays.filter(d => d !== date);
+            const updatedDays = noClassDays.filter(d => d.date !== date);
             if (updatedDays.length < noClassDays.length) {
                 await updateFile(noClassDaysFile, updatedDays, noClassDaysSha, `Eliminar día sin clases: ${date}`);
             }
