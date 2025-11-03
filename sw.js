@@ -7,15 +7,21 @@ const urlsToCache = [
     '/', 
     'index.html', 
     'horario.jpg', 
-    'manifest.json',
-    'widget_template.json', // Agregamos el template del widget a la caché
+    'manifest.json', 
+    'widget_template.json',
     'images/icons/icon-192x192.png',
-    'schedule-data.js', // ¡Añadimos el horario centralizado a la caché!
+    // Módulos JS principales
+    'schedule-data.js',
     'schedule-utils.js',
     'notification-logic.js',
     'ui-logic.js',
     'script.js',
-    'style.css'
+    'style.css',
+    // Páginas estáticas para acceso offline
+    'about-us.html',
+    'feedback.html',
+    'changelog.html',
+    'notification-settings.html'
 ];
 
 // Variable global para almacenar el horario una vez cargado.

@@ -29,6 +29,7 @@
             <button id="reset-theme-btn" class="menu-button">🔄 Sincronizar Tema con Sistema</button>
             <button id="time-source-toggle" class="menu-button">☁️ Usar Hora de Internet</button>
             <button id="notifications-btn" class="menu-button" aria-label="Activar notificaciones">🔕 Notificaciones</button>
+            <button id="export-schedule-btn" class="menu-button">🗓️ Exportar Horario</button>
             <button id="add-widget-btn" class="menu-button">🧩 Agregar Widgets</button>
             <a href="notification-settings.html" class="menu-button">⚙️ Configurar Notificaciones</a>
             <button id="register-sw-btn" class="menu-button" style="color: #17a2b8;">⚙️ Registrar Service Worker</button>
@@ -189,6 +190,9 @@
 
     <!-- Contenedor para los anuncios en vivo (toasts) -->
     <div id="live-announcements-container"></div>
+
+    <!-- Librería para generar archivos .ics -->
+    <script src="https://cdn.jsdelivr.net/npm/ics-browser@1.5.0/ics.deps.min.js"></script>
 
     <script type="module" src="schedule-data.js"></script>
     <script type="module" src="schedule-utils.js"></script>

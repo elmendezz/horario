@@ -135,20 +135,30 @@ export async function updateSchedule() {
 
     const { currentClass, nextClass } = await getCurrentAndNextClass(now);
 
-    // 1. Determinar el estado y el texto a mostrar
+    // Determinar el estado y el texto a mostrar
     let newClassName, newTeacherName;
     if (currentClass) {
         newClassName = currentClass.name;
         newTeacherName = currentClass.teacher;
         container?.classList.add(currentClass.isHoliday ? 'is-idle-glow' : 'is-in-session');
+        const classStartMinutes = currentClass.time[0] * 60 + currentClass.time[1];
+        const classEndMinutes = classStartMinutes + (currentClass.duration || classDuration);
+        currentClassEnd = new Date(now);
+        currentClassEnd.setHours(Math.floor(classEndMinutes / 60), classEndMinutes % 60, 59, 999);
+        currentActiveClassInfo = { ...currentClass, dayIndex: now.getDay() - 1 };
+    }
+
+    // Determinar el estado y el texto a mostrar
+    if (currentClass) {
+        newClassName = currentClass.name;
+        newTeacherName = currentClass.teacher;
         nextClassCountdownContainer?.classList.remove('visible'); // Ocultar contador grande
     } else {
         newClassName = "¡Sin Clases!";
         newTeacherName = "Disfruta tu día";
-        container?.classList.add('is-idle-glow'); // Añadir animación de reposo
     }
 
-    // 2. Actualizar la UI solo si el texto ha cambiado para evitar repeticiones de animación
+    // --- Lógica para animar palabras SOLO si el texto ha cambiado ---
     if (newClassName !== lastDisplayedClassName) {
         const words = newClassName.split(' ');
         currentClassDisplay.innerHTML = words.map((word, index) => 
@@ -158,16 +168,6 @@ export async function updateSchedule() {
     }
     teacherDisplay.textContent = newTeacherName;
 
-    // 3. Configurar el final de la clase actual si existe y no es un día festivo
-    if (currentClass && !currentClass.isHoliday) {
-        const classStartMinutes = currentClass.time[0] * 60 + currentClass.time[1];
-        const classEndMinutes = classStartMinutes + (currentClass.duration || classDuration);
-        currentClassEnd = new Date(now);
-        currentClassEnd.setHours(Math.floor(classEndMinutes / 60), classEndMinutes % 60, 59, 999); // Finaliza al terminar el minuto
-        currentActiveClassInfo = { ...currentClass, dayIndex: now.getDay() - 1 };
-    }
-
-    // 4. Configurar la información de la siguiente clase
     if (nextClass) {
         nextClassDisplay.textContent = `Siguiente: ${nextClass.name}`;
         if (nextClass.time) {
@@ -194,7 +194,6 @@ export async function updateSchedule() {
 
     highlightCurrentClassInTable();
 }
-
 
 /**
  * Renderiza la tabla completa del horario.
@@ -438,9 +437,6 @@ async function highlightHolidayColumns() {
     today.setHours(0, 0, 0, 0); // Normalizar a medianoche para comparaciones de día
 
     holidays.forEach(holiday => {
-        // Añadir una guarda para prevenir errores si hay datos malformados en el JSON
-        if (!holiday || !holiday.date) return;
-
         const holidayDate = new Date(holiday.date.replace(/-/g, '/'));
         const holidayDayOfWeek = holidayDate.getDay(); // 0=Sun, 1=Mon...
         if (holidayDate.getTime() >= today.getTime()) { // Solo para hoy y el futuro
@@ -454,6 +450,24 @@ async function highlightHolidayColumns() {
             }
         }
     });
+}
+
+/**
+ * Inicializa la funcionalidad del modal de ayuda para widgets.
+ */
+function initializeWidgetHelpModal() {
+    const openBtn = document.getElementById('add-widget-btn');
+    const modal = document.getElementById('widget-help-modal');
+    const closeBtn = document.getElementById('close-widget-help-modal-btn');
+
+    if (openBtn && modal && closeBtn) {
+        openBtn.addEventListener('click', () => {
+            modal.style.display = 'block';
+        });
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+    }
 }
 
 /**
@@ -622,10 +636,7 @@ export async function initializeAnnouncements() {
         // No es necesario mostrar un error en la UI, simplemente no se mostrarán anuncios.
     }
 }
-
-/**
- * Inicializa el control para cambiar la fuente de la hora (local/internet).
- */
+/** * Inicializa el control para cambiar la fuente de la hora (local/internet). */
 function initializeTimeSourceToggle() {
     const timeSourceToggle = document.getElementById('time-source-toggle');
     if (!timeSourceToggle) return;
@@ -651,11 +662,7 @@ function initializeTimeSourceToggle() {
 
     updateButtonText(); // Establecer texto inicial al cargar
 }
-
-/**
- * Inicializa la carga de anuncios en tiempo real (polling).
- * Los anuncios se mostrarán como toasts en la parte inferior de la página.
- */
+/** * Inicializa la carga de anuncios en tiempo real (polling). * Los anuncios se mostrarán como toasts en la parte inferior de la página. */
 export function initializeLiveAnnouncements() {
     const container = document.getElementById('live-announcements-container');
     if (!container) return;
@@ -744,10 +751,7 @@ export function initializeLiveAnnouncements() {
         fetchAndDisplayAnnouncements();
     }
 }
-
-/**
- * Función unificada para actualizar ambos tipos de anuncios.
- */
+/** * Función unificada para actualizar ambos tipos de anuncios. */
 export function updateAnnouncements() {
     initializeAnnouncements();
     initializeLiveAnnouncements();
@@ -772,6 +776,7 @@ function initializeSWRegistrationButton() {
     });
 }
 
+
 /**
  * Función principal para inicializar toda la lógica de la UI.
  */
@@ -781,6 +786,7 @@ export function initializeUI() {
     // Llamada unificada para inicializar los anuncios
     updateAnnouncements();
     initializeModal();
+    initializeWidgetHelpModal();
     initializeFullscreen();
     initializeCacheControls();
     initializeUser();
