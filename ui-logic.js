@@ -430,17 +430,17 @@ function initializeDevToolsToggle() {
  * Resalta las columnas de días festivos en la tabla del horario.
  */
 async function highlightHolidayColumns() {
+    // Limpiar resaltados anteriores
+    document.querySelectorAll('#schedule-table .holiday-column').forEach(cell => cell.classList.remove('holiday-column'));
+
     const holidays = await (await fetch('/api/messages?noClassDays=true')).json();
     const today = new Date();
-    const currentDayOfWeek = today.getDay(); // 0=Sun, 6=Sat
+    today.setHours(0, 0, 0, 0); // Normalizar a medianoche para comparaciones de día
 
     holidays.forEach(holiday => {
-        const holidayDate = new Date(holiday.date + 'T00:00:00-07:00');
+        const holidayDate = new Date(holiday.date.replace(/-/g, '/'));
         const holidayDayOfWeek = holidayDate.getDay(); // 0=Sun, 1=Mon...
-        const dayDiff = (holidayDate.getTime() - today.getTime()) / (1000 * 3600 * 24);
-
-        // Solo resaltar si el día festivo está en la semana actual visible
-        if (dayDiff >= -currentDayOfWeek && dayDiff < (7 - currentDayOfWeek)) {
+        if (holidayDate.getTime() >= today.getTime()) { // Solo para hoy y el futuro
             const columnIndex = holidayDayOfWeek; // 1=Lunes, 2=Martes...
             if (columnIndex >= 1 && columnIndex <= 5) {
                 document.querySelectorAll(`#schedule-table tr`).forEach(row => {

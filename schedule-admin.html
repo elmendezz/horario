@@ -31,6 +31,10 @@
             background-color: #dc3545; color: white; border: none;
             padding: 5px 10px; border-radius: 5px; cursor: pointer;
         }
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .btn-secondary:hover { filter: brightness(1.1); }
     </style>
 </head>
 <body>
@@ -61,7 +65,7 @@
         </div>
 
         <div style="text-align: center;">
-            <a href="index.html" class="styled-button" style="background-color: #6c757d;">Volver al Horario</a>
+            <a href="index.html" class="styled-button btn-secondary">Volver al Horario</a>
         </div>
     </div>
 
@@ -91,7 +95,9 @@
             }
             days.forEach(day => {
                 const li = document.createElement('li');
-                li.innerHTML = `<span><strong>${new Date(day.date + 'T00:00:00-07:00').toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</strong><br><small>${day.reason}</small></span>
+                // Usar replace para evitar problemas de zona horaria al parsear YYYY-MM-DD
+                const displayDate = new Date(day.date.replace(/-/g, '/'));
+                li.innerHTML = `<span><strong>${displayDate.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</strong><br><small>${day.reason}</small></span>
                               <button class="delete-btn" data-date="${day.date}">Borrar</button>`;
                 daysList.appendChild(li);
             });
