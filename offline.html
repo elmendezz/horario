@@ -48,17 +48,35 @@
         <h1 style="color: var(--accent-color);">Estás sin conexión</h1>
         <p>Parece que no tienes acceso a internet en este momento. Algunas funciones no estarán disponibles.</p>
         
-        <button id="retry-btn" class="styled-button" style="margin-top: 1.5em;">Reintentar Conexión</button>
+        <div class="button-group" style="flex-direction: row; justify-content: center; margin-top: 1.5em;">
+            <button id="retry-btn" class="styled-button">Reintentar Conexión</button>
+            <button id="show-schedule-btn" class="styled-button">Mostrar Horario</button>
+        </div>
 
         <div class="disabled-features">
             <h3>Funciones no disponibles:</h3>
             <ul>
                 <li>Sincronización de hora con internet.</li>
+                <li>Visualización de la clase actual y siguiente en tiempo real.</li>
                 <li>Carga de nuevos anuncios.</li>
                 <li>Envío de reportes o sugerencias.</li>
                 <li>Actualización de la aplicación.</li>
             </ul>
         </div>
+    </div>
+
+    <!-- Contenedor de la tabla del horario, idéntico al de index.html -->
+    <div class="table-wrapper" style="margin-top: 2em;">
+        <table id="schedule-table">
+            <thead>
+                <tr>
+                    <th>Hora</th><th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th>
+                </tr>
+            </thead>
+            <tbody id="schedule-table-body">
+                <!-- El contenido se generará con JavaScript -->
+            </tbody>
+        </table>
     </div>
 
     <script>
@@ -74,5 +92,8 @@
             window.location.href = '/index.html';
         });
     </script>
+
+    <!-- Cargar la lógica específica para la página offline -->
+    <script type="module" src="offline-logic.js"></script>
 </body>
 </html>

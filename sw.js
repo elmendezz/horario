@@ -17,6 +17,7 @@ const urlsToCache = [
     'notification-logic.js',
     'ui-logic.js',
     'script.js',
+    'offline-logic.js', // <-- AÑADIR EL NUEVO SCRIPT
     'style.css',
     // Páginas estáticas para acceso offline
     'about-us.html',
@@ -505,22 +506,25 @@ self.addEventListener('fetch', event => {
     } else {
         // Estrategia "Cache First" para el resto (HTML, JS, etc. precacheados)
         event.respondWith(
-            caches.open(CACHE_NAME).then(async (cache) => {
-                // Para peticiones de navegación, intentar ir a la red primero.
-                if (event.request.mode === 'navigate') {
-                    try {
-                        const networkResponse = await fetch(event.request);
-                        return networkResponse;
-                    } catch (error) {
-                        // Si la red falla, servimos la página offline.
-                        console.log('SW: Fallo de red para navegación. Sirviendo offline.html desde caché.');
-                        return cache.match('offline.html');
-                    }
-                }
-                // Para otros recursos (JS, CSS), intentar desde la caché primero.
-                const cachedResponse = await cache.match(event.request);
-                return cachedResponse || fetch(event.request);
-            })
+            // Estrategia "Network falling back to Cache" para todas las peticiones precacheadas.
+            // Es la más robusta para asegurar el funcionamiento offline.
+            fetch(event.request)
+                .then(networkResponse => {
+                    // Si la red funciona, la usamos y no hacemos nada más.
+                    return networkResponse;
+                })
+                .catch(() => {
+                    // Si la red falla, buscamos en la caché.
+                    return caches.match(event.request).then(cachedResponse => {
+                        // Si está en caché, la devolvemos.
+                        if (cachedResponse) return cachedResponse;
+                        // Si no está en caché y era una navegación, devolvemos la página offline.
+                        if (event.request.mode === 'navigate') {
+                            return caches.match('offline.html');
+                        }
+                        // Para otros recursos no cacheados (scripts, css), la petición fallará naturalmente.
+                    });
+                })
         );
     }
 });
