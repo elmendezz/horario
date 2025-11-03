@@ -244,16 +244,19 @@ body {
     font-size: 2.5em;
     margin-bottom: 0.1em;
     font-weight: 700;
-    /* --- Texto con Gradiente Gemini --- */
-    background: var(--gemini-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
     line-height: 1.2;
     word-wrap: break-word;
     display: flex; /* Usamos flex para animar palabras */
     flex-wrap: wrap;
     justify-content: center;
+}
+
+/* Aplicar el gradiente solo cuando hay una clase en sesión */
+.container.is-in-session #current-class-display {
+    background: var(--gemini-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 /* Estilo para las palabras que animaremos */
@@ -264,6 +267,7 @@ body {
     transform-origin: bottom;
     animation: reveal-word 0.8s cubic-bezier(0.215, 0.610, 0.355, 1.000) forwards;
     margin: 0 0.2em; /* Espacio entre palabras */
+    color: var(--text-color); /* Asegurar que el texto sea visible por defecto */
 }
 #teacher-display {
     font-size: 1.1em;
