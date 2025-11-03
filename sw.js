@@ -437,11 +437,14 @@ self.addEventListener('fetch', event => {
 
     // Estrategia "Network First, then Cache" para las peticiones a la API (ej. anuncios).
     if (request.url.includes('/api/')) { // Identifica las llamadas a nuestra API
+        // No cachear peticiones que no sean GET (como POST, DELETE, etc.)
+        if (request.method !== 'GET') {
+            return;
+        }
+
         event.respondWith(
             fetch(request)
                 .then(networkResponse => {
-                    // Si la red responde, actualizamos la caché con la nueva respuesta
-                    // y devolvemos la respuesta de la red.
                     const responseClone = networkResponse.clone();
                     caches.open(CACHE_NAME).then(cache => {
                         cache.put(request, responseClone);
