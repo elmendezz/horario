@@ -7,6 +7,7 @@
     <meta name="theme-color" content="#6200ea"/>
     <link rel="manifest" href="manifest.json">
 
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Horario 1CV">
@@ -161,6 +162,12 @@
           menuToggle.setAttribute('aria-expanded', 'true');
           overlay.classList.add('open');
 
+          // --- Aplicar animación escalonada a los botones del menú ---
+          const menuButtons = sideMenu.querySelectorAll('.menu-button');
+          menuButtons.forEach((button, index) => {
+            button.style.animationDelay = `${index * 0.05}s`;
+          });
+
           const focusables = getFocusableElements(sideMenu);
           if (focusables.length) {
             focusables[0].focus();
@@ -176,6 +183,12 @@
           sideMenu.setAttribute('aria-hidden', 'true');
           menuToggle.setAttribute('aria-expanded', 'false');
           overlay.classList.remove('open');
+
+          // --- Resetear la animación para la próxima vez que se abra ---
+          const menuButtons = sideMenu.querySelectorAll('.menu-button');
+          menuButtons.forEach((button) => {
+            button.style.animationDelay = '';
+          });
 
           document.removeEventListener('keydown', handleKeyDown);
 
