@@ -850,27 +850,30 @@ function initializeSWRegistrationButton() {
  * Es ideal para depurar en dispositivos móviles.
  */
 function initializeEruda() {
-    const erudaBtn = document.getElementById('show-eruda-console-btn');
-    if (!erudaBtn) return;
+    const showErudaBtn = document.getElementById('show-eruda-console-btn');
+    const hideErudaBtn = document.getElementById('hide-eruda-console-btn');
+    if (!showErudaBtn || !hideErudaBtn) return;
 
-    // Si Eruda ya está activo, el botón simplemente lo mostrará/ocultará.
+    // Si Eruda ya está cargado y activo
     if (typeof eruda !== 'undefined') {
-        erudaBtn.addEventListener('click', () => eruda.toggle());
-        return; // No necesitamos la lógica de activación si ya está cargado.
-    }
+        showErudaBtn.textContent = '👁️ Mostrar/Ocultar Consola';
+        showErudaBtn.addEventListener('click', () => eruda.toggle());
 
-    // Si Eruda no está cargado, el botón activará el modo de depuración.
-    erudaBtn.addEventListener('click', () => {
-        const isDebugMode = localStorage.getItem('eruda-debug-mode') === 'true';
-        if (isDebugMode) {
+        // Mostrar el botón de desactivar y asignarle su lógica
+        hideErudaBtn.style.display = 'block';
+        hideErudaBtn.addEventListener('click', () => {
             localStorage.removeItem('eruda-debug-mode');
             alert('Modo de depuración DESACTIVADO. La página se recargará.');
-        } else {
+            window.location.reload();
+        });
+    } else {
+        // Si Eruda no está cargado, el botón principal sirve para activar el modo
+        showErudaBtn.addEventListener('click', () => {
             localStorage.setItem('eruda-debug-mode', 'true');
             alert('Modo de depuración ACTIVADO. La página se recargará para iniciar la consola.');
-        }
-        window.location.reload();
-    });
+            window.location.reload();
+        });
+    }
 }
 
 
