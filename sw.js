@@ -465,9 +465,11 @@ self.addEventListener('activate', event => {
             }).catch(e => console.error("SW: Fallo al cargar 'notificationLeadTime':", e)),
 
             // Registrar la sincronización periódica cuando el SW se activa
-            self.registration.periodicSync?.register('update-widget-periodic', {
-                minInterval: 15 * 60 * 1000, // Cada 15 minutos
-            }).catch(e => console.error('SW: Fallo al registrar la sincronización periódica:', e)),
+            (async () => {
+                try {
+                    await self.registration.periodicSync?.register('update-widget-periodic', { minInterval: 15 * 60 * 1000 }); // Cada 15 minutos
+                } catch (e) { console.warn('SW: Fallo al registrar la sincronización periódica (permiso denegado).', e.message); }
+            })(),
             // Al activar, programamos las notificaciones de clase y también hacemos
             // una comprobación inicial para el fallback.
             scheduleClassNotifications(),

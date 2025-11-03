@@ -129,10 +129,6 @@ export function updateSchedule() {
     const formatTime = (h, m) => `${(h % 12 || 12)}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
     const nextClassCountdownContainer = document.getElementById('next-class-countdown-container');
 
-
-        L.rrentClassDisplay.textContent = currentClass.name;
-        teacherDisplay.textContent = currentClass.teacher;
-         r os
     if (nextClass) {
         nextClassDisplay.textContent = `Siguiente: ${nextClass.name}`;
         if (nextClass.time) {
