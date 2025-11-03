@@ -1,6 +1,8 @@
 // c:\Users\Admin\Documents\GitHub\horario\ui-logic.js
 
 import { reportError } from './error-logic.js';
+import { schedule as defaultSchedule, classDuration } from './schedule-data.js';
+import { getCurrentAndNextClass } from './schedule-utils.js';
 import { sendMessageToSW } from './notification-logic.js';
 
 // Variables de estado globales para la UI
@@ -129,7 +131,43 @@ export function updateSchedule() {
     const formatTime = (h, m) => `${(h % 12 || 12)}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
     const nextClassCountdownContainer = document.getElementById('next-class-countdown-container');
 
-    if (nextClass) {
+    // --- Lógica de Horario Temporal ---
+    const todayStr = now.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+    const tempScheduleData = JSON.parse(localStorage.getItem('tempSchedule'));
+    let schedule = defaultSchedule; // Usar horario por defecto
+    let isTempScheduleActive = false;
+
+    if (tempScheduleData && tempScheduleData.date === todayStr) {
+        try {
+            schedule = JSON.parse(tempScheduleData.schedule);
+            isTempScheduleActive = true;
+            if (aviso) aviso.textContent = "🚨 Usando horario temporal para hoy.";
+        } catch (e) {
+            console.error("Error al parsear horario temporal:", e);
+            if (aviso) aviso.textContent = "⚠️ Error en horario temporal. Usando horario normal.";
+            schedule = defaultSchedule; // Fallback al horario por defecto si hay error
+        }
+    } else {
+        if (aviso && aviso.textContent.startsWith("🚨")) aviso.textContent = "ⓘ Esta Web App Está En Desarrollo..."; // Limpiar aviso si ya no hay horario temporal
+    }
+
+    const { currentClass, nextClass, day } = getCurrentAndNextClass(now, schedule);
+
+    if (currentClass) {
+        currentClassDisplay.textContent = currentClass.name;
+        teacherDisplay.textContent = currentClass.teacher;
+        currentClassEnd = new Date(now);
+        const classEndMinutes = (currentClass.time[0] * 60 + currentClass.time[1]) + (currentClass.duration || classDuration);
+        currentClassEnd.setHours(Math.floor(classEndMinutes / 60), classEndMinutes % 60, 0, 0);
+        container?.classList.add('is-in-session');
+        currentActiveClassInfo = { ...currentClass, dayIndex: day - 1 }; // Guardar info de la clase actual para resaltar
+    } else {
+        currentClassDisplay.textContent = "¡Sin Clases!";
+        teacherDisplay.textContent = "Disfruta tu día";
+        container?.classList.add('no-class-glow'); // Animación dorada cuando no hay clase
+    }
+
+    if (nextClass && nextClass.name !== "Fin de clases por hoy") {
         nextClassDisplay.textContent = `Siguiente: ${nextClass.name}`;
         if (nextClass.time) {
             const formattedTime = formatTime(nextClass.time[0], nextClass.time[1]);
@@ -137,7 +175,7 @@ export function updateSchedule() {
             const nextClassStart = new Date(now);
             if (nextClass.isNextDay) {
                 // Calculate days until next class day
-                const currentDayOfWeek = now.getDay(); // 0=Sun, 1=Mon...
+                const currentDayOfWeek = day; // Usar el día calculado por getCurrentAndNextClass
                 const nextClassDayOfWeek = schedule.findIndex(daySchedule => daySchedule.includes(nextClass)) + 1; // 1=Mon, 2=Tue...
                 let daysToAdd = nextClassDayOfWeek - currentDayOfWeek;
                 if (daysToAdd <= 0) daysToAdd += 7; // If next class day is earlier in the week, go to next week
@@ -155,13 +193,27 @@ export function updateSchedule() {
         nextClassDisplay.textContent = "Siguiente: Ninguna";
     }
 
-    highlightCurrentClassInTable();
+    highlightCurrentClassInTable(schedule);
 }
 
 /**
  * Renderiza la tabla completa del horario.
  */
 export function renderScheduleTable() {
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const tempScheduleData = JSON.parse(localStorage.getItem('tempSchedule'));
+    let schedule = defaultSchedule;
+
+    if (tempScheduleData && tempScheduleData.date === todayStr) {
+        try {
+            schedule = JSON.parse(tempScheduleData.schedule);
+        } catch(e) {
+            console.error("Error al parsear horario temporal para la tabla:", e);
+            schedule = defaultSchedule;
+        }
+    }
+
     const scheduleTableBody = document.getElementById('schedule-table-body');
     scheduleTableBody.innerHTML = '';
     const formatTime = (h, m) => `${(h % 12 || 12)}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
@@ -177,8 +229,18 @@ export function renderScheduleTable() {
         row.innerHTML = `<td>${formatTime(hours, minutes)}</td>` + 
                         [0,1,2,3,4].map(dayIndex => {
                             const classItem = schedule[dayIndex].find(c => c.time[0]*60 + c.time[1] === timeInMinutes);
-                            retur
-    SelectorAll('#schedule-table td.current-class-highlight').forEach(cell => {
+                            return `<td>${classItem ? `<strong>${classItem.name}</strong><br>${classItem.teacher}` : ''}</td>`;
+                        }).join('');
+        scheduleTableBody.appendChild(row);
+    });
+    highlightCurrentClassInTable(schedule); // Resaltar la clase actual después de renderizar la tabla
+}
+
+/**
+ * Resalta la clase actual en la tabla del horario.
+ */
+function highlightCurrentClassInTable(scheduleToUse) {
+    document.querySelectorAll('#schedule-table td.current-class-highlight').forEach(cell => {
         cell.classList.remove('current-class-highlight');
     });
 
@@ -363,8 +425,59 @@ function initializeDevToolsToggle() {
 
         if (password === '1CV') {
             document.getElementById('developer-tools').style.display = 'flex';
-            devToolsBtn.style.display = 'none'; // Ocultar el botón después de usarlo
             alert('Acceso concedido. Herramientas de desarrollo visibles.');
+        }
+        // PIN de Super Admin para horario temporal
+        else if (password === '26435') {
+            tempScheduleBtn.style.display = 'block';
+            alert('Acceso de Administrador concedido. Función de horario temporal habilitada en el menú.');
+        }
+        else if (password !== null) { // Si el usuario no presionó "Cancelar"
+            alert('Contraseña incorrecta.');
+        }
+    });
+
+    tempScheduleBtn.addEventListener('click', () => {
+        const action = prompt('¿Qué deseas hacer?\n1. Crear/Editar horario temporal\n2. Ver horario temporal actual\n3. Eliminar horario temporal');
+
+        switch (action) {
+            case '1':
+                const date = prompt('Ingresa la fecha para el horario temporal (formato AAAA-MM-DD):');
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+                    alert('Formato de fecha inválido.');
+                    return;
+                }
+                const scheduleJSON = prompt('Pega aquí el JSON del horario temporal para ese día (solo el array de 5 días, ej: [[{...}], [{...}], ...]):');
+                try {
+                    const parsedSchedule = JSON.parse(scheduleJSON);
+                    if (!Array.isArray(parsedSchedule) || parsedSchedule.length !== 5) {
+                        throw new Error("El JSON debe ser un array de 5 días.");
+                    }
+                    localStorage.setItem('tempSchedule', JSON.stringify({ date, schedule: scheduleJSON }));
+                    alert(`Horario temporal guardado para ${date}. La página se recargará.`);
+                    window.location.reload();
+                } catch (e) {
+                    alert('El texto ingresado no es un JSON válido o no tiene el formato esperado (array de 5 días).');
+                    console.error("Error al parsear JSON de horario temporal:", e);
+                }
+                break;
+
+            case '2':
+                const stored = localStorage.getItem('tempSchedule');
+                if (stored) {
+                    alert(`Horario temporal actual:\n${stored}`);
+                } else {
+                    alert('No hay ningún horario temporal guardado.');
+                }
+                break;
+
+            case '3':
+                localStorage.removeItem('tempSchedule');
+                alert('Horario temporal eliminado. La página se recargará.');
+                window.location.reload();
+                break;
+            default:
+                alert('Acción no reconocida.');
         } else if (password !== null) { // Si el usuario no presionó "Cancelar"
             alert('Contraseña incorrecta.');
         }
@@ -646,7 +759,7 @@ export function initializeUI() {
     initializeUser();
     initializeScheduleToggle();
     initializeTimeSourceToggle();
-    initializeDevToolsToggle();
+    initializeDevToolsToggle(); // Esta función ahora maneja ambos PINes
     initializeSWRegistrationButton();
     renderScheduleTable(); // Renderizar la tabla inicialmente
 }
