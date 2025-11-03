@@ -14,6 +14,17 @@
     <link rel="apple-touch-icon" href="images/icons/apple-touch-icon.png">
     <title>Horario 1CV - Salón C2/Cómputo 2</title>
     <link rel="stylesheet" href="style.css">
+
+    <!-- Carga condicional de Eruda para depuración -->
+    <script>
+        // Si el modo de depuración está activado en localStorage, carga Eruda inmediatamente.
+        if (localStorage.getItem('eruda-debug-mode') === 'true') {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/eruda';
+            document.head.appendChild(script);
+            script.onload = function () { eruda.init(); };
+        }
+    </script>
 </head>
 <body>
     <!-- Menú Hamburguesa -->

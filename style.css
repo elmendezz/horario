@@ -651,6 +651,7 @@ body {
     border-radius: 8px;
     text-decoration: none;
     white-space: normal; /* Permitir que el texto se divida en varias líneas */
+    box-sizing: border-box; /* Asegura que el padding no cause desbordamiento horizontal */
     
     /* --- Animación de entrada escalonada --- */
     opacity: 0;

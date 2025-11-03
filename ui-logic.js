@@ -787,22 +787,23 @@ function initializeEruda() {
     const erudaBtn = document.getElementById('show-eruda-console-btn');
     if (!erudaBtn) return;
 
-    erudaBtn.addEventListener('click', () => {
-        // Comprobar si Eruda ya está cargado para no volver a añadir el script.
-        if (typeof eruda === 'undefined') {
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/eruda';
-            document.head.appendChild(script);
+    // Si Eruda ya está activo, el botón simplemente lo mostrará/ocultará.
+    if (typeof eruda !== 'undefined') {
+        erudaBtn.addEventListener('click', () => eruda.toggle());
+        return; // No necesitamos la lógica de activación si ya está cargado.
+    }
 
-            // Una vez que el script se carga, inicializa y muestra Eruda.
-            script.onload = function () {
-                eruda.init();
-                eruda.show();
-            };
+    // Si Eruda no está cargado, el botón activará el modo de depuración.
+    erudaBtn.addEventListener('click', () => {
+        const isDebugMode = localStorage.getItem('eruda-debug-mode') === 'true';
+        if (isDebugMode) {
+            localStorage.removeItem('eruda-debug-mode');
+            alert('Modo de depuración DESACTIVADO. La página se recargará.');
         } else {
-            // Si ya está cargado, simplemente lo muestra.
-            eruda.show();
+            localStorage.setItem('eruda-debug-mode', 'true');
+            alert('Modo de depuración ACTIVADO. La página se recargará para iniciar la consola.');
         }
+        window.location.reload();
     });
 }
 
