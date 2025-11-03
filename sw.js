@@ -16,15 +16,18 @@ const urlsToCache = [
     'schedule-utils.js',
     'notification-logic.js',
     'ui-logic.js',
+    'error-logic.js', // <-- AÑADIR EL SCRIPT DE ERRORES
     'script.js',
-    'offline-logic.js', // <-- AÑADIR EL NUEVO SCRIPT
+    'offline-logic.js',
+    'debug-logic.js', // <-- AÑADIR EL SCRIPT DE DEPURACIÓN
     'style.css',
     // Páginas estáticas para acceso offline
     'about-us.html',
     'feedback.html',
     'changelog.html',
-    'notification-settings.html',
-    'offline.html' // <-- AÑADIR LA NUEVA PÁGINA A LA CACHÉ
+    'notification-settings.html',    
+    'offline.html',
+    'debug.html'
 ];
 
 // Variable para el temporizador de notificaciones de fallback.
@@ -456,20 +459,21 @@ self.addEventListener('fetch', event => {
             return;
         }
 
+        // Estrategia "Stale-While-Revalidate" para la API.
+        // Sirve desde la caché para velocidad y offline, pero actualiza en segundo plano.
         event.respondWith(
-            fetch(request)
-                .then(networkResponse => {
-                    const responseClone = networkResponse.clone();
-                    caches.open(ASSETS_CACHE_NAME).then(cache => {
-                        cache.put(request, responseClone);
+            caches.open(ASSETS_CACHE_NAME).then(cache => {
+                return cache.match(request).then(cachedResponse => {
+                    const fetchPromise = fetch(request).then(networkResponse => {
+                        cache.put(request, networkResponse.clone());
+                        return networkResponse;
+                    }).catch(err => {
+                        console.warn(`SW: Fallo de red para API ${request.url}. Se usó la caché si estaba disponible.`);
                     });
-                    return networkResponse;
-                })
-                .catch(error => {
-                    // Si la red falla (estamos offline), intentamos servir desde la caché como respaldo.
-                    console.warn(`SW: Fallo de red para ${request.url}. Intentando desde caché.`);
-                    return caches.match(request);
-                })
+                    // Devolver la respuesta de la caché inmediatamente si existe, o esperar el fetch si no.
+                    return cachedResponse || fetchPromise;
+                });
+            })
         );
         return;
     }
