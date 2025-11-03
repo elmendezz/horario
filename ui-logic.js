@@ -135,38 +135,39 @@ export async function updateSchedule() {
 
     const { currentClass, nextClass } = await getCurrentAndNextClass(now);
 
+    // 1. Determinar el estado y el texto a mostrar
+    let newClassName, newTeacherName;
     if (currentClass) {
-        if (currentClass.isHoliday) {
-            container?.classList.add('is-idle-glow'); // Usar la animación de reposo para días festivos
-        } else {
-            container?.classList.add('is-in-session'); // Animación normal para clases
-        }
+        newClassName = currentClass.name;
+        newTeacherName = currentClass.teacher;
+        container?.classList.add(currentClass.isHoliday ? 'is-idle-glow' : 'is-in-session');
         nextClassCountdownContainer?.classList.remove('visible'); // Ocultar contador grande
-        
-        // --- Lógica para animar palabras SOLO si la clase ha cambiado ---
-        if (currentClass.name !== lastDisplayedClassName) {
-            const words = currentClass.name.split(' ');
-            currentClassDisplay.innerHTML = words.map((word, index) => 
-                `<span class="word" style="animation-delay: ${index * 0.1}s">${word}</span>`
-            ).join('');
-            lastDisplayedClassName = currentClass.name;
-        }
+    } else {
+        newClassName = "¡Sin Clases!";
+        newTeacherName = "Disfruta tu día";
+        container?.classList.add('is-idle-glow'); // Añadir animación de reposo
+    }
 
-        teacherDisplay.textContent = currentClass.teacher;
+    // 2. Actualizar la UI solo si el texto ha cambiado para evitar repeticiones de animación
+    if (newClassName !== lastDisplayedClassName) {
+        const words = newClassName.split(' ');
+        currentClassDisplay.innerHTML = words.map((word, index) => 
+            `<span class="word" style="animation-delay: ${index * 0.1}s">${word}</span>`
+        ).join('');
+        lastDisplayedClassName = newClassName;
+    }
+    teacherDisplay.textContent = newTeacherName;
+
+    // 3. Configurar el final de la clase actual si existe y no es un día festivo
+    if (currentClass && !currentClass.isHoliday) {
         const classStartMinutes = currentClass.time[0] * 60 + currentClass.time[1];
         const classEndMinutes = classStartMinutes + (currentClass.duration || classDuration);
         currentClassEnd = new Date(now);
         currentClassEnd.setHours(Math.floor(classEndMinutes / 60), classEndMinutes % 60, 59, 999); // Finaliza al terminar el minuto
         currentActiveClassInfo = { ...currentClass, dayIndex: now.getDay() - 1 };
-    } else {
-        container?.classList.add('is-idle-glow'); // Añadir animación de reposo
-        if (lastDisplayedClassName !== "¡Sin Clases!") {
-            currentClassDisplay.innerHTML = `<span class="word" style="animation-delay: 0s">¡Sin</span> <span class="word" style="animation-delay: 0.1s">Clases!</span>`;
-            lastDisplayedClassName = "¡Sin Clases!";
-        }
-        teacherDisplay.textContent = "Disfruta tu día";
     }
 
+    // 4. Configurar la información de la siguiente clase
     if (nextClass) {
         nextClassDisplay.textContent = `Siguiente: ${nextClass.name}`;
         if (nextClass.time) {
@@ -450,24 +451,6 @@ async function highlightHolidayColumns() {
             }
         }
     });
-}
-
-/**
- * Inicializa la funcionalidad del modal de ayuda para widgets.
- */
-function initializeWidgetHelpModal() {
-    const openBtn = document.getElementById('add-widget-btn');
-    const modal = document.getElementById('widget-help-modal');
-    const closeBtn = document.getElementById('close-widget-help-modal-btn');
-
-    if (openBtn && modal && closeBtn) {
-        openBtn.addEventListener('click', () => {
-            modal.style.display = 'block';
-        });
-        closeBtn.addEventListener('click', () => {
-            modal.style.display = 'none';
-        });
-    }
 }
 
 /**
@@ -795,7 +778,6 @@ export function initializeUI() {
     // Llamada unificada para inicializar los anuncios
     updateAnnouncements();
     initializeModal();
-    initializeWidgetHelpModal();
     initializeFullscreen();
     initializeCacheControls();
     initializeUser();
