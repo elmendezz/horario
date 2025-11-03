@@ -22,7 +22,8 @@ const urlsToCache = [
     'about-us.html',
     'feedback.html',
     'changelog.html',
-    'notification-settings.html'
+    'notification-settings.html',
+    'offline.html' // <-- AÑADIR LA NUEVA PÁGINA A LA CACHÉ
 ];
 
 // Variable para el temporizador de notificaciones de fallback.
@@ -441,6 +442,12 @@ self.addEventListener('fetch', event => {
         return;
     }
 
+    // Ignorar peticiones inyectadas por Vercel para evitar errores offline.
+    if (url.hostname.includes('vercel.live')) {
+        console.log('SW: Ignorando petición de Vercel Live:', request.url);
+        return;
+    }
+
     // Estrategia "Network First, then Cache" para las peticiones a la API (ej. anuncios).
     if (url.pathname.startsWith('/api/')) {
         // No cachear peticiones que no sean GET (como POST, DELETE, etc.)
@@ -498,18 +505,21 @@ self.addEventListener('fetch', event => {
     } else {
         // Estrategia "Cache First" para el resto (HTML, JS, etc. precacheados)
         event.respondWith(
-            caches.match(event.request).then(cachedResponse => {
-                const fetchPromise = fetch(event.request).catch(error => {
-                    // El fetch falló, probablemente porque estamos offline.
-                    // Solo devolvemos el index.html como fallback para las peticiones de navegación.
-                    if (event.request.mode === 'navigate') {
-                        console.log('SW: Fallo de red para navegación. Sirviendo index.html desde caché.');
-                        return caches.match('index.html');
+            caches.open(CACHE_NAME).then(async (cache) => {
+                // Para peticiones de navegación, intentar ir a la red primero.
+                if (event.request.mode === 'navigate') {
+                    try {
+                        const networkResponse = await fetch(event.request);
+                        return networkResponse;
+                    } catch (error) {
+                        // Si la red falla, servimos la página offline.
+                        console.log('SW: Fallo de red para navegación. Sirviendo offline.html desde caché.');
+                        return cache.match('offline.html');
                     }
-                    // Para otros tipos de peticiones (scripts, css), no devolvemos nada si fallan.
-                    // Esto evita el error de MIME type.
-                });
-                return cachedResponse || fetchPromise;
+                }
+                // Para otros recursos (JS, CSS), intentar desde la caché primero.
+                const cachedResponse = await cache.match(event.request);
+                return cachedResponse || fetch(event.request);
             })
         );
     }

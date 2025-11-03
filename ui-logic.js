@@ -127,6 +127,8 @@ export async function updateSchedule() {
     const nextClassDisplay = document.getElementById('next-class-display');
     const countdownEl = document.getElementById('countdown');
     nextClassDisplay.textContent = "Siguiente: Ninguna"; // <-- VALOR POR DEFECTO
+    // Ocultar por defecto y solo mostrar cuando sea relevante.
+    nextClassDisplay.style.display = 'none';
     
     currentClassEnd = null;
     currentActiveClassInfo = null; // Reiniciar en cada actualización
@@ -176,6 +178,10 @@ export async function updateSchedule() {
 
     if (nextClass) {
         nextClassDisplay.textContent = `Siguiente: ${nextClass.name}`;
+        // Solo mostrar "Siguiente clase" si hay una clase en curso o si la siguiente clase no es para otro día.
+        if (currentClass || !nextClass.isNextDay) {
+            nextClassDisplay.style.display = 'block';
+        }
         if (nextClass.time) {
             const formattedTime = formatTime(nextClass.time[0], nextClass.time[1]);
             document.getElementById('next-class-time-label').textContent = `a las ${formattedTime}`;

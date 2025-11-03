@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sin Conexión - Horario 1CV</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            justify-content: center;
+            padding: 2em;
+        }
+        .offline-container {
+            max-width: 600px;
+            text-align: center;
+        }
+        .offline-icon {
+            font-size: 4em;
+            margin-bottom: 0.2em;
+            animation: pulse-dot 3s infinite;
+        }
+        .disabled-features {
+            margin-top: 2em;
+            text-align: left;
+            color: #888;
+        }
+        .disabled-features h3 {
+            text-align: center;
+            color: var(--text-color);
+        }
+        .disabled-features ul {
+            list-style: none;
+            padding: 0;
+        }
+        .disabled-features li {
+            background-color: var(--bg-color);
+            padding: 0.8em;
+            border-radius: 8px;
+            margin-bottom: 0.5em;
+            text-decoration: line-through;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="offline-container">
+        <div class="offline-icon">🔌</div>
+        <h1 style="color: var(--accent-color);">Estás sin conexión</h1>
+        <p>Parece que no tienes acceso a internet en este momento. Algunas funciones no estarán disponibles.</p>
+        
+        <button id="retry-btn" class="styled-button" style="margin-top: 1.5em;">Reintentar Conexión</button>
+
+        <div class="disabled-features">
+            <h3>Funciones no disponibles:</h3>
+            <ul>
+                <li>Sincronización de hora con internet.</li>
+                <li>Carga de nuevos anuncios.</li>
+                <li>Envío de reportes o sugerencias.</li>
+                <li>Actualización de la aplicación.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Mantener consistencia de tema
+        const savedTheme = localStorage.getItem('theme');
+        const osThemeDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.dataset.theme = savedTheme || (osThemeDark ? 'dark' : 'light');
+
+        // Lógica del botón de reintentar
+        document.getElementById('retry-btn').addEventListener('click', () => {
+            // Simplemente intenta navegar a la página principal.
+            // El Service Worker decidirá si cargarla o redirigir de nuevo aquí.
+            window.location.href = '/index.html';
+        });
+    </script>
+</body>
+</html>
