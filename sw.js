@@ -1,7 +1,7 @@
 // sw.js (Versión con Widgets)
 
-const CACHE_NAME = 'horario-1cv-cache-v91'; // Incrementamos la versión del caché
-const ASSETS_CACHE_NAME = 'assets-cache-v1'; // Nuevo caché para assets dinámicos
+const CACHE_NAME = 'horario-1cv-cache-v291'; // Incrementamos la versión del caché
+const ASSETS_CACHE_NAME = 'assets-cache-v2'; // Nuevo caché para assets dinámicos
 import { schedule } from './schedule-data.js';
 import { getCurrentAndNextClass } from './schedule-utils.js';
 const urlsToCache = [

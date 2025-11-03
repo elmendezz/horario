@@ -286,6 +286,12 @@ function initializeThemeToggle() {
         if (themeToggle) {
             themeToggle.innerHTML = theme === 'dark' ? '☀️ Cambiar a Claro' : '🌑 Cambiar a Oscuro';
         }
+        // Actualizar el color de la barra de navegación del sistema
+        const themeColorMeta = document.getElementById('theme-color-meta');
+        if (themeColorMeta) {
+            // Estos colores deben coincidir con --bg-color en style.css
+            themeColorMeta.content = theme === 'dark' ? '#131314' : '#f0f0f0';
+        }
     };
 
     const osThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');

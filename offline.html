@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#131314" id="theme-color-meta">
     <title>Sin Conexión - Horario 1CV</title>
     <link rel="stylesheet" href="style.css">
     <style>
@@ -83,7 +84,10 @@
         // Mantener consistencia de tema
         const savedTheme = localStorage.getItem('theme');
         const osThemeDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        document.documentElement.dataset.theme = savedTheme || (osThemeDark ? 'dark' : 'light');
+        const currentTheme = savedTheme || (osThemeDark ? 'dark' : 'light');
+        document.documentElement.dataset.theme = currentTheme;
+        // Actualizar el color de la barra de navegación
+        document.getElementById('theme-color-meta').content = currentTheme === 'dark' ? '#131314' : '#f0f0f0';
 
         // Lógica del botón de reintentar
         document.getElementById('retry-btn').addEventListener('click', () => {
