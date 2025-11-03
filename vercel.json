@@ -1,14 +1,13 @@
 {
-  "version": 2,
-  "functions": {
-    "api/**/*.js": {
-      "memory": 128
-    }
-  },
-  "rewrites": [
+  "headers": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
     }
   ]
 }

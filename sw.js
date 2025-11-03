@@ -499,7 +499,13 @@ self.addEventListener('fetch', event => {
         // Estrategia "Cache First" para el resto (HTML, JS, etc. precacheados)
         event.respondWith(
             caches.match(request).then(cachedResponse => {
-                return cachedResponse || fetch(request);
+                // Si la respuesta está en caché, la devolvemos.
+                if (cachedResponse) {
+                    return cachedResponse;
+                }
+                // Si no está en caché (y estamos offline), el fetch fallará.
+                // Como fallback para las peticiones de navegación, intentamos devolver el index.html cacheado.
+                return fetch(request).catch(() => caches.match('index.html'));
             })
         );
     }
