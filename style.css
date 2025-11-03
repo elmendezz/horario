@@ -1,10 +1,18 @@
 /* Versión: 39 */
 :root {
+    /* Paleta de Tema Claro (sin cambios) */
     --bg-color: #f0f0f0;
     --text-color: #333;
     --container-bg: #fff;
     --container-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     --accent-color: #4CAF50; /* Color principal para tema claro */
+
+    /* Variables para Animaciones */
+    --animation-duration-fast: 0.3s;
+    --animation-duration-normal: 0.6s;
+    --animation-duration-slow: 1s;
+    --animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
     --next-class-bg: #4CAF50;
     --next-class-hover-bg: #45a049;
     --table-header-bg: #4CAF50;
@@ -12,14 +20,21 @@
 }
 
 [data-theme="dark"] {
-    --bg-color: #121212;
-    --text-color: #e0e0e0;
-    --container-bg: #1e1e1e;
-    --container-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    --accent-color: #6200ea; /* Color principal para tema oscuro */
-    --next-class-bg: #6200ea;
-    --next-class-hover-bg: #3700b3;
-    --table-header-bg: #3700b3;
+    /* --- Nueva Paleta Gemini Dark --- */
+    --bg-color: #131314; /* Fondo principal muy oscuro */
+    --text-color: #e3e3e3; /* Texto principal claro */
+    --container-bg: #1e1f20; /* Fondo de contenedores */
+    --container-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --accent-color: #89b4f8; /* Azul vibrante de Gemini como acento principal */
+
+    /* Gradiente característico de Gemini */
+    --gemini-gradient: linear-gradient(90deg, #89b4f8, #b19df7, #f4a78f);
+    --gemini-gradient-fast: linear-gradient(45deg, #89b4f8, #b19df7);
+
+    /* Colores para elementos específicos */
+    --next-class-bg: var(--accent-color);
+    --next-class-hover-bg: #a1c6fa;
+    --table-header-bg: #3c4043; /* Un gris oscuro para las cabeceras */
     --table-row-bg: #2a2a2a;
 }
 
@@ -157,6 +172,11 @@
     cursor: pointer;
 }
 
+html {
+    /* --- SCROLL SUAVE --- */
+    scroll-behavior: smooth;
+}
+
 
 body {
     font-family: Arial, sans-serif;
@@ -166,10 +186,20 @@ body {
     align-items: center;
     min-height: 100vh;
     margin: 0;
-    background-color: var(--bg-color);
     color: var(--text-color);
     text-align: center;
     padding: 2em 1em; /* Añadir más espacio superior para que no se pegue */
+
+    /* --- Fondo Animado Gemini --- */
+    background: linear-gradient(-45deg, #131314, #1e1f20, #131314, #3c4043);
+    background-size: 400% 400%;
+    animation: gradient-bg 15s ease infinite;
+}
+
+[data-theme="light"] body {
+    /* Revertir al fondo estático en tema claro */
+    background: var(--bg-color);
+    animation: none;
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 .container {
@@ -185,6 +215,10 @@ body {
     max-width: 90%;
     margin-bottom: 1em;
     transition: background-color 0.3s ease, box-shadow 0.5s linear; /* Transición suave del color del resplandor */
+
+    /* --- Animación de Entrada --- */
+    animation: fadeInUp var(--animation-duration-normal) var(--animation-timing-function) both;
+    animation-delay: 0.2s;
 }
 
 /* Aplicar animación solo cuando hay una clase en sesión */
@@ -199,8 +233,13 @@ body {
 
 #current-class-display {
     font-size: 2.5em;
-    font-weight: bold;
     margin-bottom: 0.1em;
+    font-weight: 700;
+    /* --- Texto con Gradiente Gemini --- */
+    background: var(--gemini-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     line-height: 1.2;
     word-wrap: break-word;
     /* Se eliminó el resplandor del texto */
@@ -222,11 +261,13 @@ body {
     z-index: 1;
     position: relative;
     transform: translateY(15px);
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, transform 0.2s ease;
     white-space: normal; /* Permitir que el texto se divida en varias líneas */
     line-height: 1.3; /* Mejorar el espaciado entre líneas si el texto se divide */
     max-width: 90%; /* Asegurar que no se desborde en pantallas pequeñas */
 }
+[data-theme="dark"] #next-class-display { background: var(--gemini-gradient-fast); }
+
 #next-class-display:hover {
     background-color: var(--next-class-hover-bg);
 }
@@ -235,6 +276,10 @@ body {
     font-weight: bold;
     color: var(--text-color);
     margin-top: 1em;
+
+    /* --- Animación de Entrada --- */
+    animation: fadeInUp var(--animation-duration-normal) var(--animation-timing-function) both;
+    animation-delay: 0.4s;
 }
 #countdown {
     font-size: 1.2em;
@@ -367,6 +412,10 @@ body {
     flex-direction: column;
     align-items: center;
     margin-top: 2em;
+
+    /* --- Animación de Entrada --- */
+    animation: fadeInUp var(--animation-duration-normal) var(--animation-timing-function) both;
+    animation-delay: 0.6s;
     gap: 10px;
 }
 
@@ -381,12 +430,18 @@ body {
     background-color: var(--next-class-bg);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease, filter 0.3s ease;
+}
+
+[data-theme="dark"] .styled-button {
+    background: var(--gemini-gradient-fast);
+    color: white;
 }
 
 .styled-button:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    filter: brightness(1.2); /* Aumentar brillo al pasar el ratón */
     background-color: var(--next-class-hover-bg);
 }
 
@@ -395,8 +450,8 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-[data-theme="dark"] .styled-button {
-    color: white;
+[data-theme="dark"] .styled-button:hover {
+    background: var(--gemini-gradient-fast); /* Mantener gradiente en hover */
 }
 
 #ios-install-prompt {
@@ -562,6 +617,26 @@ body {
     pointer-events: auto; /* Se puede hacer clic para cerrar el menú */
 }
 
+/* --- Keyframes para Animaciones --- */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes gradient-bg {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+
 /* --- Animación de Resplandor --- */
 @keyframes pulsate-glow {
     0% {
@@ -599,6 +674,10 @@ body {
     margin-bottom: 1em;
     width: 100%;
     max-width: 90%;
+
+    /* --- Animación de Entrada --- */
+    animation: fadeInUp var(--animation-duration-normal) var(--animation-timing-function) both;
+    animation-delay: 0.3s;
     box-sizing: border-box;
 }
 
