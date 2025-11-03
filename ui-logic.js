@@ -779,6 +779,33 @@ function initializeSWRegistrationButton() {
     });
 }
 
+/**
+ * Inicializa el botón para cargar la consola de depuración Eruda bajo demanda.
+ * Es ideal para depurar en dispositivos móviles.
+ */
+function initializeEruda() {
+    const erudaBtn = document.getElementById('show-eruda-console-btn');
+    if (!erudaBtn) return;
+
+    erudaBtn.addEventListener('click', () => {
+        // Comprobar si Eruda ya está cargado para no volver a añadir el script.
+        if (typeof eruda === 'undefined') {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/eruda';
+            document.head.appendChild(script);
+
+            // Una vez que el script se carga, inicializa y muestra Eruda.
+            script.onload = function () {
+                eruda.init();
+                eruda.show();
+            };
+        } else {
+            // Si ya está cargado, simplemente lo muestra.
+            eruda.show();
+        }
+    });
+}
+
 
 /**
  * Función principal para inicializar toda la lógica de la UI.
@@ -797,6 +824,7 @@ export function initializeUI() {
     initializeTimeSourceToggle();
     initializeDevToolsToggle();
     initializeSWRegistrationButton();
+    initializeEruda(); // <-- Añadimos la inicialización de Eruda aquí
     renderScheduleTable(); // Renderizar la tabla inicialmente
 }
 
