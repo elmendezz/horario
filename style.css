@@ -436,6 +436,23 @@ body {
     background-color: var(--next-class-hover-bg);
 }
 
+.widget-instructions {
+    text-align: left;
+    line-height: 1.6;
+}
+
+.widget-instructions h4 {
+    color: var(--accent-color);
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+}
+
+.widget-instructions .note {
+    font-size: 0.9em;
+    text-align: center;
+    margin-top: 1.5em;
+}
+
 .button-group {
     display: flex;
     flex-direction: column;

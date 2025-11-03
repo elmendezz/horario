@@ -29,6 +29,7 @@
             <button id="reset-theme-btn" class="menu-button">🔄 Sincronizar Tema con Sistema</button>
             <button id="time-source-toggle" class="menu-button">☁️ Usar Hora de Internet</button>
             <button id="notifications-btn" class="menu-button" aria-label="Activar notificaciones">🔕 Notificaciones</button>
+            <button id="add-widget-btn" class="menu-button">🧩 Agregar Widgets</button>
             <a href="notification-settings.html" class="menu-button">⚙️ Configurar Notificaciones</a>
             <button id="register-sw-btn" class="menu-button" style="color: #17a2b8;">⚙️ Registrar Service Worker</button>
             <button id="clear-cache-btn" class="menu-button" style="color: #dc3545;">🗑️ Limpiar Caché y Recargar</button>
@@ -161,6 +162,30 @@
         </div>
     </div>
 
+    <!-- Modal de Ayuda para Widgets -->
+    <div id="widget-help-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="text-align: center; color: var(--accent-color);">¿Cómo Agregar Widgets?</h2>
+            <div class="widget-instructions">
+                <h4>En Android:</h4>
+                <ol>
+                    <li>Mantén presionado un espacio vacío en tu pantalla de inicio.</li>
+                    <li>Toca la opción "Widgets".</li>
+                    <li>Busca "Horario 1CV" en la lista y arrastra el widget a tu pantalla.</li>
+                </ol>
+                <h4>En Windows 11:</h4>
+                <ol>
+                    <li>Abre el panel de widgets (puedes usar la tecla <strong>Win + W</strong>).</li>
+                    <li>Haz clic en el botón "<strong>+</strong>" en la esquina superior derecha para agregar widgets.</li>
+                    <li>Busca "Horario 1CV" y haz clic en "Anclar".</li>
+                </ol>
+                <p class="note"><em>Nota: La disponibilidad de widgets depende de tu sistema operativo y de que tengas la aplicación instalada.</em></p>
+            </div>
+            <div class="modal-footer">
+                <button id="close-widget-help-modal-btn">¡Entendido!</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Contenedor para los anuncios en vivo (toasts) -->
     <div id="live-announcements-container"></div>

@@ -1,6 +1,7 @@
 // sw.js (Versión con Widgets)
 
 const CACHE_NAME = 'horario-1cv-cache-v91'; // Incrementamos la versión del caché
+const ASSETS_CACHE_NAME = 'assets-cache-v1'; // Nuevo caché para assets dinámicos
 import { getCurrentAndNextClass } from './schedule-utils.js';
 const urlsToCache = [
     '/', 
@@ -45,7 +46,7 @@ async function updateWidget() {
 
     const now = new Date();
     // Usamos la lógica centralizada y robusta para obtener la clase actual y siguiente.
-    const { currentClass, nextClass } = getCurrentAndNextClass(now);
+    const { currentClass, nextClass } = await getCurrentAndNextClass(now);
     
     const widgetData = {
         currentTitle: currentClass ? "Clase Actual:" : "No hay clase ahora",
@@ -248,7 +249,7 @@ async function scheduleClassNotificationsWithTriggers() {
         return; 
     }
 
-    const { schedule } = await getSchedule();
+    const { schedule } = await getSchedule(); // Esto es para compatibilidad, pero la lógica principal usará getCurrentAndNextClass
 
     const now = new Date();
     let scheduledCount = 0;
@@ -259,29 +260,24 @@ async function scheduleClassNotificationsWithTriggers() {
         checkDate.setDate(now.getDate() + i);
         const dayOfWeek = checkDate.getDay();
 
-        if (dayOfWeek >= 1 && dayOfWeek <= 5) { // Lunes a Viernes
-            const todaySchedule = schedule[dayOfWeek - 1];
-            for (const classItem of todaySchedule) {
-                if (classItem.name === "Receso") continue; // No notificar recesos
+        const { nextClass } = await getCurrentAndNextClass(checkDate);
 
-                const classStartTime = new Date(checkDate);
-                classStartTime.setHours(classItem.time[0], classItem.time[1], 0, 0);
+        if (nextClass && nextClass.time) {
+            const classStartTime = new Date(checkDate);
+            classStartTime.setHours(nextClass.time[0], nextClass.time[1], 0, 0);
+            const notificationTime = new Date(classStartTime.getTime() - (notificationLeadTime * 60 * 1000));
 
-                const notificationTime = new Date(classStartTime.getTime() - (notificationLeadTime * 60 * 1000));
-
-                // Solo programar si la notificación es en el futuro
-                if (notificationTime > now) {
-                    try {
-                        await self.registration.showNotification(classItem.name, {
-                            body: `Tu clase comienza en ${notificationLeadTime} minutos.`,
-                            icon: 'images/icons/icon-192x192.png',
-                            tag: `class-${classStartTime.getTime()}`, // Etiqueta única para cada notificación
-                            showTrigger: new TimestampTrigger(notificationTime.getTime()),
-                        });
-                        scheduledCount++;
-                    } catch (e) {
-                        console.error('SW: Error al programar notificación:', e);
-                    }
+            if (notificationTime > now) {
+                try {
+                    await self.registration.showNotification(nextClass.name, {
+                        body: `Tu clase comienza en ${notificationLeadTime} minutos.`,
+                        icon: 'images/icons/icon-192x192.png',
+                        tag: `class-${classStartTime.getTime()}`,
+                        showTrigger: new TimestampTrigger(notificationTime.getTime()),
+                    });
+                    scheduledCount++;
+                } catch (e) {
+                    console.error('SW: Error al programar notificación:', e);
                 }
             }
         }
@@ -404,39 +400,44 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
     console.log('SW: Activando nueva versión y limpiando cachés antiguos...');
     event.waitUntil(
-        Promise.all([
-            caches.keys().then(cacheNames => {
-                return Promise.all(
-                    cacheNames.filter(cacheName => cacheName !== CACHE_NAME).map(cacheName => caches.delete(cacheName))
-                );
-            }).catch(e => console.error("SW: Fallo al limpiar cachés antiguas:", e)),
+        (async () => {
+            const cacheWhitelist = [CACHE_NAME, ASSETS_CACHE_NAME];
+            const cacheNames = await caches.keys();
+            await Promise.all(
+                cacheNames.map(cacheName => {
+                    if (!cacheWhitelist.includes(cacheName)) {
+                        console.log(`SW: Borrando caché antigua: ${cacheName}`);
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
 
-            // Cargar la configuración guardada al activar
-            getSetting('notificationsEnabled').then(value => {
-                notificationsEnabled = value === true; // Asegurarse de que sea booleano
-            }).catch(e => console.error("SW: Fallo al cargar 'notificationsEnabled':", e)),
-            getSetting('notificationLeadTime').then(value => {
-                notificationLeadTime = value || 2; // Valor por defecto si no existe
-            }).catch(e => console.error("SW: Fallo al cargar 'notificationLeadTime':", e)),
+            // Cargar configuración y registrar tareas asíncronas
+            await Promise.all([
+                getSetting('notificationsEnabled').then(value => { notificationsEnabled = value === true; }),
+                getSetting('notificationLeadTime').then(value => { notificationLeadTime = value || 2; }),
+                self.registration.periodicSync?.register('update-widget-periodic', { minInterval: 15 * 60 * 1000 })
+            ]).catch(e => console.error("SW: Fallo durante la activación:", e));
 
-            // Registrar la sincronización periódica cuando el SW se activa
-            self.registration.periodicSync?.register('update-widget-periodic', {
-                minInterval: 15 * 60 * 1000, // Cada 15 minutos
-            }).catch(e => console.error('SW: Fallo al registrar la sincronización periódica:', e)),
-            // Al activar, programamos las notificaciones de clase y también hacemos
-            // una comprobación inicial para el fallback.
-            scheduleClassNotifications(),
-            checkAndShowDueNotifications()
-        ])
+            await scheduleClassNotifications();
+            await checkAndShowDueNotifications();
+            
+            return self.clients.claim();
+        })()
     );
-    return self.clients.claim();
 });
 
 self.addEventListener('fetch', event => {
     const request = event.request;
+    const url = new URL(request.url);
+
+    // Ignorar peticiones que no son http/https (ej. extensiones de chrome)
+    if (!request.url.startsWith('http')) {
+        return;
+    }
 
     // Estrategia "Network First, then Cache" para las peticiones a la API (ej. anuncios).
-    if (request.url.includes('/api/')) { // Identifica las llamadas a nuestra API
+    if (url.pathname.startsWith('/api/')) {
         // No cachear peticiones que no sean GET (como POST, DELETE, etc.)
         if (request.method !== 'GET') {
             return;
@@ -446,7 +447,7 @@ self.addEventListener('fetch', event => {
             fetch(request)
                 .then(networkResponse => {
                     const responseClone = networkResponse.clone();
-                    caches.open(CACHE_NAME).then(cache => {
+                    caches.open(ASSETS_CACHE_NAME).then(cache => {
                         cache.put(request, responseClone);
                     });
                     return networkResponse;
@@ -457,10 +458,40 @@ self.addEventListener('fetch', event => {
                     return caches.match(request);
                 })
         );
+        return;
+    }
+
+    // Estrategia "Stale-While-Revalidate" para CSS
+    if (request.destination === 'style') {
+        event.respondWith(
+            caches.open(ASSETS_CACHE_NAME).then(cache => {
+                return cache.match(request).then(cachedResponse => {
+                    const fetchPromise = fetch(request).then(networkResponse => {
+                        cache.put(request, networkResponse.clone());
+                        return networkResponse;
+                    });
+                    // Devolver la respuesta de la caché inmediatamente, si existe.
+                    return cachedResponse || fetchPromise;
+                });
+            })
+        );
+        return;
+    }
+
+    // Estrategia "Cache First" para fuentes y otros assets
+    if (request.destination === 'font' || request.destination === 'image') {
+        event.respondWith(
+            caches.match(request).then(cachedResponse => {
+                return cachedResponse || fetch(request).then(networkResponse => {
+                    const responseClone = networkResponse.clone();
+                    caches.open(ASSETS_CACHE_NAME).then(cache => cache.put(request, responseClone));
+                    return networkResponse;
+                });
+            })
+        );
+        return;
     } else {
-        // Estrategia "Cache First" para todos los demás recursos (HTML, CSS, JS, imágenes).
-        // Sirve desde la caché si está disponible para una carga súper rápida.
-        // Si no está en caché, lo busca en la red.
+        // Estrategia "Cache First" para el resto (HTML, JS, etc. precacheados)
         event.respondWith(
             caches.match(request).then(cachedResponse => {
                 return cachedResponse || fetch(request);

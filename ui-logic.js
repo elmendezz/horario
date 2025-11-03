@@ -453,6 +453,24 @@ async function highlightHolidayColumns() {
 }
 
 /**
+ * Inicializa la funcionalidad del modal de ayuda para widgets.
+ */
+function initializeWidgetHelpModal() {
+    const openBtn = document.getElementById('add-widget-btn');
+    const modal = document.getElementById('widget-help-modal');
+    const closeBtn = document.getElementById('close-widget-help-modal-btn');
+
+    if (openBtn && modal && closeBtn) {
+        openBtn.addEventListener('click', () => {
+            modal.style.display = 'block';
+        });
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+    }
+}
+
+/**
  * Inicializa la lógica del menú lateral (hamburguesa).
  */
 function initializeMenu() {
@@ -777,6 +795,7 @@ export function initializeUI() {
     // Llamada unificada para inicializar los anuncios
     updateAnnouncements();
     initializeModal();
+    initializeWidgetHelpModal();
     initializeFullscreen();
     initializeCacheControls();
     initializeUser();
