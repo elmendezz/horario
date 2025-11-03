@@ -4,6 +4,7 @@ export default async function handler(req, res) {
   const mainAppRepo = "elmendezz/horario"; // Repositorio principal de la app
   const issuesRepo = "elmendezz/horario-messages"; // Repositorio para crear los issues
   const usersFile = "users.json";
+  const noClassDaysFile = "no-class-days.json";
   const announcementsFile = "anuncios.json";
   const branch = "main";
 
@@ -117,6 +118,40 @@ export default async function handler(req, res) {
         await updateFile(announcementsFile, announcements, announcementsSha, `Nuevo anuncio: ${title}`);
         return res.status(201).json({ success: true, message: "Anuncio publicado." });
     }
+
+    // --- LÓGICA DE DÍAS SIN CLASES ---
+    if (req.query.noClassDays === 'true' || (req.body && req.body.type === 'no_class_day')) {
+        const { content: noClassDays, sha: noClassDaysSha } = await getFile(noClassDaysFile);
+
+        if (req.method === 'GET') {
+            return res.status(200).json(noClassDays);
+        }
+
+        if (req.method === 'POST') {
+            const { date } = req.body;
+            if (!date) return res.status(400).json({ error: "Falta la fecha." });
+            if (!noClassDays.includes(date)) {
+                noClassDays.push(date);
+                noClassDays.sort(); // Mantener la lista ordenada
+                await updateFile(noClassDaysFile, noClassDays, noClassDaysSha, `Añadir día sin clases: ${date}`);
+            }
+            return res.status(201).json({ success: true });
+        }
+
+        if (req.method === 'DELETE') {
+            const { date } = req.body;
+            if (!date) return res.status(400).json({ error: "Falta la fecha." });
+            
+            const updatedDays = noClassDays.filter(d => d !== date);
+            if (updatedDays.length < noClassDays.length) {
+                await updateFile(noClassDaysFile, updatedDays, noClassDaysSha, `Eliminar día sin clases: ${date}`);
+            }
+            return res.status(200).json({ success: true });
+        }
+
+        return res.status(405).json({ error: "Método no permitido para días sin clases." });
+    }
+
 
     // --- LÓGICA DE ANUNCIOS (DELETE para borrar selectivamente) ---
     if (req.method === 'DELETE' && req.query.announcements === 'true') {

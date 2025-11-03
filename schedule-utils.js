@@ -2,11 +2,30 @@
 
 import { schedule, classDuration } from './schedule-data.js';
 
+let noClassDays = [];
+let lastFetched = 0;
+
+async function getNoClassDays() {
+    // Cachear los resultados por 5 minutos para no sobrecargar la API
+    if (Date.now() - lastFetched > 5 * 60 * 1000) {
+        try {
+            const response = await fetch('/api/messages?noClassDays=true');
+            if (response.ok) {
+                noClassDays = await response.json();
+                lastFetched = Date.now();
+            }
+        } catch (e) {
+            console.error("No se pudieron cargar los días sin clases:", e);
+        }
+    }
+    return noClassDays;
+}
+
 // REUSABLE LOGIC FUNCTION
-export function getCurrentAndNextClass(date) {
+export async function getCurrentAndNextClass(date) {
     const day = date.getDay();
     const currentTotalMinutes = date.getHours() * 60 + date.getMinutes();
-
+    
     let currentClass = null;
     let nextClass = null;
     let foundCurrent = false;
@@ -45,12 +64,24 @@ export function getCurrentAndNextClass(date) {
         }
     }
     
+    // Comprobar si es un día sin clases
+    const holidays = await getNoClassDays();
+    const todayStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    if (holidays.includes(todayStr)) {
+        currentClass = { name: "Día sin clases", teacher: "Suspensión de labores" };
+        foundCurrent = true;
+        // La lógica para la siguiente clase ya busca el próximo día hábil, así que funcionará bien.
+    }
+
     // If still no next class today, look for the next school day
     if (!nextClass) {
          for (let i = 1; i <= 7; i++) {
             const nextDayIndex = (day + i - 1) % 7; // 0=Sun, 1=Mon...
-            if (nextDayIndex >= 0 && nextDayIndex <= 4 && schedule[nextDayIndex] && schedule[nextDayIndex].length > 0) { // Ensure day is Mon-Fri and schedule exists
-                 nextClass = schedule[nextDayIndex][0];
+            const nextDate = new Date(date);
+            nextDate.setDate(date.getDate() + i);
+            const nextDateStr = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}-${String(nextDate.getDate()).padStart(2, '0')}`;
+            if (nextDayIndex >= 0 && nextDayIndex <= 4 && schedule[nextDayIndex] && schedule[nextDayIndex].length > 0 && !holidays.includes(nextDateStr)) {
+                 nextClass = schedule[nextDayIndex][0]; // Ensure day is Mon-Fri, schedule exists, and it's not a holiday
                  nextClass.isNextDay = true; // Add a flag to indicate it's on a future day
                  break;
             }

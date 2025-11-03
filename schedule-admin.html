@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin: Días sin Clases</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { justify-content: flex-start; padding: 2em; }
+        .admin-container { max-width: 800px; margin: 0 auto; }
+        .admin-card {
+            background-color: var(--container-bg);
+            padding: 2em;
+            border-radius: 15px;
+            box-shadow: var(--container-shadow);
+            margin-bottom: 2em;
+        }
+        h1, h2 { color: var(--accent-color); text-align: center; }
+        .form-group { margin-bottom: 1em; text-align: left; }
+        .form-group label { display: block; margin-bottom: 0.5em; font-weight: bold; }
+        .form-group input {
+            width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc;
+            box-sizing: border-box; background-color: var(--bg-color); color: var(--text-color);
+        }
+        .days-list { list-style: none; padding: 0; }
+        .days-list li {
+            background-color: var(--bg-color); padding: 1em; border-radius: 8px;
+            margin-bottom: 0.5em; display: flex; justify-content: space-between; align-items: center;
+        }
+        .delete-btn {
+            background-color: #dc3545; color: white; border: none;
+            padding: 5px 10px; border-radius: 5px; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="admin-container">
+        <h1 id="admin-greeting">Admin: Días sin Clases</h1>
+
+        <div class="admin-card">
+            <h2>Añadir Día sin Clases</h2>
+            <form id="add-day-form">
+                <div class="form-group">
+                    <label for="no-class-date">Selecciona una fecha:</label>
+                    <input type="date" id="no-class-date" required>
+                </div>
+                <button type="submit" class="styled-button">Añadir Fecha</button>
+            </form>
+        </div>
+
+        <div class="admin-card">
+            <h2>Días sin Clases Programados</h2>
+            <ul id="days-list" class="days-list">
+                <li>Cargando días...</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="index.html" class="styled-button" style="background-color: #6c757d;">Volver al Horario</a>
+        </div>
+    </div>
+
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.dataset.theme = savedTheme;
+
+        const daysList = document.getElementById('days-list');
+        const addDayForm = document.getElementById('add-day-form');
+
+        async function fetchNoClassDays() {
+            try {
+                const response = await fetch('/api/messages?noClassDays=true');
+                const days = await response.json();
+                renderDays(days);
+            } catch (error) {
+                daysList.innerHTML = '<li>Error al cargar los días.</li>';
+                console.error(error);
+            }
+        }
+
+        function renderDays(days) {
+            daysList.innerHTML = '';
+            if (days.length === 0) {
+                daysList.innerHTML = '<li>No hay días sin clases programados.</li>';
+                return;
+            }
+            days.forEach(day => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span>${new Date(day + 'T00:00:00-07:00').toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                              <button class="delete-btn" data-date="${day}">Borrar</button>`;
+                daysList.appendChild(li);
+            });
+        }
+
+        addDayForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const date = document.getElementById('no-class-date').value;
+            if (!date) return;
+
+            await fetch('/api/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'no_class_day', date })
+            });
+            alert('Fecha añadida con éxito.');
+            addDayForm.reset();
+            fetchNoClassDays();
+        });
+
+        daysList.addEventListener('click', async (e) => {
+            if (e.target.classList.contains('delete-btn')) {
+                const date = e.target.dataset.date;
+                if (!confirm(`¿Seguro que quieres eliminar el día ${date}?`)) return;
+
+                await fetch('/api/messages', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'no_class_day', date })
+                });
+                alert('Fecha eliminada.');
+                fetchNoClassDays();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const pin = prompt('Ingresa tu PIN de administrador:');
+            if (pin !== '26435') {
+                alert('PIN incorrecto.');
+                window.location.href = 'index.html';
+            } else {
+                fetchNoClassDays();
+            }
+        });
+    </script>
+</body>
+</html>

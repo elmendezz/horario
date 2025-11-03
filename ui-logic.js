@@ -115,7 +115,7 @@ export function updateClock() {
 /**
  * Actualiza la información de la clase actual y la siguiente en la UI.
  */
-export function updateSchedule() {
+export async function updateSchedule() {
     if (!serverTime) return;
     const container = document.querySelector('.container');
     const now = new Date(serverTime.getTime() + (Date.now() - startTime));
@@ -132,7 +132,7 @@ export function updateSchedule() {
     const formatTime = (h, m) => `${(h % 12 || 12)}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
     const nextClassCountdownContainer = document.getElementById('next-class-countdown-container');
 
-    const { currentClass, nextClass } = getCurrentAndNextClass(now);
+    const { currentClass, nextClass } = await getCurrentAndNextClass(now);
 
     if (currentClass) {
         container?.classList.add('is-in-session'); // Añadir la animación si hay clase

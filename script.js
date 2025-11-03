@@ -69,9 +69,39 @@ function showWhatsNewModal() {
     }
 }
 
+/**
+ * Muestra un modal para pedir el nombre del usuario si es la primera vez que visita.
+ */
+function promptForUsernameIfNeeded() {
+    const username = localStorage.getItem('username');
+    if (!username) {
+        const modal = document.getElementById('username-modal');
+        const form = document.getElementById('username-form');
+        const input = document.getElementById('username-input');
+
+        if (modal && form && input) {
+            modal.style.display = 'block';
+            input.focus();
+
+            form.onsubmit = (e) => {
+                e.preventDefault();
+                const newUsername = input.value.trim();
+                if (newUsername) {
+                    localStorage.setItem('username', newUsername);
+                    modal.style.display = 'none';
+                    // Actualiza el saludo inmediatamente
+                    const userGreetingMenuEl = document.getElementById('user-greeting-menu');
+                    if(userGreetingMenuEl) userGreetingMenuEl.innerHTML = `👋 ¡Hola, ${newUsername}!`;
+                }
+            };
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // checkForUpdates(); // Desactivado temporalmente para dar prioridad al modal de versión
     showWhatsNewModal(); // Mostrar el modal de novedades si es necesario
+    promptForUsernameIfNeeded(); // Pedir nombre de usuario si es necesario
     // Inicializar la lógica de tiempo y luego la UI y notificaciones
     fetchTime().then(() => {
         initializeUI(); // Inicializar todos los componentes de la UI
