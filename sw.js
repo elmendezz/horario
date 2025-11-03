@@ -301,6 +301,12 @@ self.addEventListener('message', event => {
         event.waitUntil(scheduleClassNotifications()); // Re-programar con el nuevo tiempo
     }
 
+    if (type === 'SKIP_WAITING') {
+        console.log('SW: Recibida orden de activación. Saltando espera...');
+        self.skipWaiting();
+        return; // Salir después de manejar el mensaje
+    }
+
     if (type === 'TEST_NOTIFICATION') {
         const delaySeconds = event.data.delay || 0;
         console.log(`SW: Solicitud para notificación de prueba en ${delaySeconds}s.`);
@@ -394,7 +400,6 @@ self.addEventListener('install', event => {
         })
     );
     // Ya no llamamos a self.skipWaiting() aquí. Esperaremos a que el usuario lo active.
-    // self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {
