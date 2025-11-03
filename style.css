@@ -306,6 +306,12 @@ body {
     animation-delay: 0.4s;
 }
 
+/* Estilo para el separador del reloj que parpadea */
+#clock .colon {
+    animation: blink 1s step-end infinite;
+    position: relative; /* Ajuste para mejor alineación vertical */
+}
+
 #countdown {
     font-size: 1.2em;
     color: var(--text-color);
@@ -334,10 +340,14 @@ body {
     min-width: 700px;
     border-collapse: collapse;
     margin-top: 1em;
-    display: none;
 }
-#schedule-table.visible {
-    display: table;
+
+/* Estilo para la animación de entrada de las filas de la tabla */
+.table-wrapper.visible #schedule-table tr {
+    opacity: 0;
+    transform: translateY(15px);
+    animation: fadeInUp 0.5s ease-out forwards;
+    /* El retraso se aplicará en línea con JS */
 }
 
 #schedule-table th, #schedule-table td {
@@ -387,6 +397,19 @@ body {
     overflow-x: auto;
     width: 100%;
     max-width: 100%;
+    /* --- Estilos para la animación de despliegue --- */
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: max-height 0.7s ease-in-out, opacity 0.5s ease-out, transform 0.5s ease-out;
+    overflow-y: hidden; /* Ocultar el contenido que se desborda durante la transición */
+}
+
+.table-wrapper.visible {
+    max-height: 100vh; /* Un valor suficientemente grande para contener la tabla */
+    opacity: 1;
+    transform: translateY(0);
+    overflow-y: auto; /* Restaurar el scroll si es necesario */
 }
 
 .modal {
@@ -663,6 +686,7 @@ body {
 
 .menu-button:hover {
     background-color: var(--bg-color);
+    transform: translateY(-2px); /* Efecto de elevación al pasar el cursor */
 }
 
 .menu-overlay {
@@ -694,6 +718,10 @@ body {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+@keyframes blink {
+    50% { opacity: 0; }
 }
 
 @keyframes gradient-bg {

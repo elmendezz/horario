@@ -68,7 +68,10 @@ export function updateClock() {
     const am_pm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12 || 12; // Formato 12 horas
     const clockEl = document.getElementById('clock');
-    if (clockEl) clockEl.textContent = isSimulated ? `Hora Simulada: ${hours}:${minutes}:${seconds} ${am_pm}` : `Hora: ${hours}:${minutes}:${seconds} ${am_pm}`;
+    // Usamos innerHTML para poder animar el separador
+    if (clockEl) {
+        clockEl.innerHTML = isSimulated ? `Hora Simulada: ${hours}<span class="colon">:</span>${minutes}<span class="colon">:</span>${seconds} ${am_pm}` : `Hora: ${hours}<span class="colon">:</span>${minutes}<span class="colon">:</span>${seconds} ${am_pm}`;
+    }
 
     const countdownEl = document.getElementById('countdown');
     const nextClassCountdownContainer = document.getElementById('next-class-countdown-container');
@@ -395,12 +398,20 @@ function initializeUser() {
  */
 function initializeScheduleToggle() {
     const showScheduleBtn = document.getElementById('show-schedule-btn');
-    const scheduleTable = document.getElementById('schedule-table');
+    const tableWrapper = document.querySelector('.table-wrapper');
     showScheduleBtn.addEventListener('click', () => {
-        scheduleTable.classList.toggle('visible');
-        showScheduleBtn.textContent = scheduleTable.classList.contains('visible') ? 'Ocultar Horario' : 'Mostrar Horario';
-        highlightCurrentClassInTable(); // Volver a resaltar al mostrar la tabla
-        highlightHolidayColumns(); // Resaltar columnas de días festivos
+        const isVisible = tableWrapper.classList.toggle('visible');
+        showScheduleBtn.textContent = isVisible ? 'Ocultar Horario' : 'Mostrar Horario';
+        
+        if (isVisible) {
+            // Aplicar animación escalonada a las filas al mostrar la tabla
+            const rows = tableWrapper.querySelectorAll('#schedule-table tr');
+            rows.forEach((row, index) => {
+                row.style.animationDelay = `${index * 0.05}s`;
+            });
+            highlightCurrentClassInTable();
+            highlightHolidayColumns();
+        }
     });
 }
 
