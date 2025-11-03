@@ -498,14 +498,18 @@ self.addEventListener('fetch', event => {
     } else {
         // Estrategia "Cache First" para el resto (HTML, JS, etc. precacheados)
         event.respondWith(
-            caches.match(request).then(cachedResponse => {
-                // Si la respuesta está en caché, la devolvemos.
-                if (cachedResponse) {
-                    return cachedResponse;
-                }
-                // Si no está en caché (y estamos offline), el fetch fallará.
-                // Como fallback para las peticiones de navegación, intentamos devolver el index.html cacheado.
-                return fetch(request).catch(() => caches.match('index.html'));
+            caches.match(event.request).then(cachedResponse => {
+                const fetchPromise = fetch(event.request).catch(error => {
+                    // El fetch falló, probablemente porque estamos offline.
+                    // Solo devolvemos el index.html como fallback para las peticiones de navegación.
+                    if (event.request.mode === 'navigate') {
+                        console.log('SW: Fallo de red para navegación. Sirviendo index.html desde caché.');
+                        return caches.match('index.html');
+                    }
+                    // Para otros tipos de peticiones (scripts, css), no devolvemos nada si fallan.
+                    // Esto evita el error de MIME type.
+                });
+                return cachedResponse || fetchPromise;
             })
         );
     }
