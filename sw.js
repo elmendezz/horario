@@ -505,26 +505,22 @@ self.addEventListener('fetch', event => {
         return;
     } else {
         // Estrategia "Cache First" para el resto (HTML, JS, etc. precacheados)
+        // Esta es la estrategia más robusta para el "App Shell".
         event.respondWith(
-            // Estrategia "Network falling back to Cache" para todas las peticiones precacheadas.
-            // Es la más robusta para asegurar el funcionamiento offline.
-            fetch(event.request)
-                .then(networkResponse => {
-                    // Si la red funciona, la usamos y no hacemos nada más.
-                    return networkResponse;
+            caches.match(event.request).then(cachedResponse => {
+                // Si la respuesta está en la caché, la devolvemos inmediatamente.
+                if (cachedResponse) {
+                    return cachedResponse;
+                }
+                // Si no está en la caché, intentamos obtenerla de la red.
+                return fetch(event.request).catch(() => {
+                    // Si la red también falla y es una petición de navegación,
+                    // devolvemos la página offline como último recurso.
+                    if (event.request.mode === 'navigate') {
+                        return caches.match('offline.html');
+                    }
                 })
-                .catch(() => {
-                    // Si la red falla, buscamos en la caché.
-                    return caches.match(event.request).then(cachedResponse => {
-                        // Si está en caché, la devolvemos.
-                        if (cachedResponse) return cachedResponse;
-                        // Si no está en caché y era una navegación, devolvemos la página offline.
-                        if (event.request.mode === 'navigate') {
-                            return caches.match('offline.html');
-                        }
-                        // Para otros recursos no cacheados (scripts, css), la petición fallará naturalmente.
-                    });
-                })
+            })
         );
     }
 });
