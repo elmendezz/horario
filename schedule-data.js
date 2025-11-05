@@ -41,7 +41,7 @@ export const schedule = [
     ],
     // Viernes (Day 5)
     [
-        { time: [13, 20], name: "Formación Socioemocional I", teacher: "Chávez Arriola Luis Mario" },
+        { time: [13, 20], name: "Formación Socioemocional I", teacher: "💩" },
         { time: [14, 10], name: "Ciencias Sociales I", teacher: "Yañez Núñez Lorena Esmeralda" },
         { time: [15, 0], name: "Receso", teacher: "Pausa De 20 Minutos.", duration: 20 },
         { time: [15, 20], name: "Lengua y Comunicación I", teacher: "Yañez Núñez Lorena Esmeralda" },
