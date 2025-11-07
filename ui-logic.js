@@ -462,7 +462,10 @@ async function highlightHolidayColumns() {
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Normalizar a medianoche para comparaciones de día
 
-    holidays.forEach(holiday => {
+    // Filtrar solo los elementos que son días festivos válidos (tienen una propiedad 'date')
+    const validHolidays = holidays.filter(holiday => holiday && holiday.date);
+
+    validHolidays.forEach(holiday => {
         const holidayDate = new Date(holiday.date.replace(/-/g, '/'));
         const holidayDayOfWeek = holidayDate.getDay(); // 0=Sun, 1=Mon...
         if (holidayDate.getTime() >= today.getTime()) { // Solo para hoy y el futuro
