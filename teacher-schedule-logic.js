@@ -52,6 +52,13 @@ function renderScheduleTable(schedule) {
                     const duration = classItem.duration || 50;
                     const rowSpan = Math.ceil(duration / 50); // Calcular cuántas filas debe ocupar
                     
+                    // Marcar las celdas que serán ocupadas por esta clase larga
+                    if (rowSpan > 1) {
+                        for (let i = 1; i < rowSpan; i++) {
+                            const nextTimeInMinutes = sortedTimes[sortedTimes.indexOf(timeInMinutes) + i];
+                            occupiedCells.set(`${dayIndex}-${nextTimeInMinutes}`, true);
+                        }
+                    }
                     return `<td rowspan="${rowSpan}"><strong>${classItem.name}</strong><br><small>${classItem.teacher}</small></td>`;
                 }
                 return '<td></td>';
