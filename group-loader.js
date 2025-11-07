@@ -78,3 +78,18 @@ window.changeGroup = () => {
     localStorage.removeItem('user-group');
     window.location.reload();
 };
+
+/**
+ * (NUEVO) Permite cambiar de grupo desde la consola del desarrollador.
+ * Uso: loadGroup('1CV')
+ * @param {string} group - El nombre del grupo a cargar.
+ */
+window.loadGroup = (group) => {
+    if (GROUPS.includes(group.toUpperCase())) {
+        console.log(`Cargando grupo: ${group.toUpperCase()}`);
+        localStorage.setItem('user-group', group.toUpperCase());
+        window.location.reload();
+    } else {
+        console.error(`El grupo "${group}" no es válido. Grupos disponibles:`, GROUPS);
+    }
+};
