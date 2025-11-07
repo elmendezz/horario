@@ -67,6 +67,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const userGroup = localStorage.getItem('user-group');
 
     if (userGroup && GROUPS.includes(userGroup)) {
+        // Mostrar mensaje de ayuda en la consola para desarrolladores.
+        console.log(
+            '%c🛠️ Modo Desarrollador: %cPara cambiar de grupo, usa la función %cloadGroup("GRUPO")',
+            'color: #89b4f8; font-weight: bold; font-size: 1.1em;',
+            'color: #e3e3e3;',
+            'color: #f4a78f; font-family: monospace;'
+        );
+
         loadScheduleAndStartApp(userGroup);
     } else {
         showGroupSelectionModal();
