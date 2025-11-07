@@ -1,5 +1,6 @@
 // c:\Users\Admin\Documents\GitHub\horario\group-loader.js
 
+// Lista de grupos disponibles.
 const GROUPS = ['1A', '1B', '1C', '1D', '1E', '1F', '1AV', '1BV', '1CV', '1DV'];
 
 function showGroupSelectionModal() {
@@ -22,10 +23,31 @@ function showGroupSelectionModal() {
     modal.style.display = 'flex';
 }
 
+// Función para cargar los scripts principales de la aplicación.
+function loadMainAppScripts() {
+    const scriptsToLoad = [
+        'schedule-utils.js',
+        'notification-logic.js',
+        'ui-logic.js',
+        'script.js'
+    ];
+
+    scriptsToLoad.forEach(src => {
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.src = src;
+        document.body.appendChild(script);
+    });
+}
+
 function loadScheduleData(group) {
     const script = document.createElement('script');
     script.type = 'module';
     script.src = `schedule-data-${group}.js`;
+    script.onload = () => {
+        // Una vez que el horario se ha cargado, cargamos el resto de la aplicación.
+        loadMainAppScripts();
+    };
     script.onerror = () => {
         console.error(`Error al cargar el horario para el grupo ${group}. Volviendo a la selección.`);
         alert(`No se pudo cargar el horario para el grupo ${group}. Por favor, selecciona otro.`);
