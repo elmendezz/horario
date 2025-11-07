@@ -1,8 +1,7 @@
 // c:\Users\Admin\Documents\GitHub\horario\ui-logic.js
 
 import { reportError } from './error-logic.js';
-import { schedule, classDuration } from './schedule-data.js';
-import { getCurrentAndNextClass } from './schedule-utils.js';
+import { getCurrentAndNextClass } from './schedule-utils.js'; // schedule se pasará como parámetro
 import { sendMessageToSW } from './notification-logic.js';
 
 // Variables de estado globales para la UI
@@ -118,7 +117,7 @@ export function updateClock() {
 /**
  * Actualiza la información de la clase actual y la siguiente en la UI.
  */
-export async function updateSchedule() {
+export async function updateSchedule(schedule, classDuration) {
     if (!serverTime) return;
     const container = document.querySelector('.container');
     const now = new Date(serverTime.getTime() + (Date.now() - startTime));
@@ -210,7 +209,7 @@ export async function updateSchedule() {
 /**
  * Renderiza la tabla completa del horario.
  */
-export function renderScheduleTable() {
+export function renderScheduleTable(schedule) {
     const scheduleTableBody = document.getElementById('schedule-table-body');
     scheduleTableBody.innerHTML = '';
     const formatTime = (h, m) => `${(h % 12 || 12)}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
@@ -906,7 +905,7 @@ function initializeEruda() {
 /**
  * Función principal para inicializar toda la lógica de la UI.
  */
-export function initializeUI() {
+export function initializeUI(schedule) {
     initializeMenu();
     initializeThemeToggle();
     // Llamada unificada para inicializar los anuncios
@@ -921,7 +920,7 @@ export function initializeUI() {
     initializeDevToolsToggle();
     initializeSWRegistrationButton();
     initializeEruda(); // <-- Añadimos la inicialización de Eruda aquí
-    renderScheduleTable(); // Renderizar la tabla inicialmente
+    renderScheduleTable(schedule); // Renderizar la tabla inicialmente
 }
 
 export { isSimulated }; // Exportar para que script.js pueda usarlo en setInterval

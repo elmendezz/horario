@@ -1,5 +1,6 @@
 // c:\Users\Admin\Documents\GitHub\horario\script.js
 
+import { schedule, classDuration } from './schedule-data.js'; // Importa el horario cargado dinámicamente
 import { fetchTime, initializeUI, updateSchedule, updateClock, isSimulated, updateAnnouncements } from './ui-logic.js';
 import { initializeNotifications } from './notification-logic.js';
 import { reportError } from './error-logic.js';
@@ -114,17 +115,17 @@ document.addEventListener('DOMContentLoaded', () => {
     showWhatsNewModal(); // Mostrar el modal de novedades si es necesario
     promptForUsernameIfNeeded(); // Pedir nombre de usuario si es necesario
     // Inicializar la lógica de tiempo y luego la UI y notificaciones
-    fetchTime().then(() => {
-        initializeUI(); // Inicializar todos los componentes de la UI
+    fetchTime().then(async () => {
+        initializeUI(schedule); // Inicializar todos los componentes de la UI, pasándole el horario
         initializeNotifications(); // Inicializar la lógica de notificaciones
 
         // Ejecutar una vez de inmediato para evitar el retraso inicial
-        updateSchedule();
+        await updateSchedule(schedule, classDuration);
         updateClock();
         
         // Configurar los intervalos de actualización
         const updateInterval = isSimulated ? 1000 : 10000; // 1 segundo si es simulado, 10 segundos si es real
-        setInterval(updateSchedule, updateInterval);
+        setInterval(() => updateSchedule(schedule, classDuration), updateInterval);
         setInterval(updateClock, 1000); // El reloj se actualiza cada segundo
     }).catch(error => {
         reportError(error, 'Inicialización Principal'); // Usamos nuestro nuevo reportero
