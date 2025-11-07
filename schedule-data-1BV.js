@@ -14,8 +14,7 @@ export const schedule = [
     ],
     // Martes
     [
-        { time: [13, 20], name: "Cultura Digital I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" },
-        { time: [14, 10], name: "Cultura Digital I", teacher: "ARMENTA FELIX ANA CRISTINA" },
+        { time: [13, 20], name: "Cultura Digital I", teacher: "ARMENTA FELIX ANA CRISTINA", duration: 100 },
         { time: [16, 10], name: "Ingles I", teacher: "DE JESUS ORDOÑEZ DIONE" }
     ],
     // Miércoles

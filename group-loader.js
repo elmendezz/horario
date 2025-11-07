@@ -60,7 +60,6 @@ async function loadScheduleAndStartApp(group) {
         localStorage.removeItem('user-group');
         showGroupSelectionModal();
     };
-    document.body.appendChild(script);
 }
 
 document.addEventListener('DOMContentLoaded', () => {

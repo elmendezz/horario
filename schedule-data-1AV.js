@@ -8,8 +8,7 @@ export const schedule = [
         { time: [12, 30], name: "Ciencias Sociales I", teacher: "CASTRO MENDIVIL ARIADNA" },
         { time: [13, 20], name: "Humanidades I", teacher: "GONZALEZ FIGUEROA CARLOS MANUEL" },
         { time: [14, 10], name: "Cultura Digital I", teacher: "SANZ SALAZAR FERNANDO HUMBERTO" },
-        { time: [15, 20], name: "Pensamiento matemático I", teacher: "OLEA GONZALEZ OMAR ISMAEL" },
-        { time: [16, 10], name: "Pensamiento matemático I", teacher: "OLEA GONZALEZ OMAR ISMAEL" },
+        { time: [15, 20], name: "Pensamiento matemático I", teacher: "OLEA GONZALEZ OMAR ISMAEL", duration: 100 },
         { time: [17, 0], name: "Lengua y Comunicación I", teacher: "YAÑEZ NUÑEZ LORENA ESMERALDA" }
     ],
     // Martes

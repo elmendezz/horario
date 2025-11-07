@@ -14,8 +14,7 @@ export const schedule = [
     // Martes
     [
         { time: [12, 30], name: "Formación socioemocional I", teacher: "GUERRERO VERA JASMIN ZELENE" },
-        { time: [13, 20], name: "Pensamiento matemático I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA" },
-        { time: [15, 20], name: "Pensamiento matemático I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA" },
+        { time: [13, 20], name: "Pensamiento matemático I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA", duration: 100 },
         { time: [16, 10], name: "Ingles I", teacher: "FALCON OLIOVAN ANDREA MARIEL" },
         { time: [17, 0], name: "Humanidades I", teacher: "ORTEGA SAMANTHA" }
     ],
@@ -28,16 +27,14 @@ export const schedule = [
     ],
     // Jueves
     [
-        { time: [14, 10], name: "Pensamiento matemático I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA" },
-        { time: [16, 10], name: "Cultura Digital I", teacher: "ARMENTA FELIX ANA CRISTINA" }
+        { time: [14, 10], name: "Pensamiento matemático I", teacher: "HERNANDEZ VARGAS KENIA YOVANNA", duration: 50 },
+        { time: [16, 10], name: "Cultura Digital I", teacher: "ARMENTA FELIX ANA CRISTINA", duration: 50 }
     ],
     // Viernes
     [
         { time: [12, 30], name: "Humanidades I", teacher: "ORTEGA SAMANTHA" },
         { time: [13, 20], name: "Ciencias Sociales I", teacher: "ORTEGA SAMANTHA" },
-        { time: [14, 10], name: "Lengua y Comunicación I", teacher: "GUERRERO VERA JASMIN ZELENE" },
-        { time: [15, 20], name: "Lengua y Comunicación I", teacher: "GUERRERO VERA JASMIN ZELENE" },
-        { time: [16, 10], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO" },
-        { time: [17, 0], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO" }
+        { time: [14, 10], name: "Lengua y Comunicación I", teacher: "GUERRERO VERA JASMIN ZELENE", duration: 100 },
+        { time: [16, 10], name: "La Materia y sus Interacciones", teacher: "VARA LOPEZ JOSE ALBERTO", duration: 100 }
     ]
 ];
