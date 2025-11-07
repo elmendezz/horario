@@ -1,6 +1,4 @@
-// c:\Users\Admin\Documents\GitHub\horario\schedule-utils.js
-
-import { schedule, classDuration } from './schedule-data.js';
+// c:/Users/Admin/Documents/GitHub/horario/schedule-utils.js
 
 let noClassDays = [];
 let lastFetched = 0;
@@ -25,7 +23,10 @@ async function getNoClassDays() {
 }
 
 // REUSABLE LOGIC FUNCTION
-export async function getCurrentAndNextClass(date) {
+export async function getCurrentAndNextClass(date, schedule) {
+    // Obtener la duración de la clase del primer elemento que la tenga, o usar 50 por defecto.
+    const classDuration = schedule.flat().find(c => c.duration)?.duration || 50;
+
     const day = date.getDay();
     const currentTotalMinutes = date.getHours() * 60 + date.getMinutes();
     

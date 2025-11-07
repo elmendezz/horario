@@ -1,5 +1,15 @@
 // c:\Users\Admin\Documents\GitHub\horario\group-loader.js
 
+/**
+ * Envía un mensaje al Service Worker.
+ * @param {object} message - El objeto de mensaje a enviar.
+ */
+function sendMessageToSW(message) {
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage(message);
+    }
+}
+
 // Lista de grupos disponibles.
 const GROUPS = ['1A', '1B', '1C', '1D', '1E', '1F', '1AV', '1BV', '1CV', '1DV'];
 
@@ -14,6 +24,8 @@ function showGroupSelectionModal() {
         button.style.margin = '5px';
         button.addEventListener('click', () => {
             localStorage.setItem('user-group', group);
+            // Informar al Service Worker sobre el grupo seleccionado.
+            sendMessageToSW({ type: 'SET_USER_GROUP', payload: { group } });
             // Recargar la página para que se inicialice con el nuevo grupo.
             window.location.reload();
         });
@@ -45,6 +57,8 @@ function loadScheduleData(group) {
     script.type = 'module';
     script.src = `schedule-data-${group}.js`;
     script.onload = () => {
+        // Informar al Service Worker sobre el grupo actual en cada carga.
+        sendMessageToSW({ type: 'SET_USER_GROUP', payload: { group } });
         // Una vez que el horario se ha cargado, cargamos el resto de la aplicación.
         loadMainAppScripts();
     };

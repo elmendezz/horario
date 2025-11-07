@@ -2,8 +2,6 @@
 
 const CACHE_NAME = 'horario-1cv-cache-v291'; // Incrementamos la versión del caché
 const ASSETS_CACHE_NAME = 'assets-cache-v2'; // Nuevo caché para assets dinámicos
-import { schedule } from './schedule-data.js';
-import { getCurrentAndNextClass } from './schedule-utils.js';
 const urlsToCache = [
     '/', 
     'index.html', 
@@ -35,6 +33,10 @@ let notificationTimer;
 // =================== LÓGICA DE WIDGETS ===================
 
 async function updateWidget() {
+    // Detener si no hay un grupo seleccionado, ya que no podemos obtener el horario.
+    const userGroup = await getSetting('user-group');
+    if (!userGroup) return;
+
     if (!self.widgets) {
         console.log('SW: La API de widgets no está disponible.');
         return;
@@ -42,8 +44,11 @@ async function updateWidget() {
 
     const now = new Date();
     // Usamos la lógica centralizada y robusta para obtener la clase actual y siguiente.
-    const { currentClass, nextClass } = await getCurrentAndNextClass(now);
-    
+    // Importamos dinámicamente la lógica necesaria SOLO cuando la necesitamos.
+    const { schedule } = await import(`./schedule-data-${userGroup}.js`);
+    const { getCurrentAndNextClass } = await import('./schedule-utils.js');
+    const { currentClass, nextClass } = await getCurrentAndNextClass(now, schedule);
+
     const widgetData = {
         currentTitle: currentClass ? "Clase Actual:" : "No hay clase ahora",
         currentSubtitle: currentClass ? currentClass.name : "¡Tiempo libre!",
@@ -171,6 +176,10 @@ async function scheduleNextNotificationFallback() {
  * Es el corazón del nuevo sistema de fallback robusto.
  */
 async function checkAndShowDueNotifications() {
+    // Detener si no hay un grupo seleccionado.
+    const userGroup = await getSetting('user-group');
+    if (!userGroup) return;
+
     if (!notificationsEnabled || self.Notification.showTrigger) {
         // No hacer nada si las notificaciones están desactivadas o si el navegador usa el método moderno (Triggers).
         return;
@@ -178,6 +187,9 @@ async function checkAndShowDueNotifications() {
 
     console.log('SW (Fallback Check): Comprobando si hay notificaciones pendientes...');
     const now = new Date();
+
+    // Importar el horario del grupo correcto
+    const { schedule } = await import(`./schedule-data-${userGroup}.js`);
 
     for (let i = 0; i < 2; i++) { // Comprobar hoy y mañana
         const checkDate = new Date();
@@ -227,6 +239,10 @@ async function scheduleClassNotifications() {
  * Programa notificaciones usando el método moderno y preferido: Notification Triggers.
  */
 async function scheduleClassNotificationsWithTriggers() {
+    // Detener si no hay un grupo seleccionado.
+    const userGroup = await getSetting('user-group');
+    if (!userGroup) return;
+
     // Primero, cancelar todas las notificaciones programadas anteriormente para evitar duplicados.
     const existingNotifications = await self.registration.getNotifications({
         includeTriggered: true
@@ -247,12 +263,14 @@ async function scheduleClassNotificationsWithTriggers() {
     let scheduledCount = 0;
 
     // Programar para los próximos 2 días para ser seguros
+    const { schedule } = await import(`./schedule-data-${userGroup}.js`);
+    const { getCurrentAndNextClass } = await import('./schedule-utils.js');
+
     for (let i = 0; i < 2; i++) {
         const checkDate = new Date(now);
         checkDate.setDate(now.getDate() + i);
-        const dayOfWeek = checkDate.getDay();
 
-        const { nextClass } = await getCurrentAndNextClass(checkDate);
+        const { nextClass } = await getCurrentAndNextClass(checkDate, schedule);
 
         if (nextClass && nextClass.time) {
             const classStartTime = new Date(checkDate);
@@ -309,6 +327,12 @@ self.addEventListener('message', event => {
         console.log('SW: Recibida orden de activación. Saltando espera...');
         self.skipWaiting();
         return; // Salir después de manejar el mensaje
+    }
+
+    if (type === 'SET_USER_GROUP') {
+        console.log(`SW: Grupo de usuario actualizado a ${payload.group}`);
+        event.waitUntil(setSetting('user-group', payload.group));
+        return;
     }
 
     if (type === 'TEST_NOTIFICATION') {

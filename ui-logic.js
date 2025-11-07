@@ -138,7 +138,7 @@ export async function updateSchedule() {
     const formatTime = (h, m) => `${(h % 12 || 12)}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
     const nextClassCountdownContainer = document.getElementById('next-class-countdown-container');
 
-    const { currentClass, nextClass } = await getCurrentAndNextClass(now);
+    const { currentClass, nextClass } = await getCurrentAndNextClass(now, schedule);
 
     // Determinar el estado y el texto a mostrar
     let newClassName, newTeacherName;
