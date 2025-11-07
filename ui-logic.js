@@ -901,6 +901,31 @@ function initializeEruda() {
     }
 }
 
+/**
+ * Actualiza el botón del salón basado en el grupo del usuario.
+ */
+function updateClassroomButton() {
+    const userGroup = localStorage.getItem('user-group');
+    const classroomButton = document.getElementById('classroom-button');
+    if (!userGroup || !classroomButton) return;
+
+    const classroomMap = {
+        '1A': 'B7 / Cómputo 1',
+        '1B': 'C1 / Cómputo 1',
+        '1C': 'C2 / Cómputo 1',
+        '1D': 'C3 / Cómputo 1',
+        '1E': 'C4 / Cómputo 1',
+        '1F': 'D6 / Cómputo 1',
+        '1AV': 'B7 / Cómputo 1 y 2',
+        '1BV': 'C1 / Cómputo 2',
+        '1CV': 'C2 / Cómputo 2',
+        '1DV': 'C3 / Cómputo 2'
+    };
+
+    const classroom = classroomMap[userGroup] || 'No asignado';
+    classroomButton.textContent = `Salón: ${classroom}`;
+}
+
 
 /**
  * Función principal para inicializar toda la lógica de la UI.
@@ -919,6 +944,7 @@ export function initializeUI(schedule) {
     initializeTimeSourceToggle();
     initializeDevToolsToggle();
     initializeSWRegistrationButton();
+    updateClassroomButton(); // <-- Actualizar el botón del salón
     initializeEruda(); // <-- Añadimos la inicialización de Eruda aquí
     renderScheduleTable(schedule); // Renderizar la tabla inicialmente
 }

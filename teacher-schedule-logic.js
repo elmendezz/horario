@@ -58,8 +58,9 @@ function renderScheduleTable(schedule) {
                     // Marcar las celdas que serán ocupadas por esta clase larga
                     if (rowSpan > 1) {
                         for (let i = 1; i < rowSpan; i++) {
-                            const nextTimeInMinutes = sortedTimes[sortedTimes.indexOf(timeInMinutes) + i];
-                            occupiedCells.set(`${dayIndex}-${nextTimeInMinutes}`, true);
+                            // La duración de una clase es de 50 minutos.
+                            const nextOccupiedTime = timeInMinutes + (i * 50);
+                            occupiedCells.set(`${dayIndex}-${nextOccupiedTime}`, true);
                         }
                     }
                     return `<td rowspan="${rowSpan}"><strong>${classItem.name}</strong><br><small>${classItem.teacher}</small></td>`;
