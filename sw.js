@@ -7,9 +7,8 @@ import { getCurrentAndNextClass } from './schedule-utils.js';
 const urlsToCache = [
     '/', 
     'index.html', 
-    'horario.jpg', 
     'manifest.json', 
-    'widget_template.json',
+    'horario.jpg',
     'images/icons/icon-192x192.png',
     // Módulos JS principales
     'schedule-data.js',
@@ -449,6 +448,22 @@ self.addEventListener('fetch', event => {
     // Ignorar peticiones inyectadas por Vercel para evitar errores offline.
     if (url.hostname.includes('vercel.live')) {
         console.log('SW: Ignorando petición de Vercel Live:', request.url);
+        return;
+    }
+
+    // NUEVA ESTRATEGIA para los archivos de horario dinámicos (schedule-data-*.js)
+    // Network First: Intenta obtener de la red primero para asegurar que se carga el archivo del grupo correcto.
+    if (url.pathname.includes('schedule-data-')) {
+        event.respondWith(
+            fetch(request)
+                .then(networkResponse => {
+                    // Si la petición a la red es exitosa, la cacheamos para uso offline futuro.
+                    const responseClone = networkResponse.clone();
+                    caches.open(ASSETS_CACHE_NAME).then(cache => cache.put(request, responseClone));
+                    return networkResponse;
+                })
+                .catch(() => caches.match(request)) // Si la red falla, intenta servir desde la caché.
+        );
         return;
     }
 
