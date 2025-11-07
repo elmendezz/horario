@@ -26,11 +26,14 @@ function renderScheduleTable(schedule) {
     scheduleTableBody.innerHTML = '';
     const formatTime = (h, m) => `${(h % 12 || 12)}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
 
-    // Obtener todos los horarios de inicio únicos y ordenarlos
+    // Obtener todos los horarios de inicio únicos y ordenarlos.
+    // Esto es crucial para que la tabla se dibuje correctamente.
     const allTimes = new Set();
-    schedule.forEach(day => day.forEach(c => {
-        if (c.time) allTimes.add(c.time[0] * 60 + c.time[1]);
-    }));
+    const timeSlots = [
+        [7,0], [7,50], [8,40], [9,0], [9,50], [10,40], [10,50], [11,40],
+        [12,30], [13,20], [14,10], [15,0], [15,20], [16,10], [17,0]
+    ];
+    timeSlots.forEach(t => allTimes.add(t[0] * 60 + t[1]));
     const sortedTimes = Array.from(allTimes).sort((a, b) => a - b);
 
     // Mapa para rastrear celdas que ya han sido ocupadas por una clase larga
