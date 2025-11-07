@@ -35,34 +35,26 @@ function showGroupSelectionModal() {
     modal.style.display = 'flex';
 }
 
-// Función para cargar los scripts principales de la aplicación.
-function loadMainAppScripts() {
-    const scriptsToLoad = [
-        'schedule-utils.js',
-        'notification-logic.js',
-        'ui-logic.js',
-        'script.js'
-    ];
-
-    scriptsToLoad.forEach(src => {
-        const script = document.createElement('script');
-        script.type = 'module';
-        script.src = src;
-        document.body.appendChild(script);
-    });
-}
-
-function loadScheduleData(group) {
-    const script = document.createElement('script');
-    script.type = 'module';
-    script.src = `schedule-data-${group}.js`;
-    script.onload = () => {
+/**
+ * Carga dinámicamente el horario de un grupo y luego inicia la aplicación principal.
+ * @param {string} group - El grupo a cargar (ej. '1CV').
+ */
+async function loadScheduleAndStartApp(group) {
+    try {
         // Informar al Service Worker sobre el grupo actual en cada carga.
         sendMessageToSW({ type: 'SET_USER_GROUP', payload: { group } });
-        // Una vez que el horario se ha cargado, cargamos el resto de la aplicación.
-        loadMainAppScripts();
-    };
-    script.onerror = () => {
+
+        // 1. Importar dinámicamente los datos del horario.
+        const scheduleModule = await import(`./schedule-data-${group}.js`);
+        const { schedule, classDuration } = scheduleModule;
+
+        // 2. Importar dinámicamente la función principal de la aplicación.
+        const mainAppModule = await import('./script.js');
+
+        // 3. Ejecutar la función principal, pasándole los datos del horario.
+        mainAppModule.main(schedule, classDuration);
+
+    } catch (error) {
         console.error(`Error al cargar el horario para el grupo ${group}. Volviendo a la selección.`);
         alert(`No se pudo cargar el horario para el grupo ${group}. Por favor, selecciona otro.`);
         localStorage.removeItem('user-group');
@@ -75,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const userGroup = localStorage.getItem('user-group');
 
     if (userGroup && GROUPS.includes(userGroup)) {
-        loadScheduleData(userGroup);
+        loadScheduleAndStartApp(userGroup);
     } else {
         showGroupSelectionModal();
     }

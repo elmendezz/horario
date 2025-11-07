@@ -1,7 +1,6 @@
 // c:\Users\Admin\Documents\GitHub\horario\script.js
 
-import { schedule, classDuration } from './schedule-data.js'; // Importa el horario cargado dinámicamente
-import { fetchTime, initializeUI, updateSchedule, updateClock, isSimulated, updateAnnouncements } from './ui-logic.js';
+import { fetchTime, initializeUI, updateSchedule, updateClock, isSimulated, updateAnnouncements } from './ui-logic.js'; // El horario se pasa como parámetro
 import { initializeNotifications } from './notification-logic.js';
 import { reportError } from './error-logic.js';
 
@@ -108,9 +107,14 @@ function manageSWUpdates() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    // La nueva lógica de actualización del SW reemplaza a la antigua función checkForUpdates.
-    manageSWUpdates();
+/**
+ * Función principal que arranca toda la aplicación.
+ * Es llamada por group-loader.js después de cargar el horario.
+ * @param {Array} schedule - El array del horario del grupo.
+ * @param {number} classDuration - La duración estándar de una clase.
+ */
+export function main(schedule, classDuration) {
+    manageSWUpdates(); // Configurar la lógica de actualización del Service Worker.
 
     showWhatsNewModal(); // Mostrar el modal de novedades si es necesario
     promptForUsernameIfNeeded(); // Pedir nombre de usuario si es necesario
@@ -129,10 +133,8 @@ document.addEventListener('DOMContentLoaded', () => {
         setInterval(updateClock, 1000); // El reloj se actualiza cada segundo
     }).catch(error => {
         reportError(error, 'Inicialización Principal'); // Usamos nuestro nuevo reportero
-        document.getElementById('current-class-display').textContent = "Error al cargar el horario.";
-        document.getElementById('teacher-display').textContent = "Por favor, recarga la página.";
     });
-});
+}
 
 // Escuchar cambios en los anuncios desde otras pestañas (ej. desde announcements.html)
 const announcementChannel = new BroadcastChannel('announcement_channel');
