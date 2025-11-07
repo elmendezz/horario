@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de Horarios para Maestros</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2em;
+        }
+        .controls {
+            margin-bottom: 2em;
+            display: flex;
+            gap: 1em;
+            align-items: center;
+        }
+        select, button {
+            padding: 0.5em;
+            font-size: 1em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Consulta de Horarios</h1>
+    <div class="controls">
+        <label for="group-select">Selecciona un grupo:</label>
+        <select id="group-select">
+            <option value="1A">1A</option>
+            <option value="1B">1B</option>
+            <option value="1C">1C</option>
+            <option value="1D">1D</option>
+            <option value="1E">1E</option>
+            <option value="1F">1F</option>
+            <option value="1AV">1AV</option>
+            <option value="1BV">1BV</option>
+            <option value="1CV">1CV</option>
+            <option value="1DV">1DV</option>
+        </select>
+        <button id="view-schedule-btn">Ver Horario</button>
+    </div>
+
+    <div class="table-wrapper" style="display: none;">
+        <h2 id="schedule-title"></h2>
+        <table id="schedule-table">
+            <thead>
+                <tr>
+                    <th>Hora</th>
+                    <th>Lunes</th>
+                    <th>Martes</th>
+                    <th>Miércoles</th>
+                    <th>Jueves</th>
+                    <th>Viernes</th>
+                </tr>
+            </thead>
+            <tbody id="schedule-table-body">
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Aquí iría el script para cargar y mostrar el horario del grupo seleccionado -->
+    <!-- <script type="module" src="teacher-schedule-logic.js"></script> -->
+
+</body>
+</html>
