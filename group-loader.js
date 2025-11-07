@@ -14,8 +14,8 @@ function showGroupSelectionModal() {
         button.style.margin = '5px';
         button.addEventListener('click', () => {
             localStorage.setItem('user-group', group);
-            modal.style.display = 'none';
-            loadScheduleData(group);
+            // Recargar la página para que se inicialice con el nuevo grupo.
+            window.location.reload();
         });
         groupButtonsContainer.appendChild(button);
     });
