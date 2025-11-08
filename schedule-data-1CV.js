@@ -36,8 +36,7 @@ export const schedule = [
     ],
     // Jueves (Day 4)
     [
-        { time: [12, 30], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda" },
-        { time: [13, 20], name: "Libre", teacher: "" },
+
         { time: [14, 10], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda" },
         { time: [15, 0], name: "Receso", teacher: "Pausa De 20 Minutos.", duration: 20 },
         { time: [15, 20], name: "Pensamiento Matemático I", teacher: "Hernández Vargas Kenia Yovanna" },
