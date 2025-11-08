@@ -16,8 +16,7 @@ export const schedule = [
     ],
     // Martes (Day 2)
     [
-        { time: [12, 30], name: "Libre", teacher: "" },
-        { time: [13, 20], name: "Libre", teacher: "" },
+        { time: [13, 20], name: "Cultura Digital I", teacher: "Armenta Felix Ana Cristina" },
         { time: [14, 10], name: "Cultura Digital I", teacher: "Armenta Felix Ana Cristina" },
         { time: [15, 0], name: "Receso", teacher: "Pausa De 20 Minutos.", duration: 20 },
         { time: [15, 20], name: "Lengua y Comunicación I", teacher: "Yañez Núñez Lorena Esmeralda" },
@@ -26,8 +25,6 @@ export const schedule = [
     ],
     // Miércoles (Day 3)
     [
-        { time: [12, 30], name: "Libre", teacher: "" },
-        { time: [13, 20], name: "Formación Socioemocional I", teacher: "Chavez Arriola Luis Mario" },
         { time: [14, 10], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda" },
         { time: [15, 0], name: "Receso", teacher: "Pausa De 20 Minutos.", duration: 20 },
         { time: [15, 20], name: "Humanidades I", teacher: "Yañez Núñez Lorena Esmeralda" },
@@ -45,8 +42,7 @@ export const schedule = [
     ],
     // Viernes (Day 5)
     [
-        { time: [12, 30], name: "Ciencias Sociales I", teacher: "Yañez Núñez Lorena Esmeralda" },
-        { time: [13, 20], name: "Libre", teacher: "" },
+        { time: [13, 20], name: "Formación Socioemocional I", teacher: "Chavez Arriola Luis Mario" },
         { time: [14, 10], name: "Ciencias Sociales I", teacher: "Yañez Núñez Lorena Esmeralda" },
         { time: [15, 0], name: "Receso", teacher: "Pausa De 20 Minutos.", duration: 20 },
         { time: [15, 20], name: "Lengua y Comunicación I", teacher: "Yañez Núñez Lorena Esmeralda" },

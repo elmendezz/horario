@@ -10,8 +10,19 @@ function sendMessageToSW(message) {
     }
 }
 
-// Lista de grupos disponibles.
-const GROUPS = ['1A', '1B', '1C', '1D', '1E', '1F', '1AV', '1BV', '1CV', '1DV'];
+// Lista de grupos disponibles. Añadimos variantes matutino/vespertino y aliases que aparecen en los datos
+const GROUPS = [
+    // 1º
+    '1A','1B','1C','1D','1E','1F','1AV','1BV','1CV','1DV',
+    // 2º
+    '2A','2B','2C','2D','2E','2F','2AV','2BV','2CV','2DV','2EV','2FV',
+    // 3º
+    '3A','3B','3C','3D','3E','3F','3AV','3BV','3CV','3DV','3EV','3FV',
+    // 5º
+    '5A','5B','5C','5D','5E','5F','5AV','5BV','5CV','5DV','5EV','5FV',
+    // Aliases exactos que aparecen en all-horarios (por ejemplo: 3AEV maps a 3AV)
+    '3AE','3AEV','3BEV','5AE','5AEV','5BEV'
+];
 
 function showGroupSelectionModal() {
     const modal = document.getElementById('group-selection-modal');
