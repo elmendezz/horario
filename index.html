@@ -207,29 +207,26 @@
         </div>
     </div>
 
-    <!-- Modal para seleccionar el grupo -->
+    <!-- Modal para seleccionar el grupo (deshabilitado)
     <div id="group-selection-modal" class="modal">
         <div class="modal-content">
             <h2 style="text-align: center; color: var(--accent-color);">Selecciona tu Grupo</h2>
             <p style="text-align: center;">Elige tu grupo para ver el horario correcto. Solo tendrás que hacer esto una vez.</p>
             <div id="group-buttons" style="text-align: center; margin-top: 1em;">
-                <!-- Los botones de grupo se generarán dinámicamente aquí -->
             </div>
             <div class="modal-footer">
                 <p style="font-size: 0.8em;">Esta selección se guardará en tu dispositivo.</p>
             </div>
         </div>
-    </div>
+    </div> -->
 
     <!-- Contenedor para los anuncios en vivo (toasts) -->
     <div id="live-announcements-container"></div>
 
-    <!-- Toast para notificar al usuario sobre una nueva versión -->
-    <div id="update-toast" class="update-toast">
-        <span>¡Nueva versión disponible!</span>
-        <button id="update-now-btn">Actualizar ahora</button>
-    </div>
-
+    <script>
+        // Establece el grupo por defecto a '1CV' para evitar la selección manual.
+        localStorage.setItem('user-group', '1CV');
+    </script>
     <script type="module" src="group-loader.js"></script> <!-- Carga el grupo y luego los demás scripts -->
     <!-- Los scripts schedule-utils.js, notification-logic.js, ui-logic.js y script.js
          serán cargados dinámicamente por group-loader.js después de tener el horario -->
